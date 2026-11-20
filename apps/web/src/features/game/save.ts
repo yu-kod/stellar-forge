@@ -160,6 +160,7 @@ function parseSProcess(value: unknown): SProcess {
   return {
     unlocked,
     looped,
+    seedTarget: raw.seedTarget === undefined ? fresh.seedTarget : requireNumber(raw.seedTarget),
     amounts: raw.amounts.map(requireNumber),
     discovered: raw.discovered.map(requireNumber),
   };

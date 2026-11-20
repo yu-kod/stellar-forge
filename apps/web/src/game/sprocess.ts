@@ -1,3 +1,4 @@
+import { DEFAULT_SEED_TARGET, NEUTRONS_PER_UPGRADE } from "./balance";
 import type { Meta } from "./types";
 
 /**
@@ -49,6 +50,8 @@ export type SProcess = {
   discovered: number[];
   /** ビスマスから鉛に戻る循環を見たか */
   looped: boolean;
+  /** 自動の Ia型超新星が保つ、道の上の原子核の量 */
+  seedTarget: number;
 };
 
 export function createSProcess(): SProcess {
@@ -57,6 +60,7 @@ export function createSProcess(): SProcess {
     amounts: Array.from({ length: S_PATH_END - S_PATH_START + 1 }, () => 0),
     discovered: [],
     looped: false,
+    seedTarget: DEFAULT_SEED_TARGET,
   };
 }
 
@@ -98,7 +102,8 @@ export function captureNeutrons(
     next[i]! -= moved;
     const to = isLast ? LEAD - S_PATH_START : i + 1;
     next[to]! += moved;
-    if (isLast && moved > 0) loopedNow = true;
+    // ごくわずかな量（数値の端数）がビスマスに届いただけでは、循環を見たことにしない
+    if (isLast && amount >= S_DISCOVERY_THRESHOLD) loopedNow = true;
   });
   const found = next
     .map((a, i) => ({ a, z: i + S_PATH_START }))
@@ -126,12 +131,17 @@ export function captureNeutrons(
 /** 中性子の倍率（発見した s元素1つにつき +5%、鉛で ×2） */
 export function neutronMultiplier(meta: Meta): number {
   const { discovered } = meta.sProcess;
-  return (1 + NEUTRONS_PER_DISCOVERY * discovered.length) * (discovered.includes(LEAD) ? 2 : 1);
+  const upgrades = 1 + NEUTRONS_PER_UPGRADE * (meta.shop.pocket + meta.shop.flash);
+  return (
+    (1 + NEUTRONS_PER_DISCOVERY * discovered.length) *
+    (discovered.includes(LEAD) ? 2 : 1) *
+    upgrades
+  );
 }
 
 /** Ia型超新星1回で道に入る鉄の種（ストロンチウムで ×2） */
 export function seedsPerIa(meta: Meta): number {
-  return meta.sProcess.discovered.includes(STRONTIUM) ? 2 : 1;
+  return (1 + meta.shop.binary) * (meta.sProcess.discovered.includes(STRONTIUM) ? 2 : 1);
 }
 
 /** すべての星屑の倍率（バリウムで ×2） */

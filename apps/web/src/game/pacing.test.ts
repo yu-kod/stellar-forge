@@ -1,10 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { playIdle } from "@/test-utils/simulate";
+import { beforeAll, describe, expect, it } from "vitest";
+import { playIdle, type IdleReport } from "@/test-utils/simulate";
 
 const MINUTE = 60;
 
-describe("ペーシング（2時間、画面を開いたまま遊ぶ）", () => {
-  const report = playIdle(120 * MINUTE);
+describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => {
+  let report: IdleReport;
+  beforeAll(() => {
+    report = playIdle(240 * MINUTE);
+  }, 300_000);
 
   it("第2層は30〜60分で解放される", () => {
     expect(report.marks.layer2).toBeGreaterThanOrEqual(28 * MINUTE);
@@ -17,15 +20,28 @@ describe("ペーシング（2時間、画面を開いたまま遊ぶ）", () => 
     expect(gap).toBeLessThanOrEqual(60 * MINUTE);
   });
 
+  it("s過程：ストロンチウムのピークは第3層の30〜90分後", () => {
+    const gap = report.marks.strontium! - report.marks.layer3!;
+    expect(gap).toBeGreaterThanOrEqual(30 * MINUTE);
+    expect(gap).toBeLessThanOrEqual(90 * MINUTE);
+  });
+
+  it("s過程：バリウム → 鉛 → 循環の順に届き、循環は第3層の1.5〜3時間後", () => {
+    const { layer3, strontium, barium, lead, loop } = report.marks;
+    expect(barium!).toBeGreaterThan(strontium!);
+    expect(lead!).toBeGreaterThan(barium!);
+    expect(loop!).toBeGreaterThanOrEqual(lead!);
+    expect(loop! - layer3!).toBeGreaterThanOrEqual(90 * MINUTE);
+    expect(loop! - layer3!).toBeLessThanOrEqual(180 * MINUTE);
+  });
+
   it("星屑は 10¹² を超えない（数値が暴走しない）", () => {
     expect(report.maxDust).toBeLessThan(1e12);
   });
 
-  it("10分ごとに少なくとも1回は恒久強化を買える", () => {
-    expect(Math.min(...report.purchasesPer10Min)).toBeGreaterThanOrEqual(1);
-  });
-
-  it("10分ごとの購入は多くても30回（クリックの作業にならない）", () => {
-    expect(Math.max(...report.purchasesPer10Min)).toBeLessThanOrEqual(30);
+  it("最初の2時間は、10分ごとに1〜30回恒久強化を買う", () => {
+    const firstTwoHours = report.purchasesPer10Min.slice(0, 12);
+    expect(Math.min(...firstTwoHours)).toBeGreaterThanOrEqual(1);
+    expect(Math.max(...firstTwoHours)).toBeLessThanOrEqual(30);
   });
 });

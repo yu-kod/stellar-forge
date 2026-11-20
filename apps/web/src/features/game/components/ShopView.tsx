@@ -49,6 +49,19 @@ export function ShopView({ meta, dispatch }: Props) {
             ))}
           </div>
         </>
+      )}{" "}
+      {isShopItemOpen(meta, "pocket") && (
+        <>
+          <h3 className="mt-2 text-base font-semibold">第3層（s過程）</h3>
+          <p className="text-muted-foreground text-sm">
+            溜まった星屑で中性子を増やし、白色矮星を鉄の種に変える。
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SHOP_IDS.filter((item) => SHOP[item].layer === 3).map((item) => (
+              <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

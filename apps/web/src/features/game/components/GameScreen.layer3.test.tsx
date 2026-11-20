@@ -93,21 +93,60 @@ describe("GameScreen：第3層 s過程", () => {
     expect(screen.getByRole("note")).toHaveTextContent("第3層クリア");
   });
 
-  it("道の上で元素を見つけたら知らせる", () => {
+  function agbStar(): GameState {
     const game = layer3();
     game.meta.nextMass = 3;
+    game.meta.discovered = { He: true, C: true, N: true, O: true };
     game.star.initialMass = 3;
     game.star.mass = { ...game.star.mass, H: 0.2, He: 2.8 };
     game.star.temperature = 2e8;
-    game.star.levels.He = 10;
+    game.star.levels.He = 20;
     game.star.agbStartedAt = 0;
+    return game;
+  }
+
+  it("道の上で元素を見つけたら知らせる", () => {
+    const game = agbStar();
     game.meta.sProcess.amounts[0] = 1;
+    const { tick } = renderGame(game);
+    tick(0.5);
+    expect(screen.getByRole("status")).toHaveTextContent("新元素 コバルト（Co） s過程で作った");
+  });
+
+  it("ビスマスから鉛に戻る循環を見たら知らせる", () => {
+    const game = agbStar();
     game.meta.sProcess.amounts[index(S_PATH_END)] = 1;
     const { tick } = renderGame(game);
     tick(0.5);
-    const status = screen.getByRole("status");
-    expect(status).toHaveTextContent("新元素 コバルト（Co）");
-    expect(status).toHaveTextContent("ビスマス → ポロニウム → 鉛");
+    expect(screen.getByRole("status")).toHaveTextContent("ビスマス → ポロニウム → 鉛");
+  });
+});
+
+describe("GameScreen：第3層の強化と自動化", () => {
+  it("星屑タブに第3層の強化を出す", async () => {
+    const { user } = renderGame(layer3());
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByRole("heading", { name: "第3層（s過程）" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "¹³C ポケット" })).toBeInTheDocument();
+  });
+
+  it("Ia型超新星の自動化を持っていれば、鉄の種の目標の量を選べる", async () => {
+    const game = layer3(0);
+    game.meta.shop.autoIa = 1;
+    const { user } = renderGame(game);
+    const picker = screen.getByRole("radiogroup", { name: "道の上の原子核を保つ量" });
+    expect(within(picker).getByRole("radio", { name: "3" })).toBeChecked();
+
+    await user.click(within(picker).getByRole("radio", { name: "10" }));
+
+    expect(within(picker).getByRole("radio", { name: "10" })).toBeChecked();
+  });
+
+  it("自動化を持っていなければ、目標の量は選べない", () => {
+    renderGame(layer3());
+    expect(
+      screen.queryByRole("radiogroup", { name: "道の上の原子核を保つ量" })
+    ).not.toBeInTheDocument();
   });
 });
 

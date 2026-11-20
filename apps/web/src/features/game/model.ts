@@ -7,6 +7,7 @@ import {
   setAuto,
   setAutoRebirth,
   setNextMass,
+  setSeedTarget,
   setTarget,
   triggerIa,
 } from "@/game/actions";
@@ -53,6 +54,7 @@ export type Action =
   | { type: "buyShopItem"; item: ShopId }
   | { type: "buyAllShopItems" }
   | { type: "triggerIa"; count: number }
+  | { type: "setSeedTarget"; target: number }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
   | { type: "setSpeed"; speed: Speed }
@@ -125,6 +127,8 @@ export function gameReducer(model: Model, action: Action): Model {
       for (let i = 0; i < action.count; i++) game = triggerIa(game);
       return { ...model, game };
     }
+    case "setSeedTarget":
+      return { ...model, game: setSeedTarget(model.game, action.target) };
     case "buyAllShopItems":
       return { ...model, game: buyAllShopItems(model.game) };
     case "buyShopItem":

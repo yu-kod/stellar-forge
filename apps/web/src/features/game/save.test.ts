@@ -147,9 +147,16 @@ describe("restoreSave", () => {
       amounts: game.meta.sProcess.amounts.map((_, i) => i / 100),
       discovered: [27, 38],
       looped: true,
+      seedTarget: 7,
     };
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
     expect(restoreSave(raw, NOW)?.game.meta.sProcess).toEqual(game.meta.sProcess);
+  });
+
+  it("鉄の種の目標の量が古いセーブに無ければ初期値", () => {
+    const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
+    delete save.game.meta.sProcess.seedTarget;
+    expect(restoreSave(save, NOW)?.game.meta.sProcess.seedTarget).toBe(3);
   });
 
   it("s過程の道がなければ、空の道で始める", () => {
