@@ -177,6 +177,42 @@ describe("GameScreen：燃焼の強化", () => {
   });
 });
 
+describe("GameScreen：狙う星屑", () => {
+  it("はじめはケイ素・硫黄（全部燃やす）を狙っている", () => {
+    renderGame();
+    const picker = screen.getByRole("radiogroup", { name: "狙う星屑" });
+    expect(within(picker).getByRole("radio", { name: "ケイ素・硫黄" })).toBeChecked();
+  });
+
+  it("狙いを変えると、狙いの外の燃焼にそう書き、自動強化も切り替わる", async () => {
+    const game = createGame();
+    game.meta.shop.auto = 1;
+    const { user } = renderGame(game);
+
+    await user.click(screen.getByRole("radio", { name: "ネオン" }));
+
+    expect(within(stageCard("ネオン燃焼")).getByText(/狙いの外/)).toBeInTheDocument();
+    expect(within(stageCard("酸素燃焼")).getByText(/狙いの外/)).toBeInTheDocument();
+    expect(within(stageCard("炭素燃焼")).queryByText(/狙いの外/)).not.toBeInTheDocument();
+    expect(
+      within(stageCard("ネオン燃焼")).getByRole("checkbox", { name: "自動" })
+    ).not.toBeChecked();
+    expect(within(stageCard("炭素燃焼")).getByRole("checkbox", { name: "自動" })).toBeChecked();
+  });
+
+  it("段階ごとに自動を切り替えたら、どの狙いも選ばれていない状態になる", async () => {
+    const game = createGame();
+    game.meta.shop.auto = 1;
+    const { user } = renderGame(game);
+
+    await user.click(within(stageCard("水素燃焼")).getByRole("checkbox", { name: "自動" }));
+
+    const picker = screen.getByRole("radiogroup", { name: "狙う星屑" });
+    for (const radio of within(picker).getAllByRole("radio")) expect(radio).not.toBeChecked();
+    expect(screen.queryByText(/狙いの外/)).not.toBeInTheDocument();
+  });
+});
+
 describe("GameScreen：知らせ", () => {
   it("点火と新元素を知らせ、しばらくすると消える", () => {
     vi.useFakeTimers();

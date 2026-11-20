@@ -1,4 +1,4 @@
-import { LOG_LIMIT, MAX_BUY_PER_ACTION, SHOP, STAGES } from "./balance";
+import { LOG_LIMIT, MAX_BUY_PER_ACTION, SHOP, STAGES, TARGET_STAGES } from "./balance";
 import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
 import { createStar } from "./star";
@@ -9,6 +9,8 @@ import {
   type ShopId,
   type StageId,
   type SupernovaRecord,
+  type Target,
+  STAGE_IDS,
 } from "./types";
 
 export function canBuyStage(state: GameState, stage: StageId): boolean {
@@ -41,7 +43,19 @@ export function buyStageMax(state: GameState, stage: StageId): GameState {
 /** 段階ごとの自動強化の ON/OFF。強化できない最後の段階は切り替えない */
 export function setAuto(state: GameState, stage: StageId, on: boolean): GameState {
   if (STAGES[stage].final) return state;
-  return { ...state, meta: { ...state.meta, autoOn: { ...state.meta.autoOn, [stage]: on } } };
+  return {
+    ...state,
+    meta: { ...state.meta, autoOn: { ...state.meta.autoOn, [stage]: on }, target: null },
+  };
+}
+
+/** 狙う星屑を決め、自動強化の ON/OFF をそれに合わせて一括で切り替える */
+export function setTarget(state: GameState, target: Target): GameState {
+  const stages = TARGET_STAGES[target];
+  const autoOn = Object.fromEntries(
+    STAGE_IDS.map((id) => [id, stages.includes(id)])
+  ) as Meta["autoOn"];
+  return { ...state, meta: { ...state.meta, autoOn, target } };
 }
 
 /** 終わった星から星屑と中性子星を受け取り、次の世代の星を生む */

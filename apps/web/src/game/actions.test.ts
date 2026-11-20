@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto } from "./actions";
+import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto, setTarget } from "./actions";
 import { createGame } from "./star";
 
 describe("buyStage", () => {
@@ -130,5 +130,37 @@ describe("setAuto（段階ごとの自動強化の ON/OFF）", () => {
   it("最後の段階は強化できないので切り替えない", () => {
     const game = createGame();
     expect(setAuto(game, "Si", true)).toBe(game);
+  });
+});
+
+describe("setTarget（狙う星屑）", () => {
+  it("狙いに合わせて自動強化の ON/OFF を一括で切り替える", () => {
+    const next = setTarget(createGame(), "Ne");
+    expect(next.meta.target).toBe("Ne");
+    expect(next.meta.autoOn).toEqual({
+      H: true,
+      He: true,
+      C: true,
+      Ne: false,
+      O: false,
+      Si: false,
+    });
+  });
+
+  it("炭素を狙うなら水素とヘリウムだけ", () => {
+    const next = setTarget(createGame(), "C");
+    expect(next.meta.autoOn).toEqual({
+      H: true,
+      He: true,
+      C: false,
+      Ne: false,
+      O: false,
+      Si: false,
+    });
+  });
+
+  it("段階をひとつずつ切り替えたら、狙いは「自分で決める」になる", () => {
+    const next = setAuto(setTarget(createGame(), "C"), "C", true);
+    expect(next.meta.target).toBeNull();
   });
 });

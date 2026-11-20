@@ -6,25 +6,27 @@ import {
   rebirth,
   shopCost,
 } from "@/game/actions";
-import { SHOP } from "@/game/balance";
+import { SHOP, TARGET_STAGES } from "@/game/balance";
 import { stageCost } from "@/game/rates";
 import { step } from "@/game/step";
 import { createGame } from "@/game/star";
 import { SHOP_IDS, STAGE_IDS, type DustId, type GameState, type StageId } from "@/game/types";
 
-/** その元素を外層に残すために強化する段階 */
+/** その元素を外層に残すために強化する段階（狙う星屑と同じ） */
 export const STAGES_FOR: Record<DustId, readonly StageId[]> = {
-  C: ["H", "He"],
-  O: ["H", "He", "Ne"],
-  Ne: ["H", "He", "C"],
-  Mg: ["H", "He", "C", "Ne"],
-  Si: ["H", "He", "C", "Ne", "O"],
-  S: ["H", "He", "C", "Ne", "O"],
+  C: TARGET_STAGES.C,
+  O: TARGET_STAGES.O,
+  Ne: TARGET_STAGES.Ne,
+  Mg: TARGET_STAGES.O,
+  Si: TARGET_STAGES.Si,
+  S: TARGET_STAGES.Si,
 };
 
 export type Strategy = (state: GameState) => readonly StageId[];
 
 export const greedy: Strategy = () => STAGE_IDS;
+/** 手では買わず、自動制御に任せる */
+export const autoOnly: Strategy = () => [];
 export const aimFor =
   (element: DustId): Strategy =>
   () =>

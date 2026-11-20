@@ -15,6 +15,7 @@ import { RecordsView } from "./RecordsView";
 import { ResetDialog } from "./ResetDialog";
 import { ShopView } from "./ShopView";
 import { StageCard } from "./StageCard";
+import { TargetPicker } from "./TargetPicker";
 import { StarPanel } from "./StarPanel";
 import { SupernovaDialog } from "./SupernovaDialog";
 
@@ -141,6 +142,7 @@ export function GameScreen({
           <h2 id="stages-label" className="sr-only">
             燃焼段階
           </h2>
+          <TargetPicker target={game.meta.target} dispatch={dispatch} />
           {STAGE_IDS.map((stage) => (
             <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
           ))}

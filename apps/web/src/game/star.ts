@@ -28,6 +28,7 @@ export function createMeta(): Meta {
     discovered: {},
     shop: { mass: 0, cno: 0, yield: 0, xs: 0, boom: 0, auto: 0, pre: 0 },
     autoOn: { H: true, He: true, C: true, Ne: true, O: true, Si: false },
+    target: "Si",
     log: [],
   };
 }

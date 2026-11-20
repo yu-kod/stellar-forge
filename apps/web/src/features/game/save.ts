@@ -8,6 +8,8 @@ import {
   type Star,
   type StarEnd,
   type SupernovaRecord,
+  type Target,
+  TARGET_IDS,
 } from "@/game/types";
 
 export const SAVE_KEY = "stellar-forge/save";
@@ -79,6 +81,13 @@ function parseEnd(value: unknown): StarEnd {
   throw new InvalidSave();
 }
 
+function parseTarget(value: unknown): Target | null {
+  if (value === undefined || value === null) return null;
+  const target = TARGET_IDS.find((id) => id === value);
+  if (!target) throw new InvalidSave();
+  return target;
+}
+
 function parseStar(value: unknown): Star {
   const raw = requireObject(value);
   const zeros = Object.fromEntries(ELEMENT_IDS.map((id) => [id, 0])) as Star["mass"];
@@ -132,6 +141,7 @@ function parseMeta(value: unknown): Meta {
     ),
     shop: withDefaults(raw.shop, defaults.shop),
     autoOn: withDefaults(raw.autoOn, defaults.autoOn),
+    target: parseTarget(raw.target),
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
   };
 }
