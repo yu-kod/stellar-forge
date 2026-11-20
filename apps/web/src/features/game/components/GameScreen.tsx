@@ -5,6 +5,7 @@ import {
   AGB_SECONDS,
   AUTO_REBIRTH_AFTER,
   LAYER2_AFTER,
+  LAYER3_AFTER,
   SHOP,
   STAGES,
   WHITE_DWARF_HYDROGEN,
@@ -309,10 +310,17 @@ function LayerGoal({ game }: { game: GameState }) {
   const spec = SHOP[goal.item];
   if (!goal.affordable && meta.rProcess.unlocked) return <RProcessGoal meta={meta} />;
   if (!goal.affordable && meta.sProcess.unlocked) return <SProcessGoal meta={meta} />;
+  // 第2層の間は、第3層までの白色矮星の進み具合を添える
+  const layer3 = meta.supernovae >= LAYER2_AFTER && !meta.sProcess.unlocked && (
+    <>
+      。第3層まで白色矮星 {meta.whiteDwarfs} / {LAYER3_AFTER}
+    </>
+  );
   if (goal.affordable) {
     return (
       <>
         <b className="text-ignite">星屑タブ</b>で「{spec.name}」と交換できる
+        {layer3}
       </>
     );
   }
@@ -321,6 +329,7 @@ function LayerGoal({ game }: { game: GameState }) {
       次の目標：「<b className="text-ignite">{spec.name}</b>」まで{currencyName(spec.currency)} あと{" "}
       {formatNumber(goal.shortfall)}
       {targetHint(spec.currency)}
+      {layer3}
       {spec.currency === "S" && meta.bestRate.S === 0 && (
         <>
           。硫黄はケイ素燃焼が鉄に変えてしまう。「より重い星」で星を大きくすると外層に残る（星の上限{" "}

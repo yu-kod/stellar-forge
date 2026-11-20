@@ -20,6 +20,19 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(gap).toBeLessThanOrEqual(60 * MINUTE);
   });
 
+  it("第2層の解放から第3層の解放まで、発見・解放の空白は10分まで", () => {
+    const times = [
+      ...Object.values(report.lightAt),
+      report.marks.layer2!,
+      report.marks.cluster!,
+      report.marks.layer3!,
+    ]
+      .filter((t) => t >= report.marks.layer2! && t <= report.marks.layer3!)
+      .sort((a, b) => a - b);
+    const gaps = times.slice(1).map((t, i) => t - times[i]!);
+    expect(Math.max(...gaps)).toBeLessThanOrEqual(10 * MINUTE);
+  });
+
   it("s過程：ストロンチウムのピークは第3層の10〜45分後", () => {
     const gap = report.marks.strontium! - report.marks.layer3!;
     expect(gap).toBeGreaterThanOrEqual(10 * MINUTE);

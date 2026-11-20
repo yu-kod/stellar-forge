@@ -41,10 +41,18 @@ describe("超新星で見つける軽い元素", () => {
     expect(found(rebirth(collapsedStar({ O: 5 }, meta)).meta)).toEqual([]);
   });
 
-  it("爆発的ケイ素燃焼：ケイ素と硫黄を残し、爆発エネルギーが足りればアルゴン〜チタン", () => {
+  it("爆発的ケイ素燃焼：ケイ素を残し、爆発エネルギーが足りればアルゴン〜カルシウム", () => {
     const meta = createMeta();
-    meta.shop.boom = 8;
-    expect(found(rebirth(collapsedStar({ Si: 4, S: 2 }, meta)).meta)).toEqual([18, 19, 20, 21, 22]);
+    meta.shop.boom = 5;
+    expect(found(rebirth(collapsedStar({ Si: 4 }, meta)).meta)).toEqual([18, 19, 20]);
+  });
+
+  it("α過程の凍結：外層によらず、爆発エネルギー Lv6 でスカンジウム、Lv7 でチタン（⁴⁴Ti）", () => {
+    const meta = createMeta();
+    meta.shop.boom = 6;
+    expect(found(rebirth(collapsedStar({}, meta)).meta)).toEqual([21]);
+    meta.shop.boom = 7;
+    expect(found(rebirth(collapsedStar({}, meta)).meta)).toEqual([21, 22]);
   });
 
   it("燃え尽きや白色矮星では、爆発的元素合成は起きない", () => {
