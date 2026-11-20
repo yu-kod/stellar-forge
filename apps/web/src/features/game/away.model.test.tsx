@@ -33,6 +33,20 @@ describe("gameReducer：留守の間を進める", () => {
     );
   });
 
+  it("白色矮星だけ増えたときも、句読点がおかしくならない", async () => {
+    const { render, screen } = await import("@testing-library/react");
+    const { Notices } = await import("./components/Notices");
+    render(
+      <Notices
+        notices={[{ id: 1, event: { type: "away", seconds: 60, supernovae: 0, whiteDwarfs: 2 } }]}
+        onDismiss={() => {}}
+      />
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "留守のあいだに 1分 ぶん星が燃えた。白色矮星 2 個"
+    );
+  });
+
   it("30秒未満の留守は進めるが知らせない", () => {
     const model = gameReducer(createModel(createGame()), { type: "away", seconds: 10 });
     expect(model.game.star.time).toBeCloseTo(10);

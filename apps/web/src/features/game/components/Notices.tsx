@@ -1,3 +1,4 @@
+import { reachName } from "@/game/merger";
 import { LIGHT_SITES } from "@/game/light";
 import { useEffect } from "react";
 import { STAGES } from "@/game/balance";
@@ -11,6 +12,15 @@ const NOTICE_MS = 4200;
 type Props = { notices: Notice[]; onDismiss: (id: number) => void };
 
 /** 点火・新元素・新しい星を、画面の上に少しのあいだ出す */
+/** 留守の間に増えたもの（「。超新星 120 回・白色矮星 30 個」）。どちらもなければ空 */
+function awayCounts(supernovae: number, whiteDwarfs: number): string {
+  const parts = [
+    supernovae > 0 ? `超新星 ${formatNumber(supernovae)} 回` : null,
+    whiteDwarfs > 0 ? `白色矮星 ${formatNumber(whiteDwarfs)} 個` : null,
+  ].filter((part) => part !== null);
+  return parts.length > 0 ? `。${parts.join("・")}` : "";
+}
+
 export function Notices({ notices, onDismiss }: Props) {
   return (
     <div
@@ -95,6 +105,37 @@ function NoticeText({ event }: { event: NoticeEvent }) {
         </>
       );
     }
+    case "merger":
+      return event.blackHole ? (
+        <>
+          中性子星が合体してすぐ<b className="text-ignite">ブラックホール</b>
+          になった。放出物はわずか
+        </>
+      ) : (
+        <>
+          <b className="text-ignite">キロノバ（{event.reach > 50 ? "赤" : "青"}）</b>
+          ：中性子星合体の r過程が
+          {reachName(event.reach)}に届いた
+        </>
+      );
+    case "rDiscover": {
+      const element = elementOf(event.z);
+      return (
+        <>
+          <b className="text-ignite">
+            新元素 {element.name}（{element.symbol}）
+          </b>{" "}
+          中性子星合体で作った
+        </>
+      );
+    }
+    case "layer4Unlocked":
+      return (
+        <>
+          <b className="text-ignite">第4層</b>
+          ：中性子星合体が始まった。r過程タブで中性子星を2つ組もう
+        </>
+      );
     case "sLoop":
       return (
         <>
@@ -123,8 +164,7 @@ function NoticeText({ event }: { event: NoticeEvent }) {
         <>
           留守のあいだに <b className="text-ignite">{formatDuration(event.seconds)}</b>{" "}
           ぶん星が燃えた
-          {event.supernovae > 0 && `。超新星 ${formatNumber(event.supernovae)} 回`}
-          {event.whiteDwarfs > 0 && `・白色矮星 ${formatNumber(event.whiteDwarfs)} 個`}
+          {awayCounts(event.supernovae, event.whiteDwarfs)}
         </>
       );
   }

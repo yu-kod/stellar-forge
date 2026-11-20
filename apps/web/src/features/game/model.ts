@@ -16,6 +16,7 @@ import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { canAutoRebirth } from "@/game/actions";
 import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { AWAY_CHUNK_SECONDS, AWAY_LIMIT_SECONDS, advanceAway, isStopped } from "@/game/away";
+import { formBinary, type MergerEvent } from "@/game/merger";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { GameState, ShopId, StageId, Target } from "@/game/types";
@@ -33,6 +34,9 @@ export type NoticeEvent =
   | { type: "sDiscover"; z: number }
   | { type: "sLoop" }
   | { type: "light"; z: number }
+  | Extract<MergerEvent, { type: "merger" }>
+  | { type: "rDiscover"; z: number }
+  | { type: "layer4Unlocked" }
   | { type: "layer2Unlocked" };
 export type Notice = { id: number; event: NoticeEvent };
 
@@ -67,6 +71,7 @@ export type Action =
   | { type: "buyShopItem"; item: ShopId }
   | { type: "buyAllShopItems" }
   | { type: "triggerIa"; count: number }
+  | { type: "formBinary"; a: number; b: number }
   | { type: "setSeedTarget"; target: number }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
@@ -95,10 +100,28 @@ function isNotice(event: GameEvent | SupernovaEvent): event is ShownEvent | Supe
   return ["ignite", "discover", "supernova", "sDiscover", "sLoop"].includes(event.type);
 }
 
+type ClusterEvent = ReturnType<typeof advanceAll>["clusterEvents"][number];
+type ClusterNotice = Extract<
+  ClusterEvent,
+  { type: "discover" | "sDiscover" | "sLoop" | "merger" | "rDiscover" }
+>;
+
+/** 星団の星と連星の出来事のうち、知らせるもの（発見と合体） */
+function isClusterNotice(event: ClusterEvent): event is ClusterNotice {
+  return ["discover", "sDiscover", "sLoop", "merger", "rDiscover"].includes(event.type);
+}
+
 /** 第3層が今回の操作で解放されたら知らせる */
 function layer3Notice(before: GameState, after: GameState): NoticeEvent[] {
   return !before.meta.sProcess.unlocked && after.meta.sProcess.unlocked
     ? [{ type: "layer3Unlocked" }]
+    : [];
+}
+
+/** 第4層が今回の操作で解放されたら知らせる */
+function layer4Notice(before: GameState, after: GameState): NoticeEvent[] {
+  return !before.meta.rProcess.unlocked && after.meta.rProcess.unlocked
+    ? [{ type: "layer4Unlocked" }]
     : [];
 }
 
@@ -154,9 +177,7 @@ export function gameReducer(model: Model, action: Action): Model {
       if (model.away) return catchUp(model, model.away);
       if (model.game.star.end && model.game.meta.cluster.length === 0) return model;
       const { state, events, clusterEvents } = advanceAll(model.game, action.seconds * model.speed);
-      const discoveries = clusterEvents.filter(
-        (e) => e.type === "discover" || e.type === "sDiscover" || e.type === "sLoop"
-      );
+      const discoveries = clusterEvents.filter(isClusterNotice);
       // 自動で次の星を生むようになったら、毎周の点火は知らせない
       const quiet = canAutoRebirth(state.meta);
       const notices = events.filter(isNotice).filter((e) => !quiet || e.type !== "ignite");
@@ -165,6 +186,7 @@ export function gameReducer(model: Model, action: Action): Model {
         ...discoveries,
         ...lightNotice(model.game, state),
         ...layer3Notice(model.game, state),
+        ...layer4Notice(model.game, state),
       ]);
     }
     case "buy":
@@ -188,6 +210,8 @@ export function gameReducer(model: Model, action: Action): Model {
       for (let i = 0; i < action.count; i++) game = triggerIa(game);
       return notify({ ...model, game }, lightNotice(model.game, game));
     }
+    case "formBinary":
+      return { ...model, game: formBinary(model.game, action.a, action.b) };
     case "setSeedTarget":
       return { ...model, game: setSeedTarget(model.game, action.target) };
     case "buyAllShopItems":

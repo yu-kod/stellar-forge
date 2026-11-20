@@ -11,6 +11,7 @@ import {
 } from "@/game/balance";
 import { canAutoRebirth, canBuyShopItem, rebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
+import { nextRDiscovery } from "@/game/merger";
 import { nextSDiscovery } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
@@ -25,6 +26,7 @@ import { Notices } from "./Notices";
 import { PeriodicTableView } from "./PeriodicTableView";
 import { RecordsView } from "./RecordsView";
 import { ResetDialog } from "./ResetDialog";
+import { RProcessPanel } from "./RProcessPanel";
 import { ShopView } from "./ShopView";
 import { ClusterPanel } from "./ClusterPanel";
 import { MassPicker } from "./MassPicker";
@@ -48,7 +50,7 @@ type Props = {
   showSpeed?: boolean;
 };
 
-type Tab = "star" | "cluster" | "sprocess" | "shop" | "table" | "records";
+type Tab = "star" | "cluster" | "sprocess" | "rprocess" | "shop" | "table" | "records";
 const SPEEDS: Speed[] = [1, 3];
 const SAVE_EVERY_MS = 5000;
 /** これより短い留守は知らせない [秒] */
@@ -170,11 +172,15 @@ export function GameScreen({
       <p role="note" className="bg-muted rounded-lg border px-3 py-2 text-sm">
         <GoalText game={game} />
       </p>
-      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)} className="gap-3">
-        <TabsList aria-label="画面" className="w-full overflow-x-auto sm:w-fit">
+      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)} className="min-w-0 gap-3">
+        <TabsList
+          aria-label="画面"
+          className="w-full max-w-full justify-start overflow-x-auto sm:w-fit"
+        >
           <TabsTrigger value="star">星</TabsTrigger>
           {game.meta.cluster.length > 0 && <TabsTrigger value="cluster">星団</TabsTrigger>}
           {game.meta.sProcess.unlocked && <TabsTrigger value="sprocess">s過程</TabsTrigger>}
+          {game.meta.rProcess.unlocked && <TabsTrigger value="rprocess">r過程</TabsTrigger>}
           <TabsTrigger value="shop">星屑</TabsTrigger>
           <TabsTrigger value="table">周期表</TabsTrigger>
           <TabsTrigger value="records">記録</TabsTrigger>
@@ -215,6 +221,9 @@ export function GameScreen({
         </TabsContent>
         <TabsContent value="sprocess">
           <SProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
+        </TabsContent>
+        <TabsContent value="rprocess">
+          <RProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
         </TabsContent>
         <TabsContent value="shop" className="bg-card rounded-xl border p-4">
           <ShopView meta={game.meta} dispatch={dispatchAndSave} />
@@ -260,6 +269,7 @@ function GoalText({ game }: { game: GameState }) {
   }
   const goal = nextShopGoal(meta);
   const spec = SHOP[goal.item];
+  if (!goal.affordable && meta.rProcess.unlocked) return <RProcessGoal meta={meta} />;
   if (!goal.affordable && meta.sProcess.unlocked) return <SProcessGoal meta={meta} />;
   if (goal.affordable) {
     return (
@@ -273,6 +283,22 @@ function GoalText({ game }: { game: GameState }) {
       次の目標：「<b className="text-ignite">{spec.name}</b>」まで{currencyName(spec.currency)} あと{" "}
       {formatNumber(goal.shortfall)}
       {targetHint(spec.currency)}
+    </>
+  );
+}
+
+/** 第4層の目標：r過程で次に作る元素 */
+function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
+  const next = nextRDiscovery(meta.rProcess);
+  if (!next) return <>r過程：金まで作った</>;
+  const element = elementOf(next.z);
+  return (
+    <>
+      r過程：次は{" "}
+      <b className="text-ignite">
+        {element.name}（{element.symbol}）
+      </b>
+      を作る（{Math.floor(next.progress * 100)}%）
     </>
   );
 }
