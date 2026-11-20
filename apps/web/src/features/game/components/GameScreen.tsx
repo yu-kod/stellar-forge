@@ -1,7 +1,7 @@
 import { createJsonStorage, type JsonStorage } from "@app/web-core";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { STAGES } from "@/game/balance";
+import { AUTO_REBIRTH_AFTER, STAGES } from "@/game/balance";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds } from "@/game/step";
 import { createGame } from "@/game/star";
@@ -144,6 +144,17 @@ export function GameScreen({
             燃焼段階
           </h2>
           <TargetPicker target={game.meta.target} dispatch={dispatch} />
+          {game.meta.supernovae >= AUTO_REBIRTH_AFTER && (
+            <label className="text-muted-foreground flex h-11 items-center gap-2 px-1 text-sm">
+              <input
+                type="checkbox"
+                className="accent-ignite size-4"
+                checked={game.meta.autoRebirth}
+                onChange={(e) => dispatch({ type: "setAutoRebirth", on: e.target.checked })}
+              />
+              超新星のあと自動で次の星を生む
+            </label>
+          )}
           {STAGE_IDS.map((stage) => (
             <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
           ))}

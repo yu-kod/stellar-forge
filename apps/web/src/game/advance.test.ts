@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { advance } from "./advance";
+import { aboutToCollapse } from "@/test-utils/game";
+import { setAutoRebirth } from "./actions";
+import { advance, advanceRuns } from "./advance";
+import { AUTO_REBIRTH_AFTER } from "./balance";
+import { dustPreview } from "./dust";
+import type { GameState } from "./types";
 import { createGame } from "./star";
 import { step } from "./step";
 
@@ -51,5 +56,49 @@ describe("advance：長い時間を細かい刻みに分けて進める", () => 
     const { state } = advance(createGame(), 0.1);
 
     expect(state.star.mass.He).toBeCloseTo(expected.star.mass.He);
+  });
+});
+
+describe("advanceRuns：超新星のあと自動で次の星を生みながら進める", () => {
+  function veteran(): GameState {
+    const game = aboutToCollapse();
+    game.meta.supernovae = AUTO_REBIRTH_AFTER;
+    game.star.generation = AUTO_REBIRTH_AFTER + 1;
+    return game;
+  }
+
+  it("自動で次の星を生めるなら、終わった星から次の星を生んで残りの時間を進める", () => {
+    const { state, events } = advanceRuns(veteran(), 2, 0.05);
+    expect(state.meta.supernovae).toBe(AUTO_REBIRTH_AFTER + 1);
+    expect(state.star.generation).toBe(AUTO_REBIRTH_AFTER + 2);
+    expect(state.star.time).toBeGreaterThan(1.5);
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: "supernova", generation: AUTO_REBIRTH_AFTER + 1 })
+    );
+  });
+
+  it("超新星が10回に満たなければ、終わった星で止まる", () => {
+    const game = aboutToCollapse();
+    game.meta.supernovae = AUTO_REBIRTH_AFTER - 1;
+    const { state } = advanceRuns(game, 2, 0.05);
+    expect(state.star.end).toBe("collapse");
+  });
+
+  it("自動で次の星を生む設定を切っていれば、終わった星で止まる", () => {
+    const game = setAutoRebirth(veteran(), false);
+    const { state } = advanceRuns(game, 2, 0.05);
+    expect(state.star.end).toBe("collapse");
+  });
+
+  it("得た星屑を知らせに載せる", () => {
+    const game = veteran();
+    const ended = advance(game, 2, 0.05).state;
+    const { events } = advanceRuns(game, 2, 0.05);
+    const supernova = events.find((e) => e.type === "supernova");
+    expect(supernova).toEqual({
+      type: "supernova",
+      generation: AUTO_REBIRTH_AFTER + 1,
+      gain: dustPreview(ended.meta, ended.star),
+    });
   });
 });

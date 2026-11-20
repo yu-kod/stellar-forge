@@ -167,6 +167,9 @@ export const MAX_BUY_PER_ACTION = 1000;
 /** 燃焼の自動制御が1回の更新で買う上限 */
 export const AUTO_BUY_PER_STEP = 20;
 
+/** 自動で次の星を生めるようになるまでの超新星の回数 */
+export const AUTO_REBIRTH_AFTER = 10;
+
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
 

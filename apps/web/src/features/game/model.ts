@@ -1,5 +1,14 @@
-import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto, setTarget } from "@/game/actions";
-import { advance } from "@/game/advance";
+import {
+  buyShopItem,
+  buyStage,
+  buyStageMax,
+  rebirth,
+  setAuto,
+  setAutoRebirth,
+  setTarget,
+} from "@/game/actions";
+import { advanceRuns, type SupernovaEvent } from "@/game/advance";
+import { AUTO_REBIRTH_AFTER } from "@/game/balance";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { GameState, ShopId, StageId, Target } from "@/game/types";
@@ -10,7 +19,9 @@ export type Speed = 1 | 3;
 export type NoticeEvent =
   | Extract<GameEvent, { type: "ignite" | "discover" }>
   | { type: "born"; generation: number }
-  | { type: "away"; seconds: number };
+  | { type: "away"; seconds: number }
+  | SupernovaEvent
+  | { type: "autoRebirthUnlocked" };
 export type Notice = { id: number; event: NoticeEvent };
 
 export type Model = {
@@ -26,6 +37,7 @@ export type Action =
   | { type: "buyMax"; stage: StageId }
   | { type: "setAuto"; stage: StageId; on: boolean }
   | { type: "setTarget"; target: Target }
+  | { type: "setAutoRebirth"; on: boolean }
   | { type: "buyShopItem"; item: ShopId }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
@@ -48,15 +60,17 @@ function notify(model: Model, events: NoticeEvent[]): Model {
   };
 }
 
-function isNotice(event: GameEvent): event is Extract<GameEvent, { type: "ignite" | "discover" }> {
-  return event.type === "ignite" || event.type === "discover";
+function isNotice(
+  event: GameEvent | SupernovaEvent
+): event is Extract<GameEvent, { type: "ignite" | "discover" }> | SupernovaEvent {
+  return event.type === "ignite" || event.type === "discover" || event.type === "supernova";
 }
 
 export function gameReducer(model: Model, action: Action): Model {
   switch (action.type) {
     case "tick": {
       if (model.game.star.end) return model;
-      const { state, events } = advance(model.game, action.seconds * model.speed);
+      const { state, events } = advanceRuns(model.game, action.seconds * model.speed);
       return notify({ ...model, game: state }, events.filter(isNotice));
     }
     case "buy":
@@ -67,12 +81,18 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, game: setAuto(model.game, action.stage, action.on) };
     case "setTarget":
       return { ...model, game: setTarget(model.game, action.target) };
+    case "setAutoRebirth":
+      return { ...model, game: setAutoRebirth(model.game, action.on) };
     case "buyShopItem":
       return { ...model, game: buyShopItem(model.game, action.item) };
     case "rebirth": {
       if (!model.game.star.end) return model;
       const game = rebirth(model.game);
-      return notify({ ...model, game }, [{ type: "born", generation: game.star.generation }]);
+      const unlocked = game.meta.supernovae === AUTO_REBIRTH_AFTER && game.meta.autoRebirth;
+      return notify({ ...model, game }, [
+        { type: "born", generation: game.star.generation },
+        ...(unlocked ? [{ type: "autoRebirthUnlocked" } as const] : []),
+      ]);
     }
     case "dismiss":
       return { ...model, notices: model.notices.filter((n) => n.id !== action.id) };

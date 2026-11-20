@@ -52,6 +52,8 @@ export type Meta = {
   autoOn: Record<StageId, boolean>;
   /** 狙う星屑。段階ごとに自動強化を切り替えたら null（自分で決める） */
   target: Target | null;
+  /** 超新星のあと自動で次の星を生むか（超新星の回数が足りれば効く） */
+  autoRebirth: boolean;
   log: SupernovaRecord[];
 };
 

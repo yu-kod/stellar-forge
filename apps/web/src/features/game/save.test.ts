@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 壊れたセーブを作るために型を外す */
 import { describe, expect, it } from "vitest";
 import { createGame } from "@/game/star";
-import { collapsed } from "@/test-utils/game";
+import { aboutToCollapse, collapsed } from "@/test-utils/game";
 import { OFFLINE_LIMIT_SECONDS, SAVE_VERSION, restoreSave, toSave } from "./save";
 
 const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
@@ -46,6 +46,14 @@ describe("restoreSave", () => {
     expect(restored?.game.star.time).toBe(0);
   });
 
+  it("自動で次の星を生めるなら、留守中も周回を続ける", () => {
+    const game = aboutToCollapse();
+    game.meta.supernovae = 10;
+    const restored = restoreSave(toSave(game, NOW), NOW + 600_000);
+    expect(restored?.game.meta.supernovae).toBeGreaterThan(10);
+    expect(restored?.game.star.end).toBeNull();
+  });
+
   it("終わった星は進めない（超新星の画面から再開する）", () => {
     const game = collapsed();
     const restored = restoreSave(toSave(game, NOW), NOW + 60_000);
@@ -72,6 +80,7 @@ describe("restoreSave", () => {
     const game = createGame();
     game.meta.discovered = { He: true, C: true };
     game.meta.target = null;
+    game.meta.autoRebirth = false;
     game.meta.log = [
       {
         generation: 1,

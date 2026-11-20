@@ -59,6 +59,16 @@ function NoticeText({ event }: { event: NoticeEvent }) {
     }
     case "born":
       return <>第{event.generation}世代の星が生まれた。星屑で恒久強化を買おう</>;
+    case "supernova": {
+      const total = Object.values(event.gain).reduce((sum, n) => sum + n, 0);
+      return (
+        <>
+          <b className="text-ignite">第{event.generation}世代 超新星</b> 星屑 +{total}
+        </>
+      );
+    }
+    case "autoRebirthUnlocked":
+      return <>超新星10回。これからは超新星のあと自動で次の星が生まれる（切り替えられる）</>;
     case "away":
       return (
         <>
