@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { createMeta } from "@/game/star";
 import type { SupernovaRecord } from "@/game/types";
 import { RecordsView } from "./RecordsView";
+import { LAYER2_AFTER } from "@/game/balance";
+import { LAYER3_AFTER } from "@/game/balance";
 
 function record(overrides: Partial<SupernovaRecord> = {}): SupernovaRecord {
   return {
@@ -18,29 +20,33 @@ function record(overrides: Partial<SupernovaRecord> = {}): SupernovaRecord {
 describe("RecordsView", () => {
   it("超新星が5回に満たないうちは、第1層がいまの層で、第2層は回数だけ見せる", () => {
     const meta = createMeta();
-    meta.supernovae = 4;
+    meta.supernovae = LAYER2_AFTER - 1;
     render(<RecordsView meta={meta} />);
     const layers = screen.getByRole("list", { name: "層" });
     expect(within(layers).getByRole("listitem", { name: /第1層/ })).toHaveTextContent("いまの層");
-    expect(within(layers).getByText(/超新星 4\/5 回/)).toBeInTheDocument();
+    expect(
+      within(layers).getByText(new RegExp(`超新星 ${LAYER2_AFTER - 1}/${LAYER2_AFTER} 回`))
+    ).toBeInTheDocument();
     expect(within(layers).getAllByText("？？？")).toHaveLength(3);
   });
 
   it("超新星5回で第2層がいまの層になり、第3層は白色矮星の数で予告する", () => {
     const meta = createMeta();
-    meta.supernovae = 5;
-    meta.whiteDwarfs = 2;
+    meta.supernovae = LAYER2_AFTER;
+    meta.whiteDwarfs = LAYER3_AFTER - 1;
     render(<RecordsView meta={meta} />);
     const layers = screen.getByRole("list", { name: "層" });
     expect(within(layers).getByRole("listitem", { name: /第2層/ })).toHaveTextContent("いまの層");
-    expect(within(layers).getByText(/白色矮星 2\/3 個/)).toBeInTheDocument();
+    expect(
+      within(layers).getByText(new RegExp(`白色矮星 ${LAYER3_AFTER - 1}/${LAYER3_AFTER} 個`))
+    ).toBeInTheDocument();
     expect(within(layers).getAllByText("？？？")).toHaveLength(2);
   });
 
   it("白色矮星3つで第3層と第4層の予告を見せる", () => {
     const meta = createMeta();
-    meta.supernovae = 5;
-    meta.whiteDwarfs = 3;
+    meta.supernovae = LAYER2_AFTER;
+    meta.whiteDwarfs = LAYER3_AFTER;
     meta.neutronStars = 4;
     render(<RecordsView meta={meta} />);
     expect(screen.queryByText("？？？")).not.toBeInTheDocument();

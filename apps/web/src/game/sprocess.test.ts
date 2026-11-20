@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { triggerIa } from "./actions";
-import { LAYER3_AFTER } from "./balance";
+import { LAYER2_AFTER, LAYER3_AFTER } from "./balance";
 import { dustPreview } from "./dust";
 import {
   S_PATH_END,
@@ -27,7 +27,7 @@ function withAmounts(entries: Record<number, number>): SProcess {
 }
 
 function layer3Meta(overrides: Partial<Meta> = {}): Meta {
-  const meta = { ...createMeta(), supernovae: 10, ...overrides };
+  const meta = { ...createMeta(), supernovae: LAYER2_AFTER, ...overrides };
   meta.sProcess = { ...meta.sProcess, unlocked: true, ...overrides.sProcess };
   return meta;
 }
@@ -168,12 +168,12 @@ describe("Ia型超新星", () => {
 });
 
 describe("第3層の解放と中性子", () => {
-  it("白色矮星が3つになると第3層が解放される", () => {
-    expect(LAYER3_AFTER).toBe(3);
+  it("白色矮星が30個になると第3層が解放される", () => {
+    expect(LAYER3_AFTER).toBe(30);
   });
 
   it("第3層の解放後、軽い星のヘリウム燃焼が中性子を出し、鉄の種が捕まえる", () => {
-    const meta = layer3Meta({ nextMass: 3, supernovae: 10 });
+    const meta = layer3Meta({ nextMass: 3 });
     meta.sProcess.amounts[0] = 1;
     const game: GameState = { meta, star: createStar(meta) };
     game.star.mass.H = 1;

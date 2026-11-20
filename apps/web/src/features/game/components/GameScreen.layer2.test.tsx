@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { LAYER2_AFTER } from "@/game/balance";
 import { createGame, createStar } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { collapsed, manualTicker } from "@/test-utils/game";
@@ -14,8 +15,8 @@ function renderGame(initial: GameState) {
 
 function layer2(): GameState {
   const game = createGame();
-  game.meta.supernovae = 5;
-  game.star.generation = 6;
+  game.meta.supernovae = LAYER2_AFTER;
+  game.star.generation = LAYER2_AFTER + 1;
   return game;
 }
 
@@ -70,7 +71,7 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
 
   it("自動で次の星を生むとき、白色矮星になったことを知らせる", () => {
     const game = lowMassStar();
-    game.meta.supernovae = 10;
+    game.meta.supernovae = LAYER2_AFTER;
     game.star.mass.H = 0.29;
     game.star.agbStartedAt = -20;
     game.star.mass.He = 2.71;
@@ -113,14 +114,14 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
     const game = lowMassStar();
     game.star.end = "whiteDwarf";
     renderGame(game);
-    expect(screen.getByRole("dialog", { name: "第6世代　白色矮星" })).toHaveTextContent(
-      "惑星状星雲"
-    );
+    expect(
+      screen.getByRole("dialog", { name: `第${LAYER2_AFTER + 1}世代\u3000白色矮星` })
+    ).toHaveTextContent("惑星状星雲");
   });
 
   it("超新星の画面でも次の星の質量を選べ、その質量で生まれる", async () => {
     const game = collapsed();
-    game.meta.supernovae = 5;
+    game.meta.supernovae = LAYER2_AFTER;
     const { user } = renderGame(game);
     const dialog = screen.getByRole("dialog");
 
@@ -132,9 +133,9 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
     expect(screen.getByRole("region", { name: "星の状態" })).toHaveTextContent("3.00 M☉");
   });
 
-  it("5回目の超新星で、質量を選べるようになったと知らせる", async () => {
+  it("第2層を解放する回数目の超新星で、質量を選べるようになったと知らせる", async () => {
     const game = collapsed();
-    game.meta.supernovae = 4;
+    game.meta.supernovae = LAYER2_AFTER - 1;
     const { user } = renderGame(game);
 
     await user.click(screen.getByRole("button", { name: "放出された元素から次の星を生む" }));

@@ -4,6 +4,7 @@ import { buyShopItem } from "@/game/actions";
 import { createGame } from "@/game/star";
 import { aboutToCollapse, collapsed } from "@/test-utils/game";
 import { OFFLINE_LIMIT_SECONDS, SAVE_VERSION, restoreSave, toSave } from "./save";
+import { LAYER2_AFTER } from "@/game/balance";
 
 const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
 
@@ -111,7 +112,7 @@ describe("restoreSave", () => {
 
   it("星団の星も戻す", () => {
     const game = createGame();
-    game.meta.supernovae = 5;
+    game.meta.supernovae = LAYER2_AFTER;
     game.meta.dust.N = 30;
     const withCluster = buyShopItem(game, "cluster");
     withCluster.meta.cluster[0]!.nextMass = null;
@@ -121,7 +122,7 @@ describe("restoreSave", () => {
 
   it("留守中は星団の星も燃える", () => {
     const game = createGame();
-    game.meta.supernovae = 5;
+    game.meta.supernovae = LAYER2_AFTER;
     game.meta.dust.N = 30;
     const withCluster = buyShopItem(game, "cluster");
     const restored = restoreSave(toSave(withCluster, NOW), NOW + 60_000);
@@ -130,8 +131,9 @@ describe("restoreSave", () => {
 
   it("主星が超新星の画面で止まっていても、星団の星は燃え続ける", () => {
     const game = collapsed();
-    game.meta.supernovae = 5;
+    game.meta.supernovae = LAYER2_AFTER;
     game.meta.dust.N = 30;
+    game.meta.autoRebirth = false;
     const withCluster = buyShopItem(game, "cluster");
     const restored = restoreSave(toSave(withCluster, NOW), NOW + 60_000);
     expect(restored?.game.star.end).toBe("collapse");

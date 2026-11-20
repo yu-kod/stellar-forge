@@ -1,17 +1,14 @@
-import { LAYER2_AFTER } from "@/game/balance";
+import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
 import { DUST_IDS, type Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatMass, formatNumber } from "../format";
 import { ElementChip } from "./ElementChip";
 
-/** 第3層の予告を見せるまでの白色矮星の数 */
-const LAYER3_PREVIEW_AFTER = 3;
-
 type Layer = { title: string; status?: string; body: string; current?: boolean };
 
 function layers(meta: Meta): Layer[] {
   const layer2 = meta.supernovae >= LAYER2_AFTER;
-  const layer3Preview = meta.whiteDwarfs >= LAYER3_PREVIEW_AFTER;
+  const layer3Preview = meta.whiteDwarfs >= LAYER3_AFTER;
   const hidden = "？？？";
   return [
     {
@@ -31,7 +28,7 @@ function layers(meta: Meta): Layer[] {
       title: "第3層　漸近巨星分枝星とs過程",
       status: layer3Preview
         ? "（準備中）"
-        : `（白色矮星 ${meta.whiteDwarfs}/${LAYER3_PREVIEW_AFTER} 個で予告を解放）`,
+        : `（白色矮星 ${meta.whiteDwarfs}/${LAYER3_AFTER} 個で予告を解放）`,
       body: layer3Preview
         ? "軽い星の中で中性子をゆっくり捕まえ、鉄を種に一歩ずつ重い元素へ。ビスマス209で行き止まりになる。"
         : hidden,

@@ -186,7 +186,7 @@ export const AUTO_BUY_PER_STEP = 20;
 export const AUTO_REBIRTH_AFTER = 10;
 
 /** 第2層（星の質量を選ぶ）を解放する超新星の回数 */
-export const LAYER2_AFTER = 5;
+export const LAYER2_AFTER = 25;
 /** これより軽い星は炭素燃焼に届かず、白色矮星になる [M☉] */
 export const LOW_MASS_LIMIT = 8;
 /** 軽い星のコア温度の上限 [K]（ヘリウム燃焼は点火するが炭素燃焼は点火しない） */
@@ -212,7 +212,7 @@ export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.25;
 export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 
 /** 第3層（s過程）を解放する白色矮星の数 */
-export const LAYER3_AFTER = 3;
+export const LAYER3_AFTER = 30;
 /** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
 export const NEUTRONS_PER_HELIUM = 1;
 
