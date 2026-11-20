@@ -278,7 +278,15 @@ export function pairAdvice(meta: Meta, z: number): PairAdvice {
 /** いま作りたい元素：まだの r過程の元素のうち、在庫で届く組のあるものの一番近いもの（なければ一番近いもの）。すべて見つけていればおまけ（ウラン） */
 export function rGoal(meta: Meta): number {
   const reachable = nextRDiscovery(meta.rProcess, (z) => bestPair(meta, z) !== null);
-  return reachable?.z ?? nextRDiscovery(meta.rProcess)?.z ?? URANIUM;
+  const actinide = [URANIUM, THORIUM].find((z) => !has(meta.rProcess, z));
+  return reachable?.z ?? nextRDiscovery(meta.rProcess)?.z ?? actinide ?? URANIUM;
+}
+
+/** その組が、まだの元素（r過程の元素とトリウム・ウラン）のどれかに届くか */
+export function usefulPair(meta: Meta, a: number, b: number): boolean {
+  return [...R_ELEMENTS, ...ACTINIDES].some(
+    (z) => !has(meta.rProcess, z) && yieldOf(meta, a, b, z) > 0
+  );
 }
 
 /** 連星の自動化：枠が空いていれば、いま作りたい元素を一番多く作る組を組む（届かない組は作らない） */

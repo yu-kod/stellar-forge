@@ -2,7 +2,7 @@ import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { MERGER_SECONDS, R_ELEMENTS, R_PATH_START, formBinary } from "@/game/merger";
+import { MERGER_SECONDS, R_ELEMENTS, R_PATH_START, formBinary, rThreshold } from "@/game/merger";
 import { createGame } from "@/game/star";
 import { createSlot } from "@/game/actions";
 import type { GameState } from "@/game/types";
@@ -183,7 +183,7 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     );
   });
 
-  it("83マスがそろったら、目標を周期表の先にする", () => {
+  function complete(): GameState {
     const game = layer4();
     game.meta.discovered = Object.fromEntries(
       ["He", "C", "N", "O", "Ne", "Mg", "Si", "S", "Fe"].map((id) => [id, true])
@@ -193,8 +193,28 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     game.meta.shop.shield = 4;
     game.meta.supernovae = 50;
     game.meta.shop.auto = 1;
+    return game;
+  }
+
+  it("83マスがそろったら、目標を周期表の先にし、進み具合を出す", () => {
+    const game = complete();
+    game.meta.rProcess.amounts[92 - R_PATH_START] = rThreshold(92) * 0.42;
     render(<GameScreen initial={game} ticker={manualTicker().ticker} />);
-    expect(screen.getByRole("note")).toHaveTextContent("周期表の先");
+    expect(screen.getByRole("note")).toHaveTextContent("周期表の先：ウラン（U）を作る（42%）");
+  });
+
+  it("ウランを見つけたら、まだのトリウムを目標にする", () => {
+    const game = complete();
+    game.meta.rProcess.discovered.push(92);
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} />);
+    expect(screen.getByRole("note")).toHaveTextContent("周期表の先：トリウム（Th）を作る");
+  });
+
+  it("トリウム・ウランも見つけたら、すべてそろったと書く", () => {
+    const game = complete();
+    game.meta.rProcess.discovered.push(90, 92);
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} />);
+    expect(screen.getByRole("note")).toHaveTextContent("ウランまで、すべての元素をそろえた");
   });
 
   it("在庫が空でも欄を出し、連星にはできない", () => {
@@ -269,6 +289,25 @@ describe("第4層の強化", () => {
 });
 
 describe("エンディングの後（周期表の先）", () => {
+  it("r過程の一覧に、トリウム・ウランの進み具合も出す", () => {
+    const game = layer4();
+    game.meta.rProcess.amounts[90 - R_PATH_START] = 3.5;
+    renderGame(game);
+    expect(within(panel()).getByRole("list", { name: "r過程で作る元素" })).toHaveTextContent(
+      "トリウム（Th）3.50 / 15"
+    );
+  });
+
+  it("まだの元素のどれにも届かない組では、連星にできない", async () => {
+    const game = layer4({ [HEAVY]: 4 });
+    game.meta.rProcess.discovered = [...R_ELEMENTS];
+    renderGame(game);
+    expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeDisabled();
+    expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
+      "この組では、まだの元素に届かない"
+    );
+  });
+
   it("r過程の元素がすべてそろっても、r過程タブを描ける（作りたい元素はウラン）", () => {
     const game = layer4();
     game.meta.rProcess.discovered = [...R_ELEMENTS];

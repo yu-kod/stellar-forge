@@ -12,6 +12,7 @@ import {
 import { canAutoRebirth, canBuyShopItem, rebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
 import {
+  ACTINIDES,
   R_ELEMENTS,
   R_PATH_START,
   nextRDiscovery,
@@ -350,13 +351,29 @@ const blocks = (advice: PairAdvice) => advice.type === "masses" || advice.type =
 /** 第4層の目標：r過程で次に作る元素。届かない元素があれば、どうすれば届くか */
 function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
   const { rProcess } = meta;
-  if (!nextRDiscovery(rProcess) && nextMissing(meta)) return <MissingGoal meta={meta} />;
+  const rDone = !nextRDiscovery(rProcess);
+  if (rDone && nextMissing(meta)) return <MissingGoal meta={meta} />;
+  if (rDone && ACTINIDES.every((z) => rProcess.discovered.includes(z))) {
+    return (
+      <>
+        <b className="text-ignite">ウランまで、すべての元素をそろえた</b>
+        。記録タブでエンディングを見返せる
+      </>
+    );
+  }
   const goal = rGoal(meta);
   const advice = pairAdvice(meta, goal);
   if (blocks(advice)) return <PairHint z={goal} advice={advice} />;
-  if (!R_ELEMENTS.includes(goal)) return <MissingGoal meta={meta} />;
   const element = elementOf(goal);
   const progress = Math.min(1, rProcess.amounts[goal - R_PATH_START]! / rThreshold(goal));
+  if (rDone) {
+    return (
+      <>
+        <b className="text-ignite">周期表の先</b>：{element.name}（{element.symbol}）を作る（
+        {Math.floor(progress * 100)}%）。Ye 0.14 以下の合体で作る
+      </>
+    );
+  }
   const blocked = R_ELEMENTS.filter((z) => !rProcess.discovered.includes(z))
     .map((z) => ({ z, advice: pairAdvice(meta, z) }))
     .find((item) => blocks(item.advice));
@@ -377,17 +394,9 @@ function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
   );
 }
 
-/** r過程の元素をそろえた後：まだ見つけていない元素と、その作り方。全部そろったら周期表の先 */
+/** r過程の元素をそろえた後：まだ見つけていない元素と、その作り方 */
 function MissingGoal({ meta }: { meta: GameState["meta"] }) {
-  const missing = nextMissing(meta);
-  if (!missing) {
-    return (
-      <>
-        <b className="text-ignite">周期表の先</b>：トリウム・ウランは Ye 0.14
-        以下の合体で作る（ニュートリノの遮蔽）
-      </>
-    );
-  }
+  const missing = nextMissing(meta)!;
   const element = elementOf(missing.z);
   return (
     <>
