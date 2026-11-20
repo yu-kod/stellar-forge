@@ -119,6 +119,15 @@ describe("GameScreen：2周目からの目標", () => {
     );
   });
 
+  it("硫黄をまだ稼いだことがなければ、自動制御の目標に硫黄の残し方を添える", () => {
+    const game = createGame();
+    game.meta.supernovae = 3;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "硫黄はケイ素燃焼が鉄に変えてしまう。「より重い星」で星を大きくすると外層に残る"
+    );
+  });
+
   it("もう交換できるものがあれば、そう促す", () => {
     const game = createGame();
     game.meta.supernovae = 1;

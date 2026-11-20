@@ -51,8 +51,8 @@ export const R_ELEMENTS: readonly number[] = [
 const EJECTA_MILESTONES: readonly number[] = [
   0.6, 2.1, 3, 4.3, 6.2, 9, 13, 18, 26, 37, 54, 77, 110, 155, 220,
 ];
-/** おまけ（トリウム・ウラン）の発見に要る放出物 */
-const ACTINIDE_EJECTA = 40;
+/** おまけ（トリウム・ウラン）の発見に要る放出物（金より多い。完結の後の目標） */
+const ACTINIDE_EJECTA = 300;
 /** 特別な効果のない r過程の元素1つあたりの放出物の上乗せ */
 const EJECTA_PER_R_ELEMENT = 0.05;
 /** 合計がこれより軽いほど、合体後の星が長く残って（円盤風で）放出物が増える [M☉] */
