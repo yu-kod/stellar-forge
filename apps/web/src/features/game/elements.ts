@@ -1,4 +1,4 @@
-import type { ElementId } from "@/game/types";
+import type { ElementId, Target } from "@/game/types";
 
 export type ElementInfo = {
   name: string;
@@ -29,3 +29,11 @@ export const ELEMENTS: Record<ElementId, ElementInfo> = {
 export function isGameElement(symbol: string): symbol is ElementId {
   return symbol in ELEMENTS;
 }
+
+/** 狙う星屑の名前 */
+export const TARGET_NAMES: Record<Target, string> = {
+  C: "炭素",
+  Ne: "ネオン",
+  O: "酸素・マグネシウム",
+  Si: "ケイ素・硫黄",
+};

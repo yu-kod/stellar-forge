@@ -60,7 +60,9 @@ describe("restoreSave", () => {
     delete save.game.meta.supernovae;
     delete save.game.meta.neutronStars;
     delete save.game.meta.log;
+    delete save.game.meta.target;
     const restored = restoreSave(save, NOW);
+    expect(restored?.game.meta.target).toBeNull();
     expect(restored?.game.meta).toMatchObject({ supernovae: 0, neutronStars: 0, log: [] });
     expect(restored?.game.meta.shop.pre).toBe(0);
     expect(restored?.game.meta.autoOn.H).toBe(true);
@@ -69,6 +71,7 @@ describe("restoreSave", () => {
   it("発見した元素と、これまでの超新星の記録も戻す", () => {
     const game = createGame();
     game.meta.discovered = { He: true, C: true };
+    game.meta.target = null;
     game.meta.log = [
       {
         generation: 1,
@@ -96,6 +99,7 @@ describe("restoreSave", () => {
       saveWith((g) => (g.meta.log = [{ generation: 1, time: 1, ejected: 1, gain: {}, end: null }])),
     ],
     ["自動の切り替えが真偽値でない", saveWith((g) => (g.meta.autoOn.H = 1))],
+    ["狙いが知らない値", saveWith((g) => (g.meta.target = "Au"))],
   ])("壊れたセーブは読まない：%s", (_, raw) => {
     expect(restoreSave(raw, NOW)).toBeNull();
   });

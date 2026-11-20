@@ -8,6 +8,10 @@ export type StageId = (typeof STAGE_IDS)[number];
 export const DUST_IDS = ["C", "O", "Ne", "Mg", "Si", "S"] as const;
 export type DustId = (typeof DUST_IDS)[number];
 
+/** 狙う星屑。燃焼をどこまで強化するか（玉ねぎをどこまで焼くか）の4段階 */
+export const TARGET_IDS = ["C", "Ne", "O", "Si"] as const;
+export type Target = (typeof TARGET_IDS)[number];
+
 export const SHOP_IDS = ["mass", "cno", "yield", "xs", "boom", "auto", "pre"] as const;
 export type ShopId = (typeof SHOP_IDS)[number];
 
@@ -46,6 +50,8 @@ export type Meta = {
   discovered: Partial<Record<ElementId, true>>;
   shop: Record<ShopId, number>;
   autoOn: Record<StageId, boolean>;
+  /** 狙う星屑。段階ごとに自動強化を切り替えたら null（自分で決める） */
+  target: Target | null;
   log: SupernovaRecord[];
 };
 

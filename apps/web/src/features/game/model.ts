@@ -1,8 +1,8 @@
-import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto } from "@/game/actions";
+import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto, setTarget } from "@/game/actions";
 import { advance } from "@/game/advance";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
-import type { GameState, ShopId, StageId } from "@/game/types";
+import type { GameState, ShopId, StageId, Target } from "@/game/types";
 
 export type Speed = 1 | 3;
 
@@ -25,6 +25,7 @@ export type Action =
   | { type: "buy"; stage: StageId }
   | { type: "buyMax"; stage: StageId }
   | { type: "setAuto"; stage: StageId; on: boolean }
+  | { type: "setTarget"; target: Target }
   | { type: "buyShopItem"; item: ShopId }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
@@ -64,6 +65,8 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, game: buyStageMax(model.game, action.stage) };
     case "setAuto":
       return { ...model, game: setAuto(model.game, action.stage, action.on) };
+    case "setTarget":
+      return { ...model, game: setTarget(model.game, action.target) };
     case "buyShopItem":
       return { ...model, game: buyShopItem(model.game, action.item) };
     case "rebirth": {

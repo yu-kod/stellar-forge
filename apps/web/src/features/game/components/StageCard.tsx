@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { Button } from "@/components/ui/button";
 import { canBuyStage } from "@/game/actions";
-import { CHANDRASEKHAR_MASS, MILESTONE_EVERY, STAGES } from "@/game/balance";
+import { CHANDRASEKHAR_MASS, MILESTONE_EVERY, STAGES, TARGET_STAGES } from "@/game/balance";
 import { burnRate, fuelOf, isIgnited, stageCost } from "@/game/rates";
 import { secondsToCollapse } from "@/game/step";
 import type { GameState, StageId } from "@/game/types";
@@ -20,6 +20,16 @@ const STAGE_COLOR: Record<StageId, string> = {
   Ne: ELEMENTS.Ne.bg,
   O: ELEMENTS.O.bg,
   Si: ELEMENTS.Si.bg,
+};
+
+/** その段階が燃やす元素の名前 */
+const FUEL_NAME: Record<StageId, string> = {
+  H: ELEMENTS.H.name,
+  He: ELEMENTS.He.name,
+  C: ELEMENTS.C.name,
+  Ne: ELEMENTS.Ne.name,
+  O: ELEMENTS.O.name,
+  Si: ELEMENTS.Si.name,
 };
 
 function reaction(stage: StageId): string {
@@ -86,6 +96,11 @@ export function StageCard({ game, stage, dispatch }: Props) {
         )}
       </div>
       <StageDetail game={game} stage={stage} />
+      {!spec.final && meta.target !== null && !TARGET_STAGES[meta.target].includes(stage) && (
+        <p className="text-muted-foreground text-sm">
+          狙いの外：強化すると{FUEL_NAME[stage]}が燃えて減る
+        </p>
+      )}
       {spec.final && ignited && (
         <div
           role="progressbar"

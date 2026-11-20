@@ -1,4 +1,4 @@
-import type { DustId, ElementId, ShopId, StageId } from "./types";
+import type { DustId, ElementId, ShopId, StageId, Target } from "./types";
 
 /**
  * バランスの数値。正は docs/design.md。ここを変えたら設計書の表とシミュレーションテストも直す。
@@ -164,6 +164,14 @@ export const AUTO_BUY_PER_STEP = 20;
 
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
+
+/** 狙う星屑ごとに、自動で強化する段階（その元素を燃料にする段階より手前まで） */
+export const TARGET_STAGES: Record<Target, readonly StageId[]> = {
+  C: ["H", "He"],
+  Ne: ["H", "He", "C"],
+  O: ["H", "He", "C", "Ne"],
+  Si: ["H", "He", "C", "Ne", "O"],
+};
 
 /** 星屑 = floor(質量^DUST_EXPONENT × 倍率) */
 export const DUST_EXPONENT = 1.1;

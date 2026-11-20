@@ -74,6 +74,12 @@ describe("gameReducer", () => {
     expect(model.game.meta.autoOn.C).toBe(false);
   });
 
+  it("setTarget は狙う星屑を変え、自動強化をそれに合わせる", () => {
+    const model = gameReducer(modelWith(), { type: "setTarget", target: "C" });
+    expect(model.game.meta.target).toBe("C");
+    expect(model.game.meta.autoOn.C).toBe(false);
+  });
+
   it("buyShopItem は星屑で恒久強化を買う", () => {
     const start = modelWith();
     start.game.meta.dust.O = 3;
