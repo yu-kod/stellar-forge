@@ -1,7 +1,7 @@
 import { createRProcess, type RProcess } from "@/game/rprocess";
-import { advanceAll } from "@/game/cluster";
+import { AWAY_LIMIT_SECONDS, isStopped } from "@/game/away";
 import { createSProcess, type SProcess } from "@/game/sprocess";
-import { canAutoRebirth, createSlot } from "@/game/actions";
+import { createSlot } from "@/game/actions";
 import { createMeta } from "@/game/star";
 import {
   ELEMENT_IDS,
@@ -18,11 +18,6 @@ import {
 
 export const SAVE_KEY = "stellar-forge/save";
 export const SAVE_VERSION = 1;
-/** 閉じていた間に進める時間の上限 [秒] */
-export const OFFLINE_LIMIT_SECONDS = 30 * 60;
-/** 留守中の進行は粗い刻みで速く進める */
-const OFFLINE_STEP_SECONDS = 0.25;
-
 export type SaveData = { version: typeof SAVE_VERSION; savedAt: number; game: GameState };
 export type Restored = { game: GameState; awaySeconds: number };
 
@@ -31,7 +26,7 @@ export function toSave(game: GameState, now: number): SaveData {
 }
 
 /**
- * 保存したものを読み、閉じていた時間（30分まで）だけ星を進める。
+ * 保存したものを読み、閉じていた時間（12時間まで）を返す。進めるのは画面の側（留守の間の進行）。
  * 形が合わないものは null（新しく始める）。バージョンを上げたら、ここで古い形から移す
  */
 export function restoreSave(raw: unknown, now: number): Restored | null {
@@ -39,11 +34,9 @@ export function restoreSave(raw: unknown, now: number): Restored | null {
     if (!isObject(raw) || raw.version !== SAVE_VERSION) return null;
     const savedAt = requireNumber(raw.savedAt);
     const game = parseGame(raw.game);
-    const stopped = game.star.end && !canAutoRebirth(game.meta) && game.meta.cluster.length === 0;
-    if (stopped) return { game, awaySeconds: 0 };
-    const awaySeconds = Math.min(OFFLINE_LIMIT_SECONDS, Math.max(0, (now - savedAt) / 1000));
-    if (awaySeconds === 0) return { game, awaySeconds };
-    return { game: advanceAll(game, awaySeconds, OFFLINE_STEP_SECONDS).state, awaySeconds };
+    if (isStopped(game)) return { game, awaySeconds: 0 };
+    const awaySeconds = Math.min(AWAY_LIMIT_SECONDS, Math.max(0, (now - savedAt) / 1000));
+    return { game, awaySeconds };
   } catch {
     return null;
   }

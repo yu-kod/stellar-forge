@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMass, formatNumber } from "./format";
+import { formatDuration, formatMass, formatNumber } from "./format";
 
 describe("formatNumber：大きな数は仮数2桁と上付きの指数で書く", () => {
   it.each([
@@ -37,5 +37,16 @@ describe("formatMass：質量は M☉ で書く", () => {
     [25, "25.0 M☉"],
   ])("%d → %s", (value, expected) => {
     expect(formatMass(value)).toBe(expected);
+  });
+});
+
+describe("formatDuration", () => {
+  it.each([
+    [29, "0分"],
+    [120, "2分"],
+    [3600, "1時間0分"],
+    [2 * 3600 - 15 * 60, "1時間45分"],
+  ])("%d 秒は %s", (seconds, text) => {
+    expect(formatDuration(seconds)).toBe(text);
   });
 });

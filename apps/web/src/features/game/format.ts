@@ -35,3 +35,10 @@ export function formatNumber(value: number, unit?: string): string {
 export function formatMass(value: number): string {
   return `${value.toFixed(value < 10 ? 2 : 1)} M☉`;
 }
+
+/** 秒を「1時間45分」「2分」の形にする（分は四捨五入） */
+export function formatDuration(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  return hours > 0 ? `${hours}時間${minutes % 60}分` : `${minutes}分`;
+}

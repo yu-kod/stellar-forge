@@ -2,8 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { buyShopItem } from "@/game/actions";
 import { createGame } from "@/game/star";
-import { aboutToCollapse, collapsed } from "@/test-utils/game";
-import { OFFLINE_LIMIT_SECONDS, SAVE_VERSION, restoreSave, toSave } from "./save";
+import { AWAY_LIMIT_SECONDS } from "@/game/away";
+import { SAVE_VERSION, restoreSave, toSave } from "./save";
 import { LAYER2_AFTER } from "@/game/balance";
 
 const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
@@ -39,37 +39,37 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.star.agbStartedAt).toBeNull();
   });
 
-  it("閉じていた時間だけ星を進める", () => {
+  it("閉じていた時間を返す（進めるのは画面の側で少しずつ）", () => {
     const restored = restoreSave(toSave(createGame(), NOW), NOW + 60_000);
     expect(restored?.awaySeconds).toBe(60);
-    expect(restored?.game.star.time).toBeCloseTo(60);
+    expect(restored?.game.star.time).toBe(0);
   });
 
-  it("留守中の進行は30分まで", () => {
-    const restored = restoreSave(toSave(createGame(), NOW), NOW + 5 * 3600_000);
-    expect(OFFLINE_LIMIT_SECONDS).toBe(1800);
-    expect(restored?.awaySeconds).toBe(1800);
+  it("留守は12時間まで数える", () => {
+    const restored = restoreSave(toSave(createGame(), NOW), NOW + 20 * 3600_000);
+    expect(restored?.awaySeconds).toBe(AWAY_LIMIT_SECONDS);
+  });
+
+  it("終わった星で止まっていれば、留守の時間は数えない（超新星の画面から再開する）", () => {
+    const game = createGame();
+    game.star.end = "collapse";
+    const restored = restoreSave(toSave(game, NOW), NOW + 60_000);
+    expect(restored?.awaySeconds).toBe(0);
+  });
+
+  it("星団の星の次の質量も戻す", () => {
+    const game = createGame();
+    game.meta.supernovae = LAYER2_AFTER;
+    game.meta.dust.N = 30;
+    const withCluster = buyShopItem(game, "cluster");
+    const raw = JSON.parse(JSON.stringify(toSave(withCluster, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta.cluster[0]?.nextMass).toBe(7);
   });
 
   it("時計が戻っていても、時間を巻き戻さない", () => {
     const restored = restoreSave(toSave(createGame(), NOW), NOW - 60_000);
     expect(restored?.awaySeconds).toBe(0);
     expect(restored?.game.star.time).toBe(0);
-  });
-
-  it("自動で次の星を生めるなら、留守中も周回を続ける", () => {
-    const game = aboutToCollapse();
-    game.meta.supernovae = 10;
-    const restored = restoreSave(toSave(game, NOW), NOW + 600_000);
-    expect(restored?.game.meta.supernovae).toBeGreaterThan(10);
-    expect(restored?.game.star.end).toBeNull();
-  });
-
-  it("終わった星は進めない（超新星の画面から再開する）", () => {
-    const game = collapsed();
-    const restored = restoreSave(toSave(game, NOW), NOW + 60_000);
-    expect(restored?.game).toEqual(game);
-    expect(restored?.awaySeconds).toBe(0);
   });
 
   it("後から足した項目が古いセーブに無ければ、初期値で埋める", () => {
@@ -118,26 +118,6 @@ describe("restoreSave", () => {
     withCluster.meta.cluster[0]!.nextMass = null;
     const raw = JSON.parse(JSON.stringify(toSave(withCluster, NOW)));
     expect(restoreSave(raw, NOW)?.game.meta.cluster).toEqual(withCluster.meta.cluster);
-  });
-
-  it("留守中は星団の星も燃える", () => {
-    const game = createGame();
-    game.meta.supernovae = LAYER2_AFTER;
-    game.meta.dust.N = 30;
-    const withCluster = buyShopItem(game, "cluster");
-    const restored = restoreSave(toSave(withCluster, NOW), NOW + 60_000);
-    expect(restored?.game.meta.cluster[0]?.star.time).toBeCloseTo(60);
-  });
-
-  it("主星が超新星の画面で止まっていても、星団の星は燃え続ける", () => {
-    const game = collapsed();
-    game.meta.supernovae = LAYER2_AFTER;
-    game.meta.dust.N = 30;
-    game.meta.autoRebirth = false;
-    const withCluster = buyShopItem(game, "cluster");
-    const restored = restoreSave(toSave(withCluster, NOW), NOW + 60_000);
-    expect(restored?.game.star.end).toBe("collapse");
-    expect(restored?.game.meta.cluster[0]?.star.time).toBeCloseTo(60);
   });
 
   it("s過程の道も戻す", () => {
