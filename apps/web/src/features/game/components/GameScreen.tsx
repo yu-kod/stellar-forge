@@ -1,11 +1,14 @@
 import { createJsonStorage, type JsonStorage } from "@app/web-core";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AUTO_REBIRTH_AFTER, STAGES } from "@/game/balance";
+import { AUTO_REBIRTH_AFTER, SHOP, STAGES } from "@/game/balance";
+import { canAutoRebirth } from "@/game/actions";
+import { nextShopGoal } from "@/game/goal";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds } from "@/game/step";
 import { createGame } from "@/game/star";
-import { STAGE_IDS, type GameState } from "@/game/types";
+import { STAGE_IDS, type DustId, type GameState, type Target } from "@/game/types";
+import { ELEMENTS, TARGET_NAMES } from "../elements";
 import { formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
@@ -190,7 +193,42 @@ export function GameScreen({
   );
 }
 
-function GoalText({ game: { meta, star } }: { game: GameState }) {
+/** その星屑を一番多く残す狙い */
+const TARGET_FOR_DUST: Record<DustId, Target> = {
+  C: "C",
+  O: "O",
+  Ne: "Ne",
+  Mg: "O",
+  Si: "Si",
+  S: "Si",
+};
+
+function GoalText({ game }: { game: GameState }) {
+  const { meta, star } = game;
+  const next = STAGE_IDS.find((stage) => !isIgnited(star, stage));
+  if (meta.supernovae === 0 || (next === undefined && !canAutoRebirth(meta))) {
+    return <RunGoal game={game} />;
+  }
+  const goal = nextShopGoal(meta);
+  const spec = SHOP[goal.item];
+  if (goal.affordable) {
+    return (
+      <>
+        <b className="text-ignite">星屑タブ</b>で「{spec.name}」と交換できる
+      </>
+    );
+  }
+  return (
+    <>
+      次の目標：「<b className="text-ignite">{spec.name}</b>」まで{ELEMENTS[spec.currency].name}
+      の星屑 あと {goal.shortfall.toLocaleString("ja-JP")}（狙い：
+      {TARGET_NAMES[TARGET_FOR_DUST[spec.currency]]}）
+    </>
+  );
+}
+
+/** 星の中の目標（最初の星と、最後の数十秒） */
+function RunGoal({ game: { meta, star } }: { game: GameState }) {
   const next = STAGE_IDS.find((stage) => !isIgnited(star, stage));
   if (next === undefined) {
     return (
