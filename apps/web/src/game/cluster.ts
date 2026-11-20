@@ -74,6 +74,7 @@ export function advanceAll(
     clusterEvents.push(...result.events);
     meta = mergeSlot(meta, index, result.state, slot);
   });
+  meta = { ...meta, elapsed: meta.elapsed + seconds };
   const mergers = advanceBinaries(meta, seconds);
   clusterEvents.push(...mergers.events);
   meta = mergers.meta;

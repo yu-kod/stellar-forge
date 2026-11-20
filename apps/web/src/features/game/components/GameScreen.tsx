@@ -22,6 +22,7 @@ import { formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
 import { animationFrameTicker, type Ticker } from "../ticker";
+import { EndingDialog } from "./EndingDialog";
 import { Notices } from "./Notices";
 import { PeriodicTableView } from "./PeriodicTableView";
 import { RecordsView } from "./RecordsView";
@@ -232,7 +233,7 @@ export function GameScreen({
           <PeriodicTableView meta={game.meta} />
         </TabsContent>
         <TabsContent value="records" className="bg-card rounded-xl border p-4">
-          <RecordsView meta={game.meta} />
+          <RecordsView meta={game.meta} onEnding={() => dispatch({ type: "openEnding" })} />
         </TabsContent>
       </Tabs>
       <footer className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-3 pb-6 text-sm">
@@ -240,6 +241,11 @@ export function GameScreen({
         <ResetDialog onReset={reset} />
       </footer>
       <SupernovaDialog game={game} onRebirth={startNextStar} dispatch={dispatch} />
+      <EndingDialog
+        game={game}
+        open={model.ending && game.star.end === null}
+        onClose={() => dispatchAndSave({ type: "closeEnding" })}
+      />
     </main>
   );
 }

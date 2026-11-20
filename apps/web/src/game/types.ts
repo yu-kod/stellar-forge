@@ -96,6 +96,10 @@ export type Meta = {
   rProcess: RProcess;
   /** これまでの一番よい1周の稼ぎ（星屑ごとの毎秒）。次の目標の推定時間に使う */
   bestRate: Record<DustId, number>;
+  /** 遊んだ時間（留守の間も含む）[秒] */
+  elapsed: number;
+  /** 83マスが埋まった時の遊んだ時間 [秒]。まだなら null */
+  completedAt: number | null;
   /** 起こした Ia型超新星の数 */
   iaSupernovae: number;
   /** 見つけた軽い元素（リチウム〜マンガン）の原子番号 */

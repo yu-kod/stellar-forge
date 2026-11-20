@@ -17,6 +17,7 @@ import { canAutoRebirth } from "@/game/actions";
 import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { AWAY_CHUNK_SECONDS, AWAY_LIMIT_SECONDS, advanceAway, isStopped } from "@/game/away";
 import { formBinary, type MergerEvent } from "@/game/merger";
+import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { GameState, ShopId, StageId, Target } from "@/game/types";
@@ -52,6 +53,8 @@ export type Away = {
 export type Model = {
   game: GameState;
   away: Away | null;
+  /** エンディングの画面を開いているか */
+  ending: boolean;
   speed: Speed;
   notices: Notice[];
   nextNoticeId: number;
@@ -76,12 +79,17 @@ export type Action =
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
   | { type: "setSpeed"; speed: Speed }
+  | { type: "openEnding" }
+  | { type: "closeEnding" }
   | { type: "reset" };
 
 const NOTICE_LIMIT = 4;
 
 export function createModel(game: GameState, events: NoticeEvent[] = []): Model {
-  return notify({ game, away: null, speed: 1, notices: [], nextNoticeId: 1 }, events);
+  return notify(
+    { game, away: null, ending: false, speed: 1, notices: [], nextNoticeId: 1 },
+    events
+  );
 }
 
 function notify(model: Model, events: NoticeEvent[]): Model {
@@ -159,8 +167,27 @@ function catchUp(model: Model, away: Away): Model {
   ]);
 }
 
+/** 83マスが初めて埋まったら、その時の遊んだ時間を残してエンディングを開く */
+function checkComplete(model: Model): Model {
+  const { meta } = model.game;
+  if (meta.completedAt !== null || foundElements(meta).length < ALL_ELEMENTS) return model;
+  return {
+    ...model,
+    ending: true,
+    game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
+  };
+}
+
 export function gameReducer(model: Model, action: Action): Model {
+  return checkComplete(reduce(model, action));
+}
+
+function reduce(model: Model, action: Action): Model {
   switch (action.type) {
+    case "openEnding":
+      return { ...model, ending: true };
+    case "closeEnding":
+      return { ...model, ending: false };
     case "away": {
       if (action.seconds <= 0 || isStopped(model.game)) return model;
       const { meta } = model.game;

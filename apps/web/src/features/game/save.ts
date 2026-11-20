@@ -227,6 +227,11 @@ function parseMeta(value: unknown): Meta {
     sProcess: parseSProcess(raw.sProcess),
     rProcess: parseRProcess(raw.rProcess),
     bestRate: withDefaults(raw.bestRate, defaults.bestRate),
+    elapsed: raw.elapsed === undefined ? 0 : requireNumber(raw.elapsed),
+    completedAt:
+      raw.completedAt === undefined || raw.completedAt === null
+        ? null
+        : requireNumber(raw.completedAt),
     iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
     lightFound: parseNumbers(raw.lightFound),
   };

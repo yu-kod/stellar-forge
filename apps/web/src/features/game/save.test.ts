@@ -201,6 +201,19 @@ describe("restoreSave", () => {
     });
   });
 
+  it("遊んだ時間と、83マスが埋まった時を戻す。古いセーブに無ければ 0 と null", () => {
+    const game = createGame();
+    game.meta.elapsed = 5000;
+    game.meta.completedAt = 4000;
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({ elapsed: 5000, completedAt: 4000 });
+    raw.game.meta.completedAt = null;
+    expect(restoreSave(raw, NOW)?.game.meta.completedAt).toBeNull();
+    delete raw.game.meta.completedAt;
+    delete raw.game.meta.elapsed;
+    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({ elapsed: 0, completedAt: null });
+  });
+
   it("星団を持っているのに星が保存されていなければ、作り直す", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     save.game.meta.shop.cluster = 1;
