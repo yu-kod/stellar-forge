@@ -4,6 +4,31 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * 日本語フォントは画面に出す文字だけに絞って同梱する（scripts/build-fonts.mjs）。
+ * 文字を足したら npm run fonts -w @app/web で作り直す。足りなければ src/fonts.test.ts が落ちる
+ */
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/zen-kaku-gothic-new-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/zen-kaku-gothic-new-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Dela Gothic One";
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/dela-gothic-one-400.woff2") format("woff2");
+}
+
+/*
  * デザイントークン。色はここでだけ定義し、コンポーネントでは bg-primary などの
  * ユーティリティ経由で参照する（.claude/skills/ui-design.md）。
  * 星の内部という1つの世界に固定するため、テーマはダーク1種類だけ。
