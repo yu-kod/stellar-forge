@@ -2,6 +2,11 @@ import { buyStage, canBuyStage } from "./actions";
 import {
   AUTO_BUY_PER_STEP,
   CHANDRASEKHAR_MASS,
+  CNO_NITROGEN_PER_HYDROGEN,
+  LOW_MASS_CNO_NITROGEN_PER_HYDROGEN,
+  LOW_MASS_LIMIT,
+  LOW_MASS_MAX_TEMPERATURE,
+  WHITE_DWARF_HYDROGEN,
   DISCOVERY_THRESHOLD,
   FIZZLE_AFTER_SECONDS,
   FIZZLE_RATE,
@@ -29,7 +34,8 @@ export type GameEvent =
   | { type: "ignite"; stage: StageId }
   | { type: "discover"; element: ElementId }
   | { type: "collapse" }
-  | { type: "fizzle" };
+  | { type: "fizzle" }
+  | { type: "whiteDwarf" };
 
 export type StepResult = { state: GameState; events: GameEvent[] };
 
@@ -94,12 +100,25 @@ export function step(state: GameState, dt: number): StepResult {
       delta[id] += burned * share;
     }
     energy += burned * STAGES[stage].energyPerMass;
+    if (stage === "H") {
+      // CNO サイクル：燃えた水素に比例して、炭素を窒素に変える（炭素があるだけ）
+      const perHydrogen = isLowMass(state.star)
+        ? LOW_MASS_CNO_NITROGEN_PER_HYDROGEN
+        : CNO_NITROGEN_PER_HYDROGEN;
+      const converted = Math.min(state.star.mass.C, burned * perHydrogen);
+      delta.C -= converted;
+      delta.N += converted;
+    }
   }
   for (const id of ELEMENT_IDS) star.mass[id] = Math.max(0, star.mass[id] + delta[id]);
   star.energy += energy * energyMultiplier(meta);
   star.time += dt;
 
-  star.temperature = Math.max(star.temperature, temperatureFromWeight(coreWeight(star)));
+  const ceiling = isLowMass(star) ? LOW_MASS_MAX_TEMPERATURE : Infinity;
+  star.temperature = Math.min(
+    ceiling,
+    Math.max(star.temperature, temperatureFromWeight(coreWeight(star)))
+  );
   for (const stage of STAGE_IDS) {
     if (star.ignitedAt[stage] !== undefined || !isIgnited(star, stage)) continue;
     star.ignitedAt[stage] = star.time;
@@ -137,9 +156,15 @@ function autoBuy(state: GameState): GameState {
   return next;
 }
 
-/** 鉄のコアが限界に達したら崩壊、何も燃えなくなったら燃え尽き */
+/** 炭素燃焼に届かない軽い星か */
+export function isLowMass(star: Star): boolean {
+  return star.initialMass < LOW_MASS_LIMIT;
+}
+
+/** 鉄のコアが限界に達したら崩壊、軽い星は外層の水素が尽きたら白色矮星、何も燃えなくなったら燃え尽き */
 function endOfLife({ meta, star }: GameState): StarEnd {
   if (star.mass.Fe >= CHANDRASEKHAR_MASS) return "collapse";
+  if (isLowMass(star) && star.mass.H < WHITE_DWARF_HYDROGEN * star.initialMass) return "whiteDwarf";
   if (star.time > FIZZLE_AFTER_SECONDS && totalBurnRate(meta, star) < FIZZLE_RATE) return "fizzle";
   return null;
 }

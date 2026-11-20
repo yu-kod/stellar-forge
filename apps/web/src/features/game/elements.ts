@@ -13,6 +13,12 @@ export const ELEMENTS: Record<ElementId, ElementInfo> = {
   H: { name: "水素", discovery: "最初からある", bg: "bg-el-h", fill: "fill-el-h" },
   He: { name: "ヘリウム", discovery: "全エネルギー ×2", bg: "bg-el-he", fill: "fill-el-he" },
   C: { name: "炭素", discovery: "ヘリウム燃焼の速度 ×2", bg: "bg-el-c", fill: "fill-el-c" },
+  N: {
+    name: "窒素",
+    discovery: "惑星状星雲の星屑 ×1.5",
+    bg: "bg-el-n",
+    fill: "fill-el-n",
+  },
   O: { name: "酸素", discovery: "星屑 ×1.25", bg: "bg-el-o", fill: "fill-el-o" },
   Ne: { name: "ネオン", discovery: "炭素燃焼の速度 ×2", bg: "bg-el-ne", fill: "fill-el-ne" },
   Mg: {

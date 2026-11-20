@@ -5,10 +5,11 @@ import {
   rebirth,
   setAuto,
   setAutoRebirth,
+  setNextMass,
   setTarget,
 } from "@/game/actions";
 import { advanceRuns, type SupernovaEvent } from "@/game/advance";
-import { AUTO_REBIRTH_AFTER } from "@/game/balance";
+import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { GameState, ShopId, StageId, Target } from "@/game/types";
@@ -21,7 +22,8 @@ export type NoticeEvent =
   | { type: "born"; generation: number }
   | { type: "away"; seconds: number }
   | SupernovaEvent
-  | { type: "autoRebirthUnlocked" };
+  | { type: "autoRebirthUnlocked" }
+  | { type: "layer2Unlocked" };
 export type Notice = { id: number; event: NoticeEvent };
 
 export type Model = {
@@ -38,6 +40,7 @@ export type Action =
   | { type: "setAuto"; stage: StageId; on: boolean }
   | { type: "setTarget"; target: Target }
   | { type: "setAutoRebirth"; on: boolean }
+  | { type: "setNextMass"; mass: number | null }
   | { type: "buyShopItem"; item: ShopId }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
@@ -81,6 +84,8 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, game: setAuto(model.game, action.stage, action.on) };
     case "setTarget":
       return { ...model, game: setTarget(model.game, action.target) };
+    case "setNextMass":
+      return { ...model, game: setNextMass(model.game, action.mass) };
     case "setAutoRebirth":
       return { ...model, game: setAutoRebirth(model.game, action.on) };
     case "buyShopItem":
@@ -89,9 +94,12 @@ export function gameReducer(model: Model, action: Action): Model {
       if (!model.game.star.end) return model;
       const game = rebirth(model.game);
       const unlocked = game.meta.supernovae === AUTO_REBIRTH_AFTER && game.meta.autoRebirth;
+      const layer2 =
+        game.meta.supernovae === LAYER2_AFTER && game.meta.supernovae > model.game.meta.supernovae;
       return notify({ ...model, game }, [
         { type: "born", generation: game.star.generation },
         ...(unlocked ? [{ type: "autoRebirthUnlocked" } as const] : []),
+        ...(layer2 ? [{ type: "layer2Unlocked" } as const] : []),
       ]);
     }
     case "dismiss":

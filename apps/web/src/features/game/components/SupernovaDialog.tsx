@@ -6,18 +6,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CHANDRASEKHAR_MASS } from "@/game/balance";
+import { CHANDRASEKHAR_MASS, LAYER2_AFTER } from "@/game/balance";
 import { dustPreview, ejectedMetals } from "@/game/dust";
 import { DUST_IDS, type GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { ELEMENTS } from "../elements";
 import { formatMass } from "../format";
+import type { Action } from "../model";
 import { ElementChip } from "./ElementChip";
+import { MassPicker } from "./MassPicker";
 
-type Props = { game: GameState; onRebirth: () => void };
+type Props = { game: GameState; onRebirth: () => void; dispatch: (action: Action) => void };
+
+const END_TITLE = { collapse: "超新星", fizzle: "燃え尽きた", whiteDwarf: "白色矮星" } as const;
 
 /** 星が終わったら出る。次の星を生むまで閉じない */
-export function SupernovaDialog({ game, onRebirth }: Props) {
+export function SupernovaDialog({ game, onRebirth, dispatch }: Props) {
   const { meta, star } = game;
   const open = star.end !== null;
   const collapsed = star.end === "collapse";
@@ -42,12 +46,14 @@ export function SupernovaDialog({ game, onRebirth }: Props) {
         >
           <DialogHeader>
             <DialogTitle className="font-display text-ignite text-2xl font-normal">
-              {`第${star.generation}世代\u3000${collapsed ? "超新星" : "燃え尽きた"}`}
+              {`第${star.generation}世代\u3000${END_TITLE[star.end ?? "collapse"]}`}
             </DialogTitle>
             <DialogDescription>
               {collapsed
                 ? `鉄のコアが${CHANDRASEKHAR_MASS} M☉を超えて崩壊し、中性子星が残った。外層の重元素 ${formatMass(ejectedMetals(star))} が宇宙に放たれる。`
-                : "燃料が尽きた。放出量は少ない。"}
+                : star.end === "whiteDwarf"
+                  ? `赤色巨星になって外層を惑星状星雲として放ち、白色矮星が残った。重元素 ${formatMass(ejectedMetals(star))} が宇宙に放たれる（星屑 ×2）。`
+                  : "燃料が尽きた。放出量は少ない。"}
             </DialogDescription>
           </DialogHeader>
           <h3 id="ejected-label" className="text-sm font-medium">
@@ -80,6 +86,7 @@ export function SupernovaDialog({ game, onRebirth }: Props) {
               <ElementChip key={id} element={id} value={`+${gain[id]}`} />
             ))}
           </ul>
+          {meta.supernovae >= LAYER2_AFTER && <MassPicker meta={meta} dispatch={dispatch} />}
           <Button className="h-11 text-base font-bold active:scale-[0.97]" onClick={onRebirth}>
             放出された元素から次の星を生む
           </Button>

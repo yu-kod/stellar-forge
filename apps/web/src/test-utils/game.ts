@@ -6,7 +6,7 @@ import type { GameState } from "@/game/types";
 /** 全段階が点火し、鉄のコアが崩壊の直前まで育った星 */
 export function aboutToCollapse(): GameState {
   const game = createGame();
-  game.star.mass = { H: 10, He: 2, C: 1, O: 3, Ne: 1, Mg: 1, Si: 4, S: 1, Fe: 1.39 };
+  game.star.mass = { H: 10, He: 2, C: 1, N: 0, O: 3, Ne: 1, Mg: 1, Si: 4, S: 1, Fe: 1.39 };
   game.star.temperature = 2.7e9;
   game.star.time = 120;
   game.star.ignitedAt = { H: 0, He: 20, C: 50, Ne: 70, O: 80, Si: 90 };

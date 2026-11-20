@@ -63,10 +63,20 @@ function NoticeText({ event }: { event: NoticeEvent }) {
       const total = Object.values(event.gain).reduce((sum, n) => sum + n, 0);
       return (
         <>
-          <b className="text-ignite">第{event.generation}世代 超新星</b> 星屑 +{total}
+          <b className="text-ignite">
+            第{event.generation}世代 {event.end === "whiteDwarf" ? "白色矮星" : "超新星"}
+          </b>{" "}
+          星屑 +{total}
         </>
       );
     }
+    case "layer2Unlocked":
+      return (
+        <>
+          <b className="text-ignite">第2層</b>：次に生む星の質量を選べるようになった。8 M☉
+          未満の星は白色矮星になる
+        </>
+      );
     case "autoRebirthUnlocked":
       return <>超新星10回。これからは超新星のあと自動で次の星が生まれる（切り替えられる）</>;
     case "away":

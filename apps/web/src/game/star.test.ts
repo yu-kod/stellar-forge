@@ -18,7 +18,8 @@ describe("createGame", () => {
     const { meta } = createGame();
     expect(meta.supernovae).toBe(0);
     expect(meta.neutronStars).toBe(0);
-    expect(meta.dust).toEqual({ C: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 });
+    expect(meta.dust).toEqual({ C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 });
+    expect(meta).toMatchObject({ whiteDwarfs: 0, nextMass: null });
     expect(meta.discovered).toEqual({});
     expect(meta.autoOn).toEqual({ H: true, He: true, C: true, Ne: true, O: true, Si: false });
     expect(meta.target).toBe("Si");

@@ -17,6 +17,7 @@ export const MASS_NUMBER = {
   H: 1,
   He: 4,
   C: 12,
+  N: 14,
   O: 16,
   Ne: 20,
   Mg: 24,
@@ -151,6 +152,7 @@ export const FINAL_STAGE_FALLBACK_FUEL: readonly ElementId[] = [
   "Ne",
   "Mg",
   "C",
+  "N",
   "He",
 ];
 
@@ -169,6 +171,22 @@ export const AUTO_BUY_PER_STEP = 20;
 
 /** 自動で次の星を生めるようになるまでの超新星の回数 */
 export const AUTO_REBIRTH_AFTER = 10;
+
+/** 第2層（星の質量を選ぶ）を解放する超新星の回数 */
+export const LAYER2_AFTER = 5;
+/** これより軽い星は炭素燃焼に届かず、白色矮星になる [M☉] */
+export const LOW_MASS_LIMIT = 8;
+/** 軽い星のコア温度の上限 [K]（ヘリウム燃焼は点火するが炭素燃焼は点火しない） */
+export const LOW_MASS_MAX_TEMPERATURE = 3.5e8;
+/** 軽い星は、外層の水素が初期質量のこの割合を下回ると白色矮星になる */
+export const WHITE_DWARF_HYDROGEN = 0.1;
+/** 惑星状星雲（白色矮星になったとき）の星屑の倍率と、窒素を発見済みなら掛ける倍率 */
+export const PLANETARY_NEBULA_DUST = 2;
+export const NITROGEN_DUST_BONUS = 1.5;
+/** 水素燃焼で、燃えた水素に対して炭素を窒素に変える割合（CNO サイクル） */
+export const CNO_NITROGEN_PER_HYDROGEN = 0.05;
+/** 軽い星では外層の対流で炭素がよく混ざり、窒素をたくさん作る */
+export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.2;
 
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;

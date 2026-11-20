@@ -99,6 +99,16 @@ describe("advanceRuns：超新星のあと自動で次の星を生みながら�
       type: "supernova",
       generation: AUTO_REBIRTH_AFTER + 1,
       gain: dustPreview(ended.meta, ended.star),
+      end: "collapse",
     });
+  });
+});
+
+describe("advanceRuns：白色矮星", () => {
+  it("自動で次の星を生むときの知らせに、終わり方を載せる", () => {
+    const game = aboutToCollapse();
+    game.meta.supernovae = AUTO_REBIRTH_AFTER;
+    const { events } = advanceRuns(game, 2, 0.05);
+    expect(events).toContainEqual(expect.objectContaining({ type: "supernova", end: "collapse" }));
   });
 });

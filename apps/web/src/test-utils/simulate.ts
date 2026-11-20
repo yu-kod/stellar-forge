@@ -23,6 +23,7 @@ import {
 /** その元素を外層に残すために強化する段階（狙う星屑と同じ） */
 export const STAGES_FOR: Record<DustId, readonly StageId[]> = {
   C: TARGET_STAGES.C,
+  N: TARGET_STAGES.C,
   O: TARGET_STAGES.O,
   Ne: TARGET_STAGES.Ne,
   Mg: TARGET_STAGES.O,
@@ -69,7 +70,15 @@ export function playStar(start: GameState, strategy: Strategy, dt = 0.1): GameSt
 }
 
 /** その星屑を一番多く残す狙い */
-const TARGET_FOR: Record<DustId, Target> = { C: "C", O: "O", Ne: "Ne", Mg: "O", Si: "Si", S: "Si" };
+const TARGET_FOR: Record<DustId, Target> = {
+  C: "C",
+  N: "C",
+  O: "O",
+  Ne: "Ne",
+  Mg: "O",
+  Si: "Si",
+  S: "Si",
+};
 
 /**
  * 一番近く買える恒久強化を狙い、その通貨の元素を残すように遊び続ける。

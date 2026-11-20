@@ -64,6 +64,7 @@
   --el-h: #bcd7ff;
   --el-he: #ffe08a;
   --el-c: #ffad5c;
+  --el-n: #6fd6c4;
   --el-o: #ff6f61;
   --el-ne: #ff5fa2;
   --el-mg: #d77bff;
@@ -100,6 +101,7 @@
   --color-el-h: var(--el-h);
   --color-el-he: var(--el-he);
   --color-el-c: var(--el-c);
+  --color-el-n: var(--el-n);
   --color-el-o: var(--el-o);
   --color-el-ne: var(--el-ne);
   --color-el-mg: var(--el-mg);

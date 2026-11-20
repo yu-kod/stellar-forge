@@ -1,11 +1,11 @@
-export const ELEMENT_IDS = ["H", "He", "C", "O", "Ne", "Mg", "Si", "S", "Fe"] as const;
+export const ELEMENT_IDS = ["H", "He", "C", "N", "O", "Ne", "Mg", "Si", "S", "Fe"] as const;
 export type ElementId = (typeof ELEMENT_IDS)[number];
 
 export const STAGE_IDS = ["H", "He", "C", "Ne", "O", "Si"] as const;
 export type StageId = (typeof STAGE_IDS)[number];
 
 /** 星屑になる元素。水素・ヘリウム・鉄は星屑にならない */
-export const DUST_IDS = ["C", "O", "Ne", "Mg", "Si", "S"] as const;
+export const DUST_IDS = ["C", "N", "O", "Ne", "Mg", "Si", "S"] as const;
 export type DustId = (typeof DUST_IDS)[number];
 
 /** 狙う星屑。燃焼をどこまで強化するか（玉ねぎをどこまで焼くか）の4段階 */
@@ -17,7 +17,7 @@ export type ShopId = (typeof SHOP_IDS)[number];
 
 export type Composition = Record<ElementId, number>;
 
-export type StarEnd = null | "collapse" | "fizzle";
+export type StarEnd = null | "collapse" | "fizzle" | "whiteDwarf";
 
 export type Star = {
   generation: number;
@@ -47,6 +47,10 @@ export type Meta = {
   dust: Record<DustId, number>;
   supernovae: number;
   neutronStars: number;
+  /** 軽い星が残した白色矮星の数（第3層の材料） */
+  whiteDwarfs: number;
+  /** 次に生む星の質量 [M☉]。null なら上限。第2層の解放後に効く */
+  nextMass: number | null;
   discovered: Partial<Record<ElementId, true>>;
   shop: Record<ShopId, number>;
   autoOn: Record<StageId, boolean>;

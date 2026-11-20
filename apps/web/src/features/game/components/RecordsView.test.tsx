@@ -9,7 +9,7 @@ function record(overrides: Partial<SupernovaRecord> = {}): SupernovaRecord {
     generation: 1,
     time: 132.4,
     ejected: 12.34,
-    gain: { C: 3, O: 5, Ne: 0, Mg: 0, Si: 2, S: 0 },
+    gain: { C: 3, N: 0, O: 5, Ne: 0, Mg: 0, Si: 2, S: 0 },
     end: "collapse",
     ...overrides,
   };
@@ -42,7 +42,7 @@ describe("RecordsView", () => {
   it("これまでの星の寿命・放出した重元素・得た星屑を並べる", () => {
     const meta = createMeta();
     meta.log = [
-      record({ generation: 2, gain: { C: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 } }),
+      record({ generation: 2, gain: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 } }),
       record(),
     ];
     render(<RecordsView meta={meta} />);

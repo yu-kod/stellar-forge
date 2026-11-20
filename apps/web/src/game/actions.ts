@@ -65,6 +65,12 @@ export function setTarget(state: GameState, target: Target): GameState {
   return { ...state, meta: { ...state.meta, autoOn, target } };
 }
 
+/** 次に生む星の質量 [M☉] を決める。1 以上の整数にそろえる。null なら上限 */
+export function setNextMass(state: GameState, mass: number | null): GameState {
+  const nextMass = mass === null ? null : Math.max(1, Math.floor(mass));
+  return { ...state, meta: { ...state.meta, nextMass } };
+}
+
 /** 超新星のあと自動で次の星を生むかを切り替える */
 export function setAutoRebirth(state: GameState, on: boolean): GameState {
   return { ...state, meta: { ...state.meta, autoRebirth: on } };
@@ -90,8 +96,9 @@ export function rebirth(state: GameState): GameState {
   const nextMeta: Meta = {
     ...meta,
     dust: Object.fromEntries(DUST_IDS.map((id) => [id, meta.dust[id] + gain[id]])) as Meta["dust"],
-    supernovae: meta.supernovae + 1,
+    supernovae: meta.supernovae + (star.end === "whiteDwarf" ? 0 : 1),
     neutronStars: meta.neutronStars + (star.end === "collapse" ? 1 : 0),
+    whiteDwarfs: meta.whiteDwarfs + (star.end === "whiteDwarf" ? 1 : 0),
     log: [record, ...meta.log].slice(0, LOG_LIMIT),
   };
   return { meta: nextMeta, star: createStar(nextMeta) };

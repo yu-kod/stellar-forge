@@ -2,13 +2,14 @@ import { canAutoRebirth, rebirth } from "./actions";
 import { MAX_STEP_SECONDS } from "./balance";
 import { dustPreview } from "./dust";
 import { step, type GameEvent, type StepResult } from "./step";
-import type { DustId, GameState } from "./types";
+import type { DustId, GameState, StarEnd } from "./types";
 
 /** 自動で次の星を生んだときの知らせ */
 export type SupernovaEvent = {
   type: "supernova";
   generation: number;
   gain: Record<DustId, number>;
+  end: Exclude<StarEnd, null>;
 };
 export type RunsResult = { state: GameState; events: (GameEvent | SupernovaEvent)[] };
 
@@ -50,7 +51,12 @@ export function advanceRuns(
     remaining -= current.star.time - before;
     if (!current.star.end || !canAutoRebirth(current.meta) || remaining <= 0) break;
     const gain = dustPreview(current.meta, current.star);
-    events.push({ type: "supernova", generation: current.star.generation, gain });
+    events.push({
+      type: "supernova",
+      generation: current.star.generation,
+      gain,
+      end: current.star.end,
+    });
     current = rebirth(current);
   }
   return { state: current, events };
