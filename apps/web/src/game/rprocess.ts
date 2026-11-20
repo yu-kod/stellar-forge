@@ -8,15 +8,37 @@ const MASS_PER_BIN = 4;
 /** 中性子星を残す一番軽い星 [M☉] */
 const LIGHTEST_PROGENITOR = 8;
 
+/** r過程の道（ガリウム〜ウラン） */
+export const R_PATH_START = 31;
+export const R_PATH_END = 92;
+
+/** 重力波で近づいている連星。a・b は中性子星の段 */
+export type Binary = { a: number; b: number; remaining: number };
+
 export type RProcess = {
   /** 第4層が解放されたか */
   unlocked: boolean;
   /** 中性子星の在庫。添字は NEUTRON_STAR_MASSES の段 */
   pool: number[];
+  /** 合体を待つ連星 */
+  binaries: Binary[];
+  /** r過程で作った各元素の量。添字は Z − 31 */
+  amounts: number[];
+  /** r過程で発見した元素の原子番号 */
+  discovered: number[];
+  /** 合体の回数 */
+  mergers: number;
 };
 
 export function createRProcess(): RProcess {
-  return { unlocked: false, pool: NEUTRON_STAR_MASSES.map(() => 0) };
+  return {
+    unlocked: false,
+    pool: NEUTRON_STAR_MASSES.map(() => 0),
+    binaries: [],
+    amounts: Array.from({ length: R_PATH_END - R_PATH_START + 1 }, () => 0),
+    discovered: [],
+    mergers: 0,
+  };
 }
 
 /** 親の星の初期質量から、残す中性子星の段 */

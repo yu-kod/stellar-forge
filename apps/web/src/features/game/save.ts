@@ -1,4 +1,4 @@
-import { createRProcess, type RProcess } from "@/game/rprocess";
+import { createRProcess, type Binary, type RProcess } from "@/game/rprocess";
 import { AWAY_LIMIT_SECONDS, isStopped } from "@/game/away";
 import { createSProcess, type SProcess } from "@/game/sprocess";
 import { createSlot } from "@/game/actions";
@@ -171,7 +171,26 @@ function parseRProcess(value: unknown): RProcess {
   const { unlocked } = withDefaults({ unlocked: raw.unlocked }, { unlocked: fresh.unlocked });
   const pool = parseNumbers(raw.pool);
   if (pool.length !== fresh.pool.length) throw new InvalidSave();
-  return { unlocked, pool };
+  const amounts = raw.amounts === undefined ? fresh.amounts : parseNumbers(raw.amounts);
+  if (amounts.length !== fresh.amounts.length) throw new InvalidSave();
+  if (raw.binaries !== undefined && !Array.isArray(raw.binaries)) throw new InvalidSave();
+  return {
+    unlocked,
+    pool,
+    amounts,
+    binaries: ((raw.binaries as unknown[] | undefined) ?? []).map(parseBinary),
+    discovered: parseNumbers(raw.discovered),
+    mergers: raw.mergers === undefined ? 0 : requireNumber(raw.mergers),
+  };
+}
+
+function parseBinary(value: unknown): Binary {
+  const raw = requireObject(value);
+  return {
+    a: requireNumber(raw.a),
+    b: requireNumber(raw.b),
+    remaining: requireNumber(raw.remaining),
+  };
 }
 
 function parseNumbers(value: unknown): number[] {

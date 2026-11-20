@@ -172,11 +172,33 @@ describe("restoreSave", () => {
 
   it("中性子星の在庫も戻し、古いセーブに無ければ空で始める", () => {
     const game = createGame();
-    game.meta.rProcess = { unlocked: true, pool: [1, 0, 0, 0, 0, 0, 0, 0, 5] };
+    game.meta.rProcess = {
+      ...game.meta.rProcess,
+      unlocked: true,
+      pool: [1, 0, 0, 0, 0, 0, 0, 0, 5],
+      binaries: [{ a: 0, b: 8, remaining: 120 }],
+      discovered: [63],
+      mergers: 4,
+    };
+    game.meta.rProcess.amounts[3] = 2.5;
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
     expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual(game.meta.rProcess);
     delete raw.game.meta.rProcess;
     expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual(createGame().meta.rProcess);
+  });
+
+  it("r過程の道・連星・合体の回数が古いセーブに無ければ、空で始める", () => {
+    const game = createGame();
+    game.meta.rProcess.unlocked = true;
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    delete raw.game.meta.rProcess.amounts;
+    delete raw.game.meta.rProcess.binaries;
+    delete raw.game.meta.rProcess.discovered;
+    delete raw.game.meta.rProcess.mergers;
+    expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual({
+      ...createGame().meta.rProcess,
+      unlocked: true,
+    });
   });
 
   it("星団を持っているのに星が保存されていなければ、作り直す", () => {
@@ -210,6 +232,12 @@ describe("restoreSave", () => {
     ["中性子星の在庫の段の数が違う", saveWith((g) => (g.meta.rProcess.pool = [1]))],
     ["中性子星の在庫が配列でない", saveWith((g) => (g.meta.rProcess.pool = 1))],
     ["第4層の解放が真偽値でない", saveWith((g) => (g.meta.rProcess.unlocked = 1))],
+    ["r過程の道の長さが違う", saveWith((g) => (g.meta.rProcess.amounts = [1]))],
+    ["連星が配列でない", saveWith((g) => (g.meta.rProcess.binaries = {}))],
+    [
+      "連星の時間が数でない",
+      saveWith((g) => (g.meta.rProcess.binaries = [{ a: 0, b: 1, remaining: "x" }])),
+    ],
     ["軽い元素が数でない", saveWith((g) => (g.meta.lightFound = ["Li"]))],
     [
       "星団の星の狙いがない",

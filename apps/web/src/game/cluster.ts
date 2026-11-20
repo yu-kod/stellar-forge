@@ -3,6 +3,7 @@ export { createSlot } from "./actions";
 import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
 import { dustPreview } from "./dust";
+import { advanceBinaries, type MergerEvent } from "./merger";
 import { unlockLayer4 } from "./rprocess";
 import { blowWinds, heavyMultiplier, windKept } from "./sprocess";
 import type { ClusterSlot, GameState, Meta, Target } from "./types";
@@ -64,15 +65,18 @@ export function advanceAll(
   state: GameState,
   seconds: number,
   maxStep: number = MAX_STEP_SECONDS
-): RunsResult & { clusterEvents: RunsResult["events"] } {
+): RunsResult & { clusterEvents: (RunsResult["events"][number] | MergerEvent)[] } {
   const main = advanceRuns(state, seconds, maxStep);
   let meta = main.state.meta;
-  const clusterEvents: RunsResult["events"] = [];
+  const clusterEvents: (RunsResult["events"][number] | MergerEvent)[] = [];
   meta.cluster.forEach((slot, index) => {
     const result = advanceSlot(slotView(meta, slot), seconds, maxStep);
     clusterEvents.push(...result.events);
     meta = mergeSlot(meta, index, result.state, slot);
   });
+  const mergers = advanceBinaries(meta, seconds);
+  clusterEvents.push(...mergers.events);
+  meta = mergers.meta;
   return {
     state: unlockLayer4(autoIa({ meta: winds(meta, seconds), star: main.state.star })),
     events: main.events,
