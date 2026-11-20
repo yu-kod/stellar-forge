@@ -384,6 +384,20 @@ describe("GameScreen：星屑の交換", () => {
     expect(within(item).getByRole("button", { name: /交換/ })).toBeDisabled();
   });
 
+  it("第2層の強化は、第2層が解放されてから見せる", async () => {
+    const before = renderGame();
+    await before.user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.queryByRole("article", { name: "星間ガスの再利用" })).not.toBeInTheDocument();
+    before.unmount();
+
+    const game = createGame();
+    game.meta.supernovae = 5;
+    const after = renderGame(game);
+    await after.user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByRole("heading", { name: "第2層（窒素）" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "星間ガスの再利用" })).toBeInTheDocument();
+  });
+
   it("1回きりの強化は、取得したらそう見せる", async () => {
     const game = createGame();
     game.meta.shop.auto = 1;

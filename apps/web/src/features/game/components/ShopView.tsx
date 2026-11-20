@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { Button } from "@/components/ui/button";
 import { canBuyShopItem, shopCost } from "@/game/actions";
+import { isShopItemOpen } from "@/game/shop";
 import { SHOP } from "@/game/balance";
 import { DUST_IDS, SHOP_IDS, type Meta, type ShopId } from "@/game/types";
 import { ELEMENTS } from "../elements";
@@ -24,10 +25,23 @@ export function ShopView({ meta, dispatch }: Props) {
         欲しい星屑に合わせて、どの燃焼を強化するかを変えよう。例：炭素が欲しいなら炭素燃焼を強化しない。ケイ素が欲しいなら酸素燃焼まで強化する。
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        {SHOP_IDS.map((item) => (
+        {SHOP_IDS.filter((item) => SHOP[item].layer === undefined).map((item) => (
           <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
         ))}
       </div>
+      {isShopItemOpen(meta, "recycle") && (
+        <>
+          <h3 className="mt-2 text-base font-semibold">第2層（窒素）</h3>
+          <p className="text-muted-foreground text-sm">
+            窒素は主に軽い星（8 M☉ 未満）が白色矮星になるときに手に入る。
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SHOP_IDS.filter((item) => SHOP[item].layer === 2).map((item) => (
+              <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

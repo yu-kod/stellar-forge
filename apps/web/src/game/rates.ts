@@ -1,6 +1,8 @@
 import {
   CNO_BONUS_PER_LEVEL,
   CROSS_SECTION_PER_LEVEL,
+  LOW_MASS_LIMIT,
+  PULSE_PER_LEVEL,
   FINAL_PHASE_COST,
   MAGNESIUM_DISCOUNT,
   MILESTONE_EVERY,
@@ -19,6 +21,7 @@ export function rateConstant(meta: Meta, star: Star, stage: StageId): number {
   if (stage === "H") k *= 1 + CNO_BONUS_PER_LEVEL * meta.shop.cno;
   const boost = DISCOVERY_BOOST[stage];
   if (boost && meta.discovered[boost]) k *= 2;
+  if (stage === "He" && star.initialMass < LOW_MASS_LIMIT) k *= PULSE_PER_LEVEL ** meta.shop.pulse;
   return k;
 }
 

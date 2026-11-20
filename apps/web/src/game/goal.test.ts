@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SHOP } from "./balance";
 import { nextShopGoal } from "./goal";
 import { createMeta } from "./star";
 
@@ -21,5 +22,13 @@ describe("nextShopGoal：次に狙う星屑の強化", () => {
     meta.shop.auto = 1;
     meta.dust.S = 3;
     expect(nextShopGoal(meta)?.item).not.toBe("auto");
+  });
+});
+
+describe("nextShopGoal と層", () => {
+  it("まだ解放されていない層の強化は選ばない", () => {
+    const meta = createMeta();
+    meta.dust.N = 9;
+    expect(SHOP[nextShopGoal(meta).item].layer).toBeUndefined();
   });
 });

@@ -8,6 +8,7 @@ import {
 } from "./balance";
 import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
+import { isShopItemOpen } from "./shop";
 import { createStar } from "./star";
 import {
   DUST_IDS,
@@ -111,6 +112,7 @@ export function shopCost(meta: Meta, item: ShopId): number {
 
 export function canBuyShopItem(meta: Meta, item: ShopId): boolean {
   const spec = SHOP[item];
+  if (!isShopItemOpen(meta, item)) return false;
   if (spec.maxLevel !== undefined && meta.shop[item] >= spec.maxLevel) return false;
   return meta.dust[spec.currency] >= shopCost(meta, item);
 }

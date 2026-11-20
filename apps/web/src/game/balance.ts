@@ -184,7 +184,7 @@ export const WHITE_DWARF_HYDROGEN = 0.1;
 export const PLANETARY_NEBULA_DUST = 2;
 export const NITROGEN_DUST_BONUS = 1.5;
 /** 水素燃焼で、燃えた水素に対して炭素を窒素に変える割合（CNO サイクル） */
-export const CNO_NITROGEN_PER_HYDROGEN = 0.05;
+export const CNO_NITROGEN_PER_HYDROGEN = 0.01;
 /** 軽い星では外層の対流で炭素がよく混ざり、窒素をたくさん作る */
 export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.2;
 
@@ -214,6 +214,8 @@ export type ShopSpec = {
   costGrowth: number;
   /** 1回だけ買える強化は 1 */
   maxLevel?: number;
+  /** 解放される層。省略すると第1層 */
+  layer?: 2;
 };
 
 export const SHOP: Record<ShopId, ShopSpec> = {
@@ -275,7 +277,36 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     costGrowth: 1,
     maxLevel: 1,
   },
+  recycle: {
+    name: "星間ガスの再利用",
+    currency: "N",
+    description: "すべての星屑 ×1.25",
+    baseCost: 10,
+    costGrowth: 2.5,
+    layer: 2,
+  },
+  nebula: {
+    name: "惑星状星雲の濃縮",
+    currency: "N",
+    description: "白色矮星になったときの星屑 ×1.5",
+    baseCost: 5,
+    costGrowth: 2.5,
+    layer: 2,
+  },
+  pulse: {
+    name: "熱パルス",
+    currency: "N",
+    description: "軽い星のヘリウム燃焼の速度 ×2",
+    baseCost: 8,
+    costGrowth: 3,
+    layer: 2,
+  },
 };
 
 /** 超新星の記録を残す件数 */
+/** 第2層の強化（窒素）の効果 */
+export const RECYCLE_PER_LEVEL = 1.25;
+export const NEBULA_PER_LEVEL = 1.5;
+export const PULSE_PER_LEVEL = 2;
+
 export const LOG_LIMIT = 20;
