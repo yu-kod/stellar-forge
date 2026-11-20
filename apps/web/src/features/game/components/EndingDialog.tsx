@@ -77,6 +77,7 @@ export function EndingDialog({ game, open, onClose }: Props) {
             );
           })}
         </ol>
+        <p className="text-muted-foreground text-xs">主な起源（簡略化）</p>
         <ul aria-label="元素の起源" className="flex flex-wrap gap-x-3 gap-y-1 text-sm">
           {(Object.keys(ORIGINS) as Origin[]).map((origin) => (
             <li key={origin} className="flex items-center gap-1.5">

@@ -20,7 +20,7 @@ import { MassPicker } from "./MassPicker";
 
 type Props = { game: GameState; onRebirth: () => void; dispatch: (action: Action) => void };
 
-const END_TITLE = { collapse: "超新星", fizzle: "燃え尽きた", whiteDwarf: "白色矮星" } as const;
+const END_TITLE = { collapse: "超新星", fizzle: "暗い超新星", whiteDwarf: "白色矮星" } as const;
 
 /** 星が終わったら出る。次の星を生むまで閉じない */
 export function SupernovaDialog({ game, onRebirth, dispatch }: Props) {
@@ -56,7 +56,7 @@ export function SupernovaDialog({ game, onRebirth, dispatch }: Props) {
                 ? `鉄のコアが${CHANDRASEKHAR_MASS} M☉を超えて崩壊し、${neutronStarBin(star.initialMass) === null ? "ブラックホール" : "中性子星"}が残った。外層の重元素 ${formatMass(ejectedMetals(star))} が宇宙に放たれる。`
                 : star.end === "whiteDwarf"
                   ? `赤色巨星になって外層を惑星状星雲として放ち、白色矮星が残った。重元素 ${formatMass(ejectedMetals(star))} が宇宙に放たれる（星屑 ×2）。`
-                  : "燃料が尽きた。放出量は少ない。"}
+                  : "燃料を燃やしきったが鉄のコアが育ちきらず、弱い爆発になった。物質の多くがブラックホールに落ち込んだので、放出量は少ない。"}
             </DialogDescription>
           </DialogHeader>
           <h3 id="ejected-label" className="text-sm font-medium">
