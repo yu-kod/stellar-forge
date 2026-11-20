@@ -150,7 +150,6 @@ describe("GameScreen：第3層の強化と自動化", () => {
 
     expect(within(picker).getByRole("radio", { name: "10" })).toBeChecked();
   });
-
 });
 
 describe("第3層の解放を知らせる", () => {
