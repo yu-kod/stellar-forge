@@ -325,12 +325,12 @@ describe("GameScreen：超新星", () => {
     expect(within(ejected).getByRole("listitem", { name: "ケイ素 4.00 M☉" })).toBeInTheDocument();
   });
 
-  it("燃え尽きた星は、そう伝える", () => {
+  it("鉄のコアが育ちきらずに終わった星は、暗い超新星として伝える", () => {
     const game = collapsed();
     game.star.end = "fizzle";
     renderGame(game);
-    expect(screen.getByRole("dialog", { name: "第1世代　燃え尽きた" })).toHaveTextContent(
-      "燃料が尽きた"
+    expect(screen.getByRole("dialog", { name: "第1世代　暗い超新星" })).toHaveTextContent(
+      "物質の多くがブラックホールに落ち込んだ"
     );
   });
 

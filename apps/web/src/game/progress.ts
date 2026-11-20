@@ -43,15 +43,21 @@ export const ORIGINS = {
 export type Origin = keyof typeof ORIGINS;
 
 const R_ONLY = new Set([63, 76, 77, 78, 79]);
+/** r過程が主な元素（太陽系の量の8割ほど以上） */
+const R_DOMINANT = new Set([52, 53, 54, 63, 64, 65, 66, 67, 68, 69, 75, 76, 77, 78, 79]);
 
-/** 原子番号の主な起源。ゲームで見つける場（第1〜4層）に合わせてまとめたもの */
+/**
+ * 原子番号の主な起源（簡略化）。鉄族（V〜Ni）は Ia型超新星、Cu〜Sr は大質量星の中の弱い s過程、
+ * r過程が主な元素は中性子星合体、残りの重い元素は軽い星の s過程
+ */
 export function originOf(z: number): Origin {
   if (z <= 2) return "bigBang";
   if (z <= 5) return "cosmicRay";
   if (z === 6 || z === 7 || z === 9) return "lowMass";
   if (z <= 22) return "massive";
-  if (z <= 26) return "typeIa";
-  return R_ONLY.has(z) ? "merger" : "lowMass";
+  if (z <= 28) return "typeIa";
+  if (z <= 38) return "massive";
+  return R_DOMINANT.has(z) ? "merger" : "lowMass";
 }
 
 /** Ia型超新星で作る軽い元素と、要る回数 */

@@ -24,7 +24,7 @@ const PLATINUM = 78;
 const GOLD = 79;
 const THORIUM = 90;
 const URANIUM = 92;
-/** 第4層で発見する元素（r過程だけで作るもの。周期表の83マスに数える） */
+/** ほぼ r過程だけで作る元素（このゲームの s過程の道では作らない。周期表の83マスに数える） */
 export const R_ONLY_ELEMENTS: readonly number[] = [EUROPIUM, OSMIUM, IRIDIUM, PLATINUM, GOLD];
 /**
  * r過程が主な元素（太陽系の量の8割ほど以上が r過程）。発見の順に並べる。
