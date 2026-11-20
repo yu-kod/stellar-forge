@@ -5,6 +5,9 @@ import { dustPreview } from "./dust";
 import { createGame } from "./star";
 
 /** docs/design.md「ペーシング目標」をテストで固定する */
+/** 何十分ぶんも遊ぶシミュレーションは、CI の遅いマシンでも終わるよう長めに待つ */
+const SIMULATION_TIMEOUT_MS = 60_000;
+
 describe("バランス", () => {
   it("最初の星は、何も考えず全部強化しても 90〜180 秒で超新星になる", () => {
     const { star } = playStar(createGame(), greedy);
@@ -38,23 +41,31 @@ describe("バランス", () => {
     expect(state.meta.shop.auto).toBe(1);
   });
 
-  it("1時間遊ぶあいだ、星屑の強化を15分以上買えない区間がない", () => {
-    const { purchases } = playCampaign(60 * 60);
-    const gaps = purchases.slice(1).map((t, i) => t - purchases[i]!);
-    expect(Math.max(...gaps)).toBeLessThan(15 * 60);
-    expect(purchases.at(-1)).toBeGreaterThan(45 * 60);
-  });
+  it(
+    "1時間遊ぶあいだ、星屑の強化を15分以上買えない区間がない",
+    () => {
+      const { purchases } = playCampaign(60 * 60);
+      const gaps = purchases.slice(1).map((t, i) => t - purchases[i]!);
+      expect(Math.max(...gaps)).toBeLessThan(15 * 60);
+      expect(purchases.at(-1)).toBeGreaterThan(45 * 60);
+    },
+    SIMULATION_TIMEOUT_MS
+  );
 
-  it("第2層では、窒素を狙うときに軽い星を混ぜたほうが、重い星だけより速く進む", () => {
-    const { state: start } = playCampaign(20 * 60);
-    const layer1Levels = (state: GameState) =>
-      (["mass", "cno", "yield", "xs", "boom", "accel"] as const).reduce(
-        (sum, id) => sum + state.meta.shop[id],
-        0
-      );
-    const heavy = playCampaign(30 * 60, { start });
-    const mixed = playCampaign(30 * 60, { start, lightMassForNitrogen: 7 });
-    expect(mixed.state.meta.whiteDwarfs).toBeGreaterThan(0);
-    expect(layer1Levels(mixed.state)).toBeGreaterThan(layer1Levels(heavy.state) + 5);
-  });
+  it(
+    "第2層では、窒素を狙うときに軽い星を混ぜたほうが、重い星だけより速く進む",
+    () => {
+      const { state: start } = playCampaign(20 * 60);
+      const layer1Levels = (state: GameState) =>
+        (["mass", "cno", "yield", "xs", "boom", "accel"] as const).reduce(
+          (sum, id) => sum + state.meta.shop[id],
+          0
+        );
+      const heavy = playCampaign(30 * 60, { start });
+      const mixed = playCampaign(30 * 60, { start, lightMassForNitrogen: 7 });
+      expect(mixed.state.meta.whiteDwarfs).toBeGreaterThan(0);
+      expect(layer1Levels(mixed.state)).toBeGreaterThan(layer1Levels(heavy.state) + 5);
+    },
+    SIMULATION_TIMEOUT_MS
+  );
 });
