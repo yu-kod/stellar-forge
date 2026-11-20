@@ -11,6 +11,7 @@ import {
   bestPair,
   mergerSeconds,
   nextRDiscovery,
+  rGoal,
   rThreshold,
   reachName,
   predictMerger,
@@ -242,5 +243,19 @@ describe("届くところの名前と、次に作る元素", () => {
     expect(nextRDiscovery(meta.rProcess)).toEqual({ z: 78, progress: 0.5 });
     meta.rProcess.discovered = [...R_ELEMENTS];
     expect(nextRDiscovery(meta.rProcess)).toBeNull();
+  });
+});
+
+describe("周期表の先（トリウム・ウラン）", () => {
+  it("金より多くの放出物が要る（完結の後の目標）", () => {
+    const needed = (z: number) => rThreshold(z) / rWeight(z);
+    expect(needed(90)).toBeGreaterThan(needed(79));
+    expect(needed(92)).toBeGreaterThan(needed(79));
+  });
+
+  it("r過程の元素をそろえたら、作りたい元素はウラン", () => {
+    const meta = layer4();
+    meta.rProcess.discovered = [...R_ELEMENTS];
+    expect(rGoal(meta)).toBe(92);
   });
 });

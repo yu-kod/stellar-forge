@@ -290,6 +290,9 @@ function GoalText({ game }: { game: GameState }) {
       次の目標：「<b className="text-ignite">{spec.name}</b>」まで{currencyName(spec.currency)} あと{" "}
       {formatNumber(goal.shortfall)}
       {targetHint(spec.currency)}
+      {spec.currency === "S" && meta.bestRate.S === 0 && (
+        <>。硫黄はケイ素燃焼が鉄に変えてしまう。「より重い星」で星を大きくすると外層に残る</>
+      )}
     </>
   );
 }
