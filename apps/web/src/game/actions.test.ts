@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buyShopItem, buyStage, buyStageMax, rebirth } from "./actions";
+import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto } from "./actions";
 import { createGame } from "./star";
 
 describe("buyStage", () => {
@@ -115,5 +115,20 @@ describe("buyShopItem", () => {
     const once = buyShopItem(game, "auto");
     expect(once.meta.shop.auto).toBe(1);
     expect(buyShopItem(once, "auto")).toBe(once);
+  });
+});
+
+describe("setAuto（段階ごとの自動強化の ON/OFF）", () => {
+  it("指定した段階だけを切り替え、渡した状態は書き換えない", () => {
+    const game = createGame();
+    const next = setAuto(game, "He", false);
+    expect(next.meta.autoOn.He).toBe(false);
+    expect(next.meta.autoOn.H).toBe(true);
+    expect(game.meta.autoOn.He).toBe(true);
+  });
+
+  it("最後の段階は強化できないので切り替えない", () => {
+    const game = createGame();
+    expect(setAuto(game, "Si", true)).toBe(game);
   });
 });

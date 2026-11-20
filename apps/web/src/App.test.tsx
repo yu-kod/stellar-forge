@@ -1,24 +1,14 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import App from "./App";
-import { returning } from "./test-utils/guest";
 import { renderWithProviders } from "./test-utils/render";
 
 describe("App", () => {
-  it("/ でトップページを表示する", async () => {
+  it("/ でゲームの画面を表示する", () => {
     renderWithProviders(<App />, { route: "/" });
 
-    expect(await screen.findByRole("button", { name: "はじめる" })).toBeInTheDocument();
-  });
-
-  it("どのページでも、ヘッダーに自分の名前が出る", async () => {
-    renderWithProviders(<App />, { route: "/no-such-page", guestSession: returning().session });
-
-    const header = screen.getByRole("banner");
-    expect(header).toHaveTextContent("App Template");
-    expect(
-      await screen.findByRole("button", { name: "名前を変える（今: ねむいペンギン）" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "星の炉" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "水素燃焼" })).toBeInTheDocument();
   });
 
   it("存在しない URL では「ページが見つからない」を表示し、トップへ戻れる", async () => {
@@ -28,6 +18,6 @@ describe("App", () => {
 
     await user.click(screen.getByRole("link", { name: "トップへ戻る" }));
 
-    expect(await screen.findByRole("button", { name: "はじめる" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "星の炉" })).toBeInTheDocument();
   });
 });

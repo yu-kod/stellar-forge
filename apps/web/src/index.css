@@ -6,49 +6,49 @@
 /*
  * デザイントークン。色はここでだけ定義し、コンポーネントでは bg-primary などの
  * ユーティリティ経由で参照する（.claude/skills/ui-design.md）。
- * 値は shadcn/ui の neutral。アプリごとにブランドの色へ差し替える。
+ * 星の内部という1つの世界に固定するため、テーマはダーク1種類だけ。
+ * index.html の <html class="dark"> で shadcn/ui の dark: 指定も効かせる。
  */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-}
+  color-scheme: dark;
+  --radius: 0.75rem;
+  --background: #0c0a14;
+  --foreground: #eee9f7;
+  --card: #15121f;
+  --card-foreground: #eee9f7;
+  --popover: #1d1830;
+  --popover-foreground: #eee9f7;
+  --primary: #ffb04a;
+  --primary-foreground: #1b1206;
+  --secondary: #221d33;
+  --secondary-foreground: #eee9f7;
+  --muted: #1c1729;
+  --muted-foreground: #a39cc0;
+  --accent: #2b2640;
+  --accent-foreground: #eee9f7;
+  --destructive: #ff6b5e;
+  --border: #2b2640;
+  --input: #716a94;
+  --ring: #b9b0de;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /* 点火の琥珀色。点火・崩壊・次の目標にだけ使う */
+  --ignite: #ffb04a;
+  --ignite-foreground: #1b1206;
+
+  /* 元素の色。玉ねぎ構造・チップ・周期表で同じ色を使う */
+  --el-h: #bcd7ff;
+  --el-he: #ffe08a;
+  --el-c: #ffad5c;
+  --el-o: #ff6f61;
+  --el-ne: #ff5fa2;
+  --el-mg: #d77bff;
+  --el-si: #9a8cff;
+  --el-s: #d9e36b;
+  --el-fe: #b07a5e;
+
+  /* コア温度の計器のグラデーション（低温の青から点火の琥珀へ） */
+  --gauge-cold: #6e7bff;
+  --gauge-warm: #ff6fa5;
 }
 
 @theme inline {
@@ -70,12 +70,57 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-ignite: var(--ignite);
+  --color-ignite-foreground: var(--ignite-foreground);
+  --color-el-h: var(--el-h);
+  --color-el-he: var(--el-he);
+  --color-el-c: var(--el-c);
+  --color-el-o: var(--el-o);
+  --color-el-ne: var(--el-ne);
+  --color-el-mg: var(--el-mg);
+  --color-el-si: var(--el-si);
+  --color-el-s: var(--el-s);
+  --color-el-fe: var(--el-fe);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans:
-    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo",
+    system-ui, sans-serif;
+  --font-display: "Dela Gothic One", "Hiragino Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --animate-flash: flash 1.2s ease-out both;
+  --animate-pop: pop 0.25s ease-out;
+
+  @keyframes flash {
+    0% {
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes pop {
+    from {
+      transform: translateY(-6px);
+      opacity: 0;
+    }
+  }
+}
+
+/* 超新星の閃光 */
+@utility bg-supernova {
+  background: radial-gradient(circle, var(--foreground) 0%, var(--ignite) 30%, transparent 70%);
+}
+
+/* コア温度の計器 */
+@utility bg-gauge {
+  background: linear-gradient(90deg, var(--gauge-cold), var(--gauge-warm), var(--ignite));
 }
 
 @layer base {

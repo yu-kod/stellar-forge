@@ -160,6 +160,9 @@ export const MAX_BUY_PER_ACTION = 1000;
 /** 燃焼の自動制御が1回の更新で買う上限 */
 export const AUTO_BUY_PER_STEP = 20;
 
+/** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
+export const MAX_STEP_SECONDS = 0.05;
+
 /** 星屑 = floor(質量^DUST_EXPONENT × 倍率) */
 export const DUST_EXPONENT = 1.1;
 export const BOOM_PER_LEVEL = 1.5;

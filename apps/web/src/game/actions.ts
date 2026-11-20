@@ -38,6 +38,12 @@ export function buyStageMax(state: GameState, stage: StageId): GameState {
   return next;
 }
 
+/** 段階ごとの自動強化の ON/OFF。強化できない最後の段階は切り替えない */
+export function setAuto(state: GameState, stage: StageId, on: boolean): GameState {
+  if (STAGES[stage].final) return state;
+  return { ...state, meta: { ...state.meta, autoOn: { ...state.meta.autoOn, [stage]: on } } };
+}
+
 /** 終わった星から星屑と中性子星を受け取り、次の世代の星を生む */
 export function rebirth(state: GameState): GameState {
   const { meta, star } = state;

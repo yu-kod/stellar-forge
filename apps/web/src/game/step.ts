@@ -43,6 +43,22 @@ function plannedBurn(meta: Meta, star: Star, stage: StageId, dt: number) {
   return { amount, fuel: ownFuel >= amount ? spec.fuel : FINAL_STAGE_FALLBACK_FUEL };
 }
 
+/** いま毎秒入るエネルギー [J/s]。表示用で、燃料が足りない分は数えない */
+export function energyRate({ meta, star }: GameState): number {
+  let rate = 0;
+  for (const stage of STAGE_IDS) {
+    const { amount, fuel } = plannedBurn(meta, star, stage, 1);
+    const available = fuel.reduce((sum, id) => sum + star.mass[id], 0);
+    rate += Math.min(amount, available) * STAGES[stage].energyPerMass;
+  }
+  return rate * energyMultiplier(meta);
+}
+
+/** 鉄のコアが限界に達するまでの秒数（ケイ素燃焼は一定の速さで鉄を作る） */
+export function secondsToCollapse(star: Star): number {
+  return Math.max(0, (CHANDRASEKHAR_MASS - star.mass.Fe) / FINAL_RATE);
+}
+
 function totalBurnRate(meta: Meta, star: Star): number {
   return STAGE_IDS.reduce((sum, stage) => sum + plannedBurn(meta, star, stage, 1).amount, 0);
 }

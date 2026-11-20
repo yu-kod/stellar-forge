@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "./star";
-import { step } from "./step";
+import { energyRate, secondsToCollapse, step } from "./step";
 
 describe("step：燃焼", () => {
   it("燃焼量 = k × 燃料 × dt だけ燃料が生成物に変わり、エネルギーが入る", () => {
@@ -238,5 +238,42 @@ describe("step：燃焼の自動制御", () => {
     const game = createGame();
     game.star.energy = 1e50;
     expect(step(game, 0.001).state.star.levels.H).toBe(1);
+  });
+});
+
+describe("energyRate：いま毎秒入るエネルギー", () => {
+  it("燃えている段階の 燃焼量 × 1 M☉あたりのエネルギー × 倍率 の合計", () => {
+    const game = createGame();
+    game.meta.shop.yield = 1;
+    const rate = 0.4 * 0.004 * 25 * 1.27e45 * 2;
+    expect(energyRate(game) / rate).toBeCloseTo(1);
+  });
+
+  it("最後の段階は一定の速さで燃える分を数える", () => {
+    const game = createGame();
+    game.star.mass.H = 0;
+    game.star.mass.Si = 5;
+    game.star.temperature = 2.7e9;
+    expect(energyRate(game) / ((1.4 / 30) * 6.5e43)).toBeCloseTo(1);
+  });
+
+  it("燃料が残っていなければ 0", () => {
+    const game = createGame();
+    game.star.mass.H = 0;
+    expect(energyRate(game)).toBe(0);
+  });
+});
+
+describe("secondsToCollapse：鉄のコアが限界に達するまでの秒数", () => {
+  it("残りの鉄を一定の速さで作る時間", () => {
+    const game = createGame();
+    game.star.mass.Fe = 0.7;
+    expect(secondsToCollapse(game.star)).toBeCloseTo(15);
+  });
+
+  it("限界を超えていれば 0", () => {
+    const game = createGame();
+    game.star.mass.Fe = 1.5;
+    expect(secondsToCollapse(game.star)).toBe(0);
   });
 });
