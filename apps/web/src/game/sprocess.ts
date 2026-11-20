@@ -25,7 +25,7 @@ const ATOMIC_WEIGHT: readonly number[] = [
 
 /** 中性子の魔法数（N = 50・82・126）にあたる元素。捕まえにくいので原子核が溜まる */
 const MAGIC = new Set([38, 39, 40, 56, 57, 58, 82, 83]);
-const MAGIC_CROSS_SECTION = 0.05;
+const MAGIC_CROSS_SECTION = 0.15;
 
 /** 主に r過程で作られる元素。s過程の道は通り抜けるが、第3層では発見しない */
 const R_PROCESS_ONLY = new Set([63, 76, 77, 78, 79]);
@@ -181,6 +181,18 @@ export function heavyRate(meta: Meta): number {
 /** 恒星風で出る s元素の価値の倍率（第3ドレッジアップ） */
 export function heavyMultiplier(meta: Meta): number {
   return 1 + HEAVY_PER_DREDGE_UP * meta.shop.flash;
+}
+
+/** まだ見つけていない s元素のうち、発見の量に一番近いもの（割合は 0〜1）。すべて見つけていれば null */
+export function nextSDiscovery(sProcess: SProcess): { z: number; progress: number } | null {
+  const candidates = S_DISCOVERABLE_ELEMENTS.filter((z) => !sProcess.discovered.includes(z)).map(
+    (z) => ({
+      z,
+      progress: Math.min(1, sProcess.amounts[z - S_PATH_START]! / discoveryThreshold(z)),
+    })
+  );
+  if (candidates.length === 0) return null;
+  return candidates.reduce((a, b) => (b.progress > a.progress ? b : a));
 }
 
 /** 中性子の倍率（発見した s元素1つにつき +5%、鉛で ×2） */

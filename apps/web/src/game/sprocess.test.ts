@@ -49,11 +49,11 @@ describe("s過程の道", () => {
     expect(total).toBe(158);
   });
 
-  it("断面積は Z / 40。中性子の魔法数の元素は ×0.05", () => {
-    expect(crossSection(40)).toBeCloseTo(0.05);
+  it("断面積は Z / 40。中性子の魔法数の元素は ×0.15", () => {
+    expect(crossSection(40)).toBeCloseTo(0.15);
     expect(crossSection(42)).toBeCloseTo(42 / 40);
-    expect(crossSection(56)).toBeCloseTo((56 / 40) * 0.05);
-    expect(crossSection(82)).toBeCloseTo((82 / 40) * 0.05);
+    expect(crossSection(56)).toBeCloseTo((56 / 40) * 0.15);
+    expect(crossSection(82)).toBeCloseTo((82 / 40) * 0.15);
   });
 
   it("金・白金・イリジウム・オスミウム・ユウロピウムは r過程で作る元素", () => {

@@ -26,12 +26,12 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(gap).toBeLessThanOrEqual(40 * MINUTE);
   });
 
-  it("s過程：バリウム → 鉛 → 循環の順に届き、循環は第3層の1.5〜3時間後", () => {
+  it("s過程：バリウム → 鉛 → 循環の順に届き、循環は第3層の75分〜3時間後", () => {
     const { layer3, strontium, barium, lead, loop } = report.marks;
     expect(barium!).toBeGreaterThan(strontium!);
     expect(lead!).toBeGreaterThan(barium!);
     expect(loop!).toBeGreaterThanOrEqual(lead!);
-    expect(loop! - layer3!).toBeGreaterThanOrEqual(90 * MINUTE);
+    expect(loop! - layer3!).toBeGreaterThanOrEqual(75 * MINUTE);
     expect(loop! - layer3!).toBeLessThanOrEqual(180 * MINUTE);
   });
 
@@ -41,6 +41,12 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(beforeLayer2.length).toBeGreaterThanOrEqual(3);
     expect(times.length).toBeGreaterThanOrEqual(8);
     expect(new Set(times.map((t) => Math.floor(t / (10 * MINUTE)))).size).toBeGreaterThanOrEqual(6);
+  });
+
+  it("s過程の発見は、30分以上途切れない", () => {
+    const times = [report.marks.layer3!, ...Object.values(report.sAt).sort((a, b) => a - b)];
+    const gaps = times.slice(1).map((t, i) => t - times[i]!);
+    expect(Math.max(...gaps)).toBeLessThanOrEqual(30 * MINUTE);
   });
 
   it("星屑は 10¹² を超えない（数値が暴走しない）", () => {

@@ -2,7 +2,12 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
-import { S_PATH_END, S_PATH_START } from "@/game/sprocess";
+import {
+  S_DISCOVERABLE_ELEMENTS,
+  S_PATH_END,
+  S_PATH_START,
+  discoveryThreshold,
+} from "@/game/sprocess";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { manualTicker, openTab } from "@/test-utils/game";
@@ -93,7 +98,29 @@ describe("GameScreen：第3層 s過程", () => {
     game.meta.sProcess.discovered = [27, 28];
     game.meta.shop.auto = 1;
     renderGame(game);
-    expect(screen.getByRole("note")).toHaveTextContent("s過程：次は 銅（Cu）を見つける");
+    expect(screen.getByRole("note")).toHaveTextContent("s過程：次は 銅（Cu）を見つける（0%）");
+  });
+
+  it("s元素をすべて見つけて循環を待つ間は、そう書く", () => {
+    const game = layer3();
+    game.meta.sProcess.discovered = [...S_DISCOVERABLE_ELEMENTS];
+    game.meta.shop.auto = 1;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "ビスマスが中性子を捕まえて鉛へ戻るのを待つ"
+    );
+  });
+
+  it("一番発見に近い元素と、その進み具合を出す（魔法数で詰まっている間の目安）", () => {
+    const game = layer3();
+    game.meta.sProcess.discovered = [27, 28, 29];
+    game.meta.sProcess.amounts[index(40)] = discoveryThreshold(40) * 0.42;
+    game.meta.sProcess.amounts[index(30)] = discoveryThreshold(30) * 0.1;
+    game.meta.shop.auto = 1;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "s過程：次は ジルコニウム（Zr）を見つける（42%）"
+    );
   });
 
   it("循環を見たら、目標はビスマスの先へ", () => {
