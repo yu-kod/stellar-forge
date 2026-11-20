@@ -159,6 +159,7 @@ export type IdleReport = {
       | "lead"
       | "loop"
       | "layer4"
+      | "rAuto"
       | "gold"
       | "complete",
       number
@@ -168,6 +169,8 @@ export type IdleReport = {
   maxDust: number;
   /** 10分ごとの恒久強化の購入数 */
   purchasesPer10Min: number[];
+  /** 第4層で手で組んだ連星の数 */
+  manualPairs: number;
 };
 
 /**
@@ -204,6 +207,7 @@ export function playIdle(
   let state = options.start ?? createGame();
   const offset = Math.round(state.meta.elapsed);
   const plan = options.seedTarget ?? DEFAULT_SEED_TARGET;
+  let manualPairs = 0;
   const marks: IdleReport["marks"] = {};
   const purchasesPer10Min: number[] = [];
   let maxDust = 0;
@@ -262,6 +266,7 @@ export function playIdle(
         const formed = pair ? formBinary(state, pair[0], pair[1]) : state;
         if (formed === state) break;
         state = formed;
+        manualPairs++;
         if (!options.pairing) break;
       }
     }
@@ -293,10 +298,11 @@ export function playIdle(
       ["lead", state.meta.sProcess.discovered.includes(82)],
       ["loop", state.meta.sProcess.looped],
       ["layer4", state.meta.rProcess.unlocked],
+      ["rAuto", state.meta.shop.rAuto > 0],
       ["gold", state.meta.rProcess.discovered.includes(79)],
       ["complete", foundElements(state.meta).length === ALL_ELEMENTS],
     ];
     for (const [mark, done] of reached) if (done && marks[mark] === undefined) marks[mark] = t;
   }
-  return { state, marks, maxDust, purchasesPer10Min, lightAt, sAt, rAt, heavyEarned };
+  return { state, marks, maxDust, purchasesPer10Min, lightAt, sAt, rAt, heavyEarned, manualPairs };
 }

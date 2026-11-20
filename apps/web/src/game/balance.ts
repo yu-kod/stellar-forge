@@ -420,7 +420,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     name: "連星の自動化",
     currency: "S",
     description: "枠が空いたら、いま作りたい元素を一番速く作る組を在庫から組む",
-    baseCost: 1e6,
+    baseCost: 5e4,
     costGrowth: 1,
     maxLevel: 1,
     layer: 4,
