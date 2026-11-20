@@ -68,10 +68,10 @@ describe("GameScreen：第4層 中性子星合体", () => {
       "1.2 M☉×2"
     );
     const binaries = within(panel()).getByRole("list", { name: "合体を待つ連星" });
-    expect(binaries).toHaveTextContent("1.2 + 2.0 M☉ 合体まで 10分0秒");
+    expect(binaries).toHaveTextContent("1.2 + 2.0 M☉ 合体まで 15分0秒");
     expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeDisabled();
     for (let i = 0; i < 4; i++) tick(0.25);
-    expect(binaries).toHaveTextContent("合体まで 9分59秒");
+    expect(binaries).toHaveTextContent("合体まで 14分59秒");
   });
 
   it("r過程だけで作る元素の進み具合を見せる（金は 10）", () => {
@@ -79,7 +79,7 @@ describe("GameScreen：第4層 中性子星合体", () => {
     game.meta.rProcess.amounts[79 - R_PATH_START] = 2.5;
     renderGame(game);
     const goals = within(panel()).getByRole("list", { name: "r過程で作る元素" });
-    expect(goals).toHaveTextContent("金（Au）2.50 / 10");
+    expect(goals).toHaveTextContent("金（Au）2.50 / 200");
   });
 
   it("合体したら、キロノバと届いたところを知らせる", () => {
@@ -144,5 +144,14 @@ describe("第4層の周期表と知らせ", () => {
     const { Notices } = await import("./Notices");
     render(<Notices notices={[{ id: 1, event }]} onDismiss={() => {}} />);
     expect(screen.getByRole("status")).toHaveTextContent(text);
+  });
+});
+
+describe("第4層の強化", () => {
+  it("星屑タブに第4層の強化を出す", async () => {
+    const { user } = renderGame(layer4());
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByRole("heading", { name: "第4層（中性子星合体）" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "連星の自動化" })).toBeInTheDocument();
   });
 });

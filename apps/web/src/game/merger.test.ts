@@ -3,7 +3,6 @@ import { advanceAll } from "./cluster";
 import {
   BLACK_HOLE_EJECTA,
   MERGER_SECONDS,
-  R_DISCOVERY_THRESHOLD,
   R_PATH_START,
   advanceBinaries,
   binarySlots,
@@ -11,6 +10,7 @@ import {
   formBinary,
   mergerSeconds,
   nextRDiscovery,
+  rThreshold,
   reachName,
   predictMerger,
   rWeight,
@@ -131,10 +131,11 @@ describe("合体と r過程", () => {
     expect(rWeight(90)).toBeGreaterThan(0);
   });
 
-  it("r過程だけで作る元素は、量が 3 を超えたら発見する（金は 10）", () => {
+  it("r過程だけで作る元素は、その元素の発見の量を超えたら発見する（金が一番多い）", () => {
+    expect([63, 76, 77, 78, 79].map(rThreshold)).toEqual([5, 8, 20, 40, 200]);
     let meta = layer4({ [LIGHT]: 20, [HEAVY]: 20 });
-    meta.rProcess.amounts[78 - R_PATH_START] = R_DISCOVERY_THRESHOLD - 0.1;
-    meta.rProcess.amounts[79 - R_PATH_START] = 9;
+    meta.rProcess.amounts[78 - R_PATH_START] = rThreshold(78) - 0.1;
+    meta.rProcess.amounts[79 - R_PATH_START] = rThreshold(79) - 1;
     const game = formBinary({ ...createGame(), meta }, LIGHT, HEAVY);
     const result = advanceBinaries(game.meta, MERGER_SECONDS);
     meta = result.meta;
@@ -197,7 +198,7 @@ describe("届くところの名前と、次に作る元素", () => {
 
   it("まだの r過程の元素のうち一番近いもの。全部見つけていれば null", () => {
     const meta = layer4();
-    meta.rProcess.amounts[78 - R_PATH_START] = 1.5;
+    meta.rProcess.amounts[78 - R_PATH_START] = rThreshold(78) / 2;
     expect(nextRDiscovery(meta.rProcess)).toEqual({ z: 78, progress: 0.5 });
     meta.rProcess.discovered = [63, 76, 77, 78, 79];
     expect(nextRDiscovery(meta.rProcess)).toBeNull();

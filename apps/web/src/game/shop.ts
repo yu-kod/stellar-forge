@@ -18,5 +18,6 @@ export function isShopItemOpen(meta: Meta, item: ShopId): boolean {
   const { layer } = SHOP[item];
   if (layer === 2) return meta.supernovae >= LAYER2_AFTER;
   if (layer === 3) return meta.sProcess.unlocked;
+  if (layer === 4) return meta.rProcess.unlocked;
   return true;
 }

@@ -3,7 +3,7 @@ export { createSlot } from "./actions";
 import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
 import { dustPreview } from "./dust";
-import { advanceBinaries, type MergerEvent } from "./merger";
+import { advanceBinaries, autoBinary, type MergerEvent } from "./merger";
 import { unlockLayer4 } from "./rprocess";
 import { blowWinds, heavyMultiplier, windKept } from "./sprocess";
 import type { ClusterSlot, GameState, Meta, Target } from "./types";
@@ -78,7 +78,7 @@ export function advanceAll(
   clusterEvents.push(...mergers.events);
   meta = mergers.meta;
   return {
-    state: unlockLayer4(autoIa({ meta: winds(meta, seconds), star: main.state.star })),
+    state: autoBinary(unlockLayer4(autoIa({ meta: winds(meta, seconds), star: main.state.star }))),
     events: main.events,
     clusterEvents,
   };
