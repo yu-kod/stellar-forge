@@ -11,7 +11,13 @@ function isDiscovered(meta: Meta, symbol: string): boolean {
   return symbol === "H" || (isGameElement(symbol) && meta.discovered[symbol] === true);
 }
 
+/** s過程で作った元素か */
+function isSProcessFound(meta: Meta, cell: PeriodicCell): boolean {
+  return meta.sProcess.discovered.includes(cell.number);
+}
+
 function describe(meta: Meta, cell: PeriodicCell): string {
+  if (isSProcessFound(meta, cell)) return `${cell.name}：s過程で作った`;
   if (isGameElement(cell.symbol) && isDiscovered(meta, cell.symbol)) {
     const { name, discovery } = ELEMENTS[cell.symbol];
     return `${name}：${discovery}`;
@@ -24,7 +30,8 @@ function describe(meta: Meta, cell: PeriodicCell): string {
 }
 
 export function PeriodicTableView({ meta }: { meta: Meta }) {
-  const found = ELEMENT_IDS.filter((id) => isDiscovered(meta, id)).length;
+  const found =
+    ELEMENT_IDS.filter((id) => isDiscovered(meta, id)).length + meta.sProcess.discovered.length;
   return (
     <div className="grid gap-3">
       <p className="text-muted-foreground text-sm">
@@ -38,6 +45,7 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
         >
           {PERIODIC_TABLE.map((cell) => {
             const got = isDiscovered(meta, cell.symbol);
+            const sFound = isSProcessFound(meta, cell);
             const goal = cell.number === BISMUTH || cell.number === GOLD;
             const label = describe(meta, cell);
             return (
@@ -50,8 +58,10 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
                   "relative grid aspect-square place-items-center rounded-sm border text-xs",
                   got && isGameElement(cell.symbol)
                     ? cn(ELEMENTS[cell.symbol].bg, "text-background border-transparent font-bold")
-                    : "bg-background text-muted-foreground",
-                  goal && "text-ignite border-ignite border-dashed",
+                    : sFound
+                      ? "bg-el-heavy text-background border-transparent font-bold"
+                      : "bg-background text-muted-foreground",
+                  goal && !sFound && "text-ignite border-ignite border-dashed",
                   cell.row === 7 && "mt-1"
                 )}
               >

@@ -3,6 +3,7 @@ import { STAGES } from "@/game/balance";
 import { ELEMENTS } from "../elements";
 import { formatNumber } from "../format";
 import type { Notice, NoticeEvent } from "../model";
+import { elementOf } from "../periodicTable";
 
 const NOTICE_MS = 4200;
 
@@ -70,6 +71,31 @@ function NoticeText({ event }: { event: NoticeEvent }) {
         </>
       );
     }
+    case "sDiscover": {
+      const element = elementOf(event.z);
+      return (
+        <>
+          <b className="text-ignite">
+            新元素 {element.name}（{element.symbol}）
+          </b>{" "}
+          s過程で作った
+        </>
+      );
+    }
+    case "sLoop":
+      return (
+        <>
+          <b className="text-ignite">第3層クリア</b>：ビスマス → ポロニウム →
+          鉛の循環を見た。s過程はここで行き止まり
+        </>
+      );
+    case "layer3Unlocked":
+      return (
+        <>
+          <b className="text-ignite">第3層</b>：s過程が始まった。白色矮星で
+          Ia型超新星を起こし、鉄の種を入れよう
+        </>
+      );
     case "layer2Unlocked":
       return (
         <>

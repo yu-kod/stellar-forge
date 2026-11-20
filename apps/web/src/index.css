@@ -71,6 +71,8 @@
   --el-si: #9a8cff;
   --el-s: #d9e36b;
   --el-fe: #b07a5e;
+  /* 鉄より重い元素（s過程・r過程で作るもの） */
+  --el-heavy: #c9b3ff;
 
   /* コア温度の計器のグラデーション（低温の青から点火の琥珀へ） */
   --gauge-cold: #6e7bff;
@@ -108,6 +110,7 @@
   --color-el-si: var(--el-si);
   --color-el-s: var(--el-s);
   --color-el-fe: var(--el-fe);
+  --color-el-heavy: var(--el-heavy);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

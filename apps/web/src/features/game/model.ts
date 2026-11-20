@@ -8,6 +8,7 @@ import {
   setAutoRebirth,
   setNextMass,
   setTarget,
+  triggerIa,
 } from "@/game/actions";
 import type { SupernovaEvent } from "@/game/advance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
@@ -26,6 +27,9 @@ export type NoticeEvent =
   | { type: "away"; seconds: number }
   | SupernovaEvent
   | { type: "autoRebirthUnlocked" }
+  | { type: "layer3Unlocked" }
+  | { type: "sDiscover"; z: number }
+  | { type: "sLoop" }
   | { type: "layer2Unlocked" };
 export type Notice = { id: number; event: NoticeEvent };
 
@@ -48,6 +52,7 @@ export type Action =
   | { type: "setSlotTarget"; slot: number; target: Target }
   | { type: "buyShopItem"; item: ShopId }
   | { type: "buyAllShopItems" }
+  | { type: "triggerIa"; count: number }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
   | { type: "setSpeed"; speed: Speed }
@@ -69,10 +74,17 @@ function notify(model: Model, events: NoticeEvent[]): Model {
   };
 }
 
-function isNotice(
-  event: GameEvent | SupernovaEvent
-): event is Extract<GameEvent, { type: "ignite" | "discover" }> | SupernovaEvent {
-  return event.type === "ignite" || event.type === "discover" || event.type === "supernova";
+type ShownEvent = Extract<GameEvent, { type: "ignite" | "discover" | "sDiscover" | "sLoop" }>;
+
+function isNotice(event: GameEvent | SupernovaEvent): event is ShownEvent | SupernovaEvent {
+  return ["ignite", "discover", "supernova", "sDiscover", "sLoop"].includes(event.type);
+}
+
+/** 第3層が今回の操作で解放されたら知らせる */
+function layer3Notice(before: GameState, after: GameState): NoticeEvent[] {
+  return !before.meta.sProcess.unlocked && after.meta.sProcess.unlocked
+    ? [{ type: "layer3Unlocked" }]
+    : [];
 }
 
 export function gameReducer(model: Model, action: Action): Model {
@@ -80,11 +92,17 @@ export function gameReducer(model: Model, action: Action): Model {
     case "tick": {
       if (model.game.star.end && model.game.meta.cluster.length === 0) return model;
       const { state, events, clusterEvents } = advanceAll(model.game, action.seconds * model.speed);
-      const discoveries = clusterEvents.filter((e) => e.type === "discover");
+      const discoveries = clusterEvents.filter(
+        (e) => e.type === "discover" || e.type === "sDiscover" || e.type === "sLoop"
+      );
       // 自動で次の星を生むようになったら、毎周の点火は知らせない
       const quiet = canAutoRebirth(state.meta);
       const notices = events.filter(isNotice).filter((e) => !quiet || e.type !== "ignite");
-      return notify({ ...model, game: state }, [...notices, ...discoveries]);
+      return notify({ ...model, game: state }, [
+        ...notices,
+        ...discoveries,
+        ...layer3Notice(model.game, state),
+      ]);
     }
     case "buy":
       return { ...model, game: buyStage(model.game, action.stage) };
@@ -102,6 +120,11 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, game: setNextMass(model.game, action.mass) };
     case "setAutoRebirth":
       return { ...model, game: setAutoRebirth(model.game, action.on) };
+    case "triggerIa": {
+      let game = model.game;
+      for (let i = 0; i < action.count; i++) game = triggerIa(game);
+      return { ...model, game };
+    }
     case "buyAllShopItems":
       return { ...model, game: buyAllShopItems(model.game) };
     case "buyShopItem":
@@ -116,6 +139,7 @@ export function gameReducer(model: Model, action: Action): Model {
         { type: "born", generation: game.star.generation },
         ...(unlocked ? [{ type: "autoRebirthUnlocked" } as const] : []),
         ...(layer2 ? [{ type: "layer2Unlocked" } as const] : []),
+        ...layer3Notice(model.game, game),
       ]);
     }
     case "dismiss":
