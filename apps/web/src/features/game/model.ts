@@ -31,6 +31,7 @@ export type NoticeEvent =
   | { type: "layer3Unlocked" }
   | { type: "sDiscover"; z: number }
   | { type: "sLoop" }
+  | { type: "light"; z: number }
   | { type: "layer2Unlocked" };
 export type Notice = { id: number; event: NoticeEvent };
 
@@ -89,6 +90,13 @@ function layer3Notice(before: GameState, after: GameState): NoticeEvent[] {
     : [];
 }
 
+/** 今回の操作で見つけた軽い元素を知らせる */
+function lightNotice(before: GameState, after: GameState): NoticeEvent[] {
+  return after.meta.lightFound
+    .filter((z) => !before.meta.lightFound.includes(z))
+    .map((z) => ({ type: "light", z }));
+}
+
 export function gameReducer(model: Model, action: Action): Model {
   switch (action.type) {
     case "tick": {
@@ -103,6 +111,7 @@ export function gameReducer(model: Model, action: Action): Model {
       return notify({ ...model, game: state }, [
         ...notices,
         ...discoveries,
+        ...lightNotice(model.game, state),
         ...layer3Notice(model.game, state),
       ]);
     }
@@ -125,7 +134,7 @@ export function gameReducer(model: Model, action: Action): Model {
     case "triggerIa": {
       let game = model.game;
       for (let i = 0; i < action.count; i++) game = triggerIa(game);
-      return { ...model, game };
+      return notify({ ...model, game }, lightNotice(model.game, game));
     }
     case "setSeedTarget":
       return { ...model, game: setSeedTarget(model.game, action.target) };
@@ -143,6 +152,7 @@ export function gameReducer(model: Model, action: Action): Model {
         { type: "born", generation: game.star.generation },
         ...(unlocked ? [{ type: "autoRebirthUnlocked" } as const] : []),
         ...(layer2 ? [{ type: "layer2Unlocked" } as const] : []),
+        ...lightNotice(model.game, game),
         ...layer3Notice(model.game, game),
       ]);
     }

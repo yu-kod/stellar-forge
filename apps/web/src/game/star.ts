@@ -60,6 +60,8 @@ export function createMeta(): Meta {
     log: [],
     cluster: [],
     sProcess: createSProcess(),
+    iaSupernovae: 0,
+    lightFound: [],
   };
 }
 

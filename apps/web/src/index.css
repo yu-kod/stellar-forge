@@ -71,6 +71,8 @@
   --el-si: #9a8cff;
   --el-s: #d9e36b;
   --el-fe: #b07a5e;
+  /* 燃焼では作らない軽い元素（リチウム〜マンガン） */
+  --el-light: #9ee37d;
   /* 鉄より重い元素（s過程・r過程で作るもの） */
   --el-heavy: #c9b3ff;
 
@@ -111,6 +113,7 @@
   --color-el-s: var(--el-s);
   --color-el-fe: var(--el-fe);
   --color-el-heavy: var(--el-heavy);
+  --color-el-light: var(--el-light);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

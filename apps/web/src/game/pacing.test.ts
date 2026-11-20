@@ -35,6 +35,14 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(loop! - layer3!).toBeLessThanOrEqual(180 * MINUTE);
   });
 
+  it("軽い元素は第1層から少しずつ見つかり、一度にまとめて出ない", () => {
+    const times = Object.values(report.lightAt);
+    const beforeLayer2 = times.filter((t) => t < report.marks.layer2!);
+    expect(beforeLayer2.length).toBeGreaterThanOrEqual(3);
+    expect(times.length).toBeGreaterThanOrEqual(8);
+    expect(new Set(times.map((t) => Math.floor(t / (10 * MINUTE)))).size).toBeGreaterThanOrEqual(6);
+  });
+
   it("星屑は 10¹² を超えない（数値が暴走しない）", () => {
     expect(report.maxDust).toBeLessThan(1e12);
   });

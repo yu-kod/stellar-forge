@@ -1,4 +1,5 @@
 import { ELEMENT_IDS, type Meta } from "@/game/types";
+import { LIGHT_SITES } from "@/game/light";
 import { cn } from "@/lib/utils";
 import { ELEMENTS, isGameElement } from "../elements";
 import { PERIODIC_TABLE, type PeriodicCell } from "../periodicTable";
@@ -18,6 +19,12 @@ function isSProcessFound(meta: Meta, cell: PeriodicCell): boolean {
 
 function describe(meta: Meta, cell: PeriodicCell): string {
   if (isSProcessFound(meta, cell)) return `${cell.name}：s過程で作った`;
+  const site = LIGHT_SITES[cell.number];
+  if (site !== undefined) {
+    return meta.lightFound.includes(cell.number)
+      ? `${cell.name}：${site}`
+      : `${cell.name}（未発見）：${site}`;
+  }
   if (isGameElement(cell.symbol) && isDiscovered(meta, cell.symbol)) {
     const { name, discovery } = ELEMENTS[cell.symbol];
     return `${name}：${discovery}`;
@@ -25,13 +32,14 @@ function describe(meta: Meta, cell: PeriodicCell): string {
   if (cell.number === BISMUTH) return "ビスマス：s過程の終点（第3層のゴール）";
   if (cell.number === GOLD) return "金：中性子星合体のr過程（第4層のゴール）";
   if (cell.number > IRON) return "鉄より重い元素：中性子捕獲で作る（第3・4層）";
-  if (isGameElement(cell.symbol)) return "まだ作っていない";
-  return "軽い元素：第2層以降で作れる";
+  return "まだ作っていない";
 }
 
 export function PeriodicTableView({ meta }: { meta: Meta }) {
   const found =
-    ELEMENT_IDS.filter((id) => isDiscovered(meta, id)).length + meta.sProcess.discovered.length;
+    ELEMENT_IDS.filter((id) => isDiscovered(meta, id)).length +
+    meta.sProcess.discovered.length +
+    meta.lightFound.length;
   return (
     <div className="grid gap-3">
       <p className="text-muted-foreground text-sm">
@@ -46,6 +54,7 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
           {PERIODIC_TABLE.map((cell) => {
             const got = isDiscovered(meta, cell.symbol);
             const sFound = isSProcessFound(meta, cell);
+            const lightFound = meta.lightFound.includes(cell.number);
             const goal = cell.number === BISMUTH || cell.number === GOLD;
             const label = describe(meta, cell);
             return (
@@ -60,7 +69,9 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
                     ? cn(ELEMENTS[cell.symbol].bg, "text-background border-transparent font-bold")
                     : sFound
                       ? "bg-el-heavy text-background border-transparent font-bold"
-                      : "bg-background text-muted-foreground",
+                      : lightFound
+                        ? "bg-el-light text-background border-transparent font-bold"
+                        : "bg-background text-muted-foreground",
                   goal && !sFound && "text-ignite border-ignite border-dashed",
                   cell.row === 7 && "mt-1"
                 )}

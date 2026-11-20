@@ -1,3 +1,4 @@
+import { LIGHT_SITES } from "@/game/light";
 import { useEffect } from "react";
 import { STAGES } from "@/game/balance";
 import { ELEMENTS } from "../elements";
@@ -79,6 +80,17 @@ function NoticeText({ event }: { event: NoticeEvent }) {
             新元素 {element.name}（{element.symbol}）
           </b>{" "}
           s過程で作った
+        </>
+      );
+    }
+    case "light": {
+      const element = elementOf(event.z);
+      return (
+        <>
+          <b className="text-ignite">
+            新元素 {element.name}（{element.symbol}）
+          </b>{" "}
+          {LIGHT_SITES[event.z]}
         </>
       );
     }

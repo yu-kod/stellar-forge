@@ -10,6 +10,7 @@ import {
   PLANETARY_NEBULA_DUST,
   RECYCLE_PER_LEVEL,
 } from "./balance";
+import { lightDustMultiplier } from "./light";
 import { sDustMultiplier } from "./sprocess";
 import { DUST_IDS, type DustId, type Meta, type Star } from "./types";
 
@@ -22,7 +23,8 @@ function dustMultiplier(meta: Meta, star: Star): number {
   let k =
     BOOM_PER_LEVEL ** meta.shop.boom *
     (1 + RECYCLE_PER_LEVEL * meta.shop.recycle) *
-    sDustMultiplier(meta);
+    sDustMultiplier(meta) *
+    lightDustMultiplier(meta);
   if (meta.discovered.O) k *= OXYGEN_DUST_BONUS;
   if (star.end === "fizzle") k *= FIZZLE_DUST_FACTOR;
   if (star.end === "whiteDwarf") {

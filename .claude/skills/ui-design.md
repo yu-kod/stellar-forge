@@ -77,7 +77,7 @@ Tailwind のユーティリティに結びつけてある。
 | `primary-foreground` / `primary` | 10.2 | 次の星を生むボタン |
 | `ring` / `background` | 9.7 | フォーカスリング |
 | `input` / `card` | 3.7 | 入力欄・outline ボタンの枠 |
-| `background` / `el-*` | 5.4（Fe）〜15.2（He）、N は 11.3 | 元素チップ・周期表の文字 |
+| `background` / `el-*` | 5.4（Fe）〜15.2（He）、N は 11.3、軽い元素（`el-light`）は 12.8 | 元素チップ・周期表の文字 |
 
 鉄の色は試作の `#8a5a44` だと元素チップの文字が 3.4 しかなかったため、`#b07a5e` に明るくした。
 
