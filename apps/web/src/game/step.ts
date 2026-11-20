@@ -2,6 +2,10 @@ import { buyStage, canBuyStage } from "./actions";
 import {
   AUTO_BUY_PER_STEP,
   CHANDRASEKHAR_MASS,
+  AGB_SECONDS,
+  CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN,
+  CARBON_STAR_LIMIT,
+  CARBON_STAR_NEUTRONS,
   CNO_NITROGEN_PER_HYDROGEN,
   LOW_MASS_CNO_NITROGEN_PER_HYDROGEN,
   LOW_MASS_LIMIT,
@@ -38,6 +42,7 @@ export type GameEvent =
   | { type: "collapse" }
   | { type: "fizzle" }
   | { type: "whiteDwarf" }
+  | { type: "agb" }
   | { type: "sDiscover"; z: number }
   | { type: "sLoop" };
 
@@ -108,9 +113,11 @@ export function step(state: GameState, dt: number): StepResult {
     if (stage === "He") heliumBurned = burned;
     if (stage === "H") {
       // CNO サイクル：燃えた水素に比例して、炭素を窒素に変える（炭素があるだけ）
-      const perHydrogen = isLowMass(state.star)
-        ? LOW_MASS_CNO_NITROGEN_PER_HYDROGEN
-        : CNO_NITROGEN_PER_HYDROGEN;
+      const perHydrogen = !isLowMass(state.star)
+        ? CNO_NITROGEN_PER_HYDROGEN
+        : isCarbonStar(state.star)
+          ? CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN
+          : LOW_MASS_CNO_NITROGEN_PER_HYDROGEN;
       const converted = Math.min(state.star.mass.C, burned * perHydrogen);
       delta.C -= converted;
       delta.N += converted;
@@ -136,8 +143,9 @@ export function step(state: GameState, dt: number): StepResult {
   }
 
   // 第3層：軽い星のヘリウム燃焼の熱パルスが中性子を出し、s過程の道の原子核が捕まえる
-  if (meta.sProcess.unlocked && isLowMass(state.star) && heliumBurned > 0) {
-    const neutrons = heliumBurned * NEUTRONS_PER_HELIUM * neutronMultiplier(meta);
+  if (meta.sProcess.unlocked && state.star.agbStartedAt !== null && heliumBurned > 0) {
+    const carbonStar = isCarbonStar(state.star) ? CARBON_STAR_NEUTRONS : 1;
+    const neutrons = heliumBurned * NEUTRONS_PER_HELIUM * carbonStar * neutronMultiplier(meta);
     const captured = captureNeutrons(meta.sProcess, neutrons);
     meta.sProcess = captured.sProcess;
     for (const z of captured.discovered) events.push({ type: "sDiscover", z });
@@ -148,6 +156,16 @@ export function step(state: GameState, dt: number): StepResult {
     if (id === "H" || meta.discovered[id] || star.mass[id] < DISCOVERY_THRESHOLD) continue;
     meta.discovered[id] = true;
     events.push({ type: "discover", element: id });
+  }
+
+  // 軽い星は外層の水素が尽きると漸近巨星分枝星になる（熱パルスの段階）
+  if (
+    isLowMass(star) &&
+    star.agbStartedAt === null &&
+    star.mass.H < WHITE_DWARF_HYDROGEN * star.initialMass
+  ) {
+    star.agbStartedAt = star.time;
+    events.push({ type: "agb" });
   }
 
   const bought = meta.shop.auto ? autoBuy({ meta, star }) : { meta, star };
@@ -179,10 +197,17 @@ export function isLowMass(star: Star): boolean {
   return star.initialMass < LOW_MASS_LIMIT;
 }
 
+/** 窒素をあまり作らず、炭素と中性子を多く出す軽い星（4 M☉ 未満） */
+export function isCarbonStar(star: Star): boolean {
+  return star.initialMass < CARBON_STAR_LIMIT;
+}
+
 /** 鉄のコアが限界に達したら崩壊、軽い星は外層の水素が尽きたら白色矮星、何も燃えなくなったら燃え尽き */
 function endOfLife({ meta, star }: GameState): StarEnd {
   if (star.mass.Fe >= CHANDRASEKHAR_MASS) return "collapse";
-  if (isLowMass(star) && star.mass.H < WHITE_DWARF_HYDROGEN * star.initialMass) return "whiteDwarf";
+  if (star.agbStartedAt !== null && star.time - star.agbStartedAt >= AGB_SECONDS - 1e-9) {
+    return "whiteDwarf";
+  }
   if (star.time > FIZZLE_AFTER_SECONDS && totalBurnRate(meta, star) < FIZZLE_RATE) return "fizzle";
   return null;
 }

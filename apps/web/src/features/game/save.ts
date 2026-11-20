@@ -114,6 +114,10 @@ function parseStar(value: unknown): Star {
       ])
     ),
     end: parseEnd(raw.end),
+    agbStartedAt:
+      raw.agbStartedAt === undefined || raw.agbStartedAt === null
+        ? null
+        : requireNumber(raw.agbStartedAt),
   };
 }
 

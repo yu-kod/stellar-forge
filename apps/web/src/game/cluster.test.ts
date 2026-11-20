@@ -44,6 +44,7 @@ describe("星団", () => {
     const game = withSlot();
     const slot = game.meta.cluster[0]!;
     slot.star.mass.H = 0.69;
+    slot.star.agbStartedAt = -20;
     slot.star.mass.He = 6.31;
     const { state } = advanceAll(game, 1, 0.05);
     expect(state.meta.whiteDwarfs).toBe(1);
@@ -54,6 +55,7 @@ describe("星団", () => {
   it("星団の星の狙いと質量は、主星の設定を変えない", () => {
     const game = withSlot();
     game.meta.cluster[0]!.star.mass.H = 0.69;
+    game.meta.cluster[0]!.star.agbStartedAt = -20;
     game.meta.cluster[0]!.star.mass.He = 6.31;
     const { state } = advanceAll(game, 1, 0.05);
     expect(state.meta.target).toBe("Si");
@@ -82,12 +84,23 @@ describe("星団", () => {
     game = buyShopItem(game, "cluster");
     game = setSlotTarget(game, 1, "Si");
     game.meta.cluster[0]!.star.mass.H = 0.69;
+    game.meta.cluster[0]!.star.agbStartedAt = -20;
     game.meta.cluster[0]!.star.mass.He = 6.31;
     const { state } = advanceAll(game, 1, 0.05);
     expect(state.meta.cluster.map((s) => s.target)).toEqual(["C", "Si"]);
     expect(state.meta.cluster[0]?.star.generation).not.toBe(game.meta.cluster[0]?.star.generation);
     expect(state.meta.cluster[1]?.star.time).toBeCloseTo(1);
   });
+
+  it("フレームの刻みを変えても、時間あたりの白色矮星の数は変わらない", () => {
+    const start = withSlot();
+    start.meta.shop = { ...start.meta.shop, yield: 5, xs: 5 };
+    const once = advanceAll(start, 600, 0.05).state;
+    let stepped = start;
+    for (let i = 0; i < 1200; i++) stepped = advanceAll(stepped, 0.5, 0.05).state;
+    expect(once.meta.whiteDwarfs).toBeGreaterThan(2);
+    expect(Math.abs(stepped.meta.whiteDwarfs - once.meta.whiteDwarfs)).toBeLessThanOrEqual(1);
+  }, 60_000);
 
   it("星団がなければ、主星だけを進める", () => {
     const { state } = advanceAll(createGame(), 1, 0.05);

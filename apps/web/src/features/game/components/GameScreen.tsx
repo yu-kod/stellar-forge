@@ -2,6 +2,7 @@ import { createJsonStorage, type JsonStorage } from "@app/web-core";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  AGB_SECONDS,
   AUTO_REBIRTH_AFTER,
   LAYER2_AFTER,
   SHOP,
@@ -218,6 +219,14 @@ const TARGET_FOR_DUST: Record<DustId, Target> = {
 
 function GoalText({ game }: { game: GameState }) {
   const { meta, star } = game;
+  if (isLowMass(star) && star.agbStartedAt !== null) {
+    const left = Math.max(0, Math.ceil(AGB_SECONDS - (star.time - star.agbStartedAt)));
+    return (
+      <>
+        <b className="text-ignite">漸近巨星分枝星</b>：あと {left} 秒で外層を放って白色矮星になる
+      </>
+    );
+  }
   if (isLowMass(star)) {
     return (
       <>

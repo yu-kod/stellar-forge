@@ -180,6 +180,7 @@ describe("第3層の解放と中性子", () => {
     game.star.mass.He = 2;
     game.star.temperature = 2e8;
     game.star.levels.He = 10;
+    game.star.agbStartedAt = 0;
     const { state } = step(game, 1);
     expect(state.meta.sProcess.amounts[0]).toBeLessThan(1);
     expect(state.meta.sProcess.amounts[1]).toBeGreaterThan(0);
@@ -194,9 +195,36 @@ describe("第3層の解放と中性子", () => {
     game.star.mass.He = 2;
     game.star.temperature = 2e8;
     game.star.levels.He = 50;
+    game.star.agbStartedAt = 0;
     const { events } = step(game, 1);
     expect(events).toContainEqual({ type: "sDiscover", z: 27 });
     expect(events).toContainEqual({ type: "sLoop" });
+  });
+
+  it("漸近巨星分枝星になる前の軽い星は中性子を出さない", () => {
+    const meta = layer3Meta({ nextMass: 3 });
+    meta.sProcess.amounts[0] = 1;
+    const game: GameState = { meta, star: createStar(meta) };
+    game.star.mass.H = 1;
+    game.star.mass.He = 2;
+    game.star.temperature = 2e8;
+    game.star.levels.He = 10;
+    expect(step(game, 1).state.meta.sProcess.amounts[0]).toBe(1);
+  });
+
+  it("炭素星（4 M☉ 未満）は中性子を3倍出す", () => {
+    const run = (mass: number) => {
+      const meta = layer3Meta({ nextMass: mass });
+      meta.sProcess.amounts[0] = 100;
+      const game: GameState = { meta, star: createStar(meta) };
+      game.star.mass.H = 0.1;
+      game.star.mass.He = 2;
+      game.star.temperature = 2e8;
+      game.star.levels.He = 10;
+      game.star.agbStartedAt = 0;
+      return 100 - step(game, 0.1).state.meta.sProcess.amounts[0]!;
+    };
+    expect(run(3) / run(5)).toBeCloseTo(3);
   });
 
   it("重い星は中性子を出さない", () => {
