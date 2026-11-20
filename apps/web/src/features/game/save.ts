@@ -212,6 +212,7 @@ function parseMeta(value: unknown): Meta {
     dust: withDefaults(raw.dust, defaults.dust),
     supernovae: raw.supernovae === undefined ? 0 : requireNumber(raw.supernovae),
     neutronStars: raw.neutronStars === undefined ? 0 : requireNumber(raw.neutronStars),
+    blackHoles: raw.blackHoles === undefined ? 0 : requireNumber(raw.blackHoles),
     whiteDwarfs: raw.whiteDwarfs === undefined ? 0 : requireNumber(raw.whiteDwarfs),
     nextMass:
       raw.nextMass === undefined || raw.nextMass === null ? null : requireNumber(raw.nextMass),

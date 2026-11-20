@@ -1,5 +1,6 @@
+import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
 import { describe, expect, it } from "vitest";
-import { rebirth } from "./actions";
+import { createSlot, rebirth } from "./actions";
 import { advanceAll } from "./cluster";
 import { NEUTRON_STAR_MASSES, createRProcess, neutronStarBin, unlockLayer4 } from "./rprocess";
 import { createGame, createMeta, createStar } from "./star";
@@ -34,23 +35,27 @@ describe("中性子星の質量（親の星の初期質量で決まる9段階）
     [20, 3],
     [39, 7],
     [40, 8],
-    [108, 8],
   ])("%d M☉ の星は %d 段目", (mass, bin) => {
     expect(neutronStarBin(mass)).toBe(bin);
   });
 });
 
-describe("中性子星の在庫", () => {
-  it("第4層の前は在庫に入れず、数だけ数える", () => {
-    const next = rebirth(ended(createMeta(), 20, "collapse"));
-    expect(next.meta.neutronStars).toBe(1);
+describe("40 M☉ より重い星は、崩壊してもブラックホールになる", () => {
+  it("中性子星の段はなく、ブラックホールの数を数える", () => {
+    expect(neutronStarBin(41)).toBeNull();
+    const next = rebirth(ended(createMeta(), 108, "collapse"));
+    expect(next.meta.blackHoles).toBe(1);
+    expect(next.meta.neutronStars).toBe(0);
     expect(next.meta.rProcess.pool).toEqual(createRProcess().pool);
   });
+});
 
-  it("第4層の後は、崩壊した星の中性子星を親の質量の段に入れる", () => {
-    const next = rebirth(ended(layer4(), 9, "collapse"));
+describe("中性子星の在庫", () => {
+  it("第4層の前から、崩壊した星の中性子星を親の質量の段に入れる", () => {
+    const next = rebirth(ended(createMeta(), 9, "collapse"));
+    expect(next.meta.neutronStars).toBe(1);
     expect(next.meta.rProcess.pool[0]).toBe(1);
-    expect(rebirth(ended(next.meta, 50, "collapse")).meta.rProcess.pool[8]).toBe(1);
+    expect(rebirth(ended(next.meta, 40, "collapse")).meta.rProcess.pool[8]).toBe(1);
   });
 
   it.each(["fizzle", "whiteDwarf"] as const)("%s では中性子星を残さない", (end) => {
@@ -69,25 +74,40 @@ describe("中性子星の在庫", () => {
 });
 
 describe("第4層の解放（s過程の循環を見たら）", () => {
+  it("循環を見ても、s過程の元素がそろうまでは解放しない", () => {
+    const game = createGame();
+    game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, looped: true, discovered: [27] };
+    expect(unlockLayer4(game)).toBe(game);
+  });
+
   it("循環を見る前は解放しない", () => {
     const game = createGame();
     expect(unlockLayer4(game)).toBe(game);
   });
 
-  it("循環を見たら解放し、それまでの中性子星を主星の質量で在庫に入れる", () => {
+  it("循環を見たら解放し、星団の星を中性子星を残す質量（10 M☉ と 32 M☉）にする", () => {
     const game = createGame();
-    game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, looped: true };
-    game.meta.neutronStars = 7;
-    game.star.initialMass = 30;
+    game.meta.sProcess = {
+      ...game.meta.sProcess,
+      unlocked: true,
+      looped: true,
+      discovered: [...S_DISCOVERABLE_ELEMENTS],
+    };
+    game.meta.cluster = [createSlot(game.meta), createSlot(game.meta)];
     const next = unlockLayer4(game);
     expect(next.meta.rProcess.unlocked).toBe(true);
-    expect(next.meta.rProcess.pool[neutronStarBin(30)]).toBe(7);
+    expect(next.meta.cluster.map((slot) => slot.nextMass)).toEqual([10, 32]);
     expect(unlockLayer4(next)).toBe(next);
   });
 
   it("毎回の更新の後に判定する", () => {
     const game = createGame();
-    game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, looped: true };
+    game.meta.sProcess = {
+      ...game.meta.sProcess,
+      unlocked: true,
+      looped: true,
+      discovered: [...S_DISCOVERABLE_ELEMENTS],
+    };
     expect(advanceAll(game, 0.1).state.meta.rProcess.unlocked).toBe(true);
   });
 });

@@ -291,6 +291,14 @@ describe("GameScreen：知らせ", () => {
 });
 
 describe("GameScreen：超新星", () => {
+  it("40 M☉ より重い星が崩壊すると、ブラックホールが残る", () => {
+    const game = aboutToCollapse();
+    game.star.initialMass = 60;
+    const { tick } = renderGame(game);
+    tick(0.25);
+    expect(screen.getByRole("dialog")).toHaveTextContent("ブラックホールが残った");
+  });
+
   it("鉄のコアが崩壊すると超新星の画面を出し、得た星屑を見せる", () => {
     const { tick } = renderGame(aboutToCollapse());
 

@@ -127,6 +127,9 @@ export function rebirth(state: GameState): GameState {
   const { meta, star } = state;
   if (!star.end) return state;
   const gain = dustPreview(meta, star);
+  // 崩壊した星は中性子星かブラックホールを残す
+  const collapsed = star.end === "collapse";
+  const bin = collapsed ? neutronStarBin(star.initialMass) : null;
   const record: SupernovaRecord = {
     generation: star.generation,
     time: star.time,
@@ -138,7 +141,8 @@ export function rebirth(state: GameState): GameState {
     ...meta,
     dust: Object.fromEntries(DUST_IDS.map((id) => [id, meta.dust[id] + gain[id]])) as Meta["dust"],
     supernovae: meta.supernovae + (star.end === "whiteDwarf" ? 0 : 1),
-    neutronStars: meta.neutronStars + (star.end === "collapse" ? 1 : 0),
+    neutronStars: meta.neutronStars + (bin !== null ? 1 : 0),
+    blackHoles: meta.blackHoles + (collapsed && bin === null ? 1 : 0),
     whiteDwarfs: meta.whiteDwarfs + (star.end === "whiteDwarf" ? 1 : 0),
     sProcess:
       star.end === "whiteDwarf" && meta.whiteDwarfs + 1 >= LAYER3_AFTER
@@ -147,10 +151,7 @@ export function rebirth(state: GameState): GameState {
     bestRate: Object.fromEntries(
       DUST_IDS.map((id) => [id, Math.max(meta.bestRate[id], gain[id] / Math.max(1, star.time))])
     ) as Meta["bestRate"],
-    rProcess:
-      meta.rProcess.unlocked && star.end === "collapse"
-        ? addNeutronStars(meta.rProcess, neutronStarBin(star.initialMass), 1)
-        : meta.rProcess,
+    rProcess: bin !== null ? addNeutronStars(meta.rProcess, bin, 1) : meta.rProcess,
     // 記録は超新星だけ。白色矮星は数だけ数える（星団で何百も生まれるため）
     log: star.end === "whiteDwarf" ? meta.log : [record, ...meta.log].slice(0, LOG_LIMIT),
   };

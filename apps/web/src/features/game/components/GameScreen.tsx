@@ -12,6 +12,7 @@ import {
 import { canAutoRebirth, canBuyShopItem, rebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
 import { nextRDiscovery } from "@/game/merger";
+import { nextMissing } from "@/game/progress";
 import { nextSDiscovery } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
@@ -296,7 +297,7 @@ function GoalText({ game }: { game: GameState }) {
 /** 第4層の目標：r過程で次に作る元素 */
 function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
   const next = nextRDiscovery(meta.rProcess);
-  if (!next) return <>r過程：金まで作った</>;
+  if (!next) return <MissingGoal meta={meta} />;
   const element = elementOf(next.z);
   return (
     <>
@@ -305,6 +306,29 @@ function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
         {element.name}（{element.symbol}）
       </b>
       を作る（{Math.floor(next.progress * 100)}%）
+    </>
+  );
+}
+
+/** r過程の元素をそろえた後：まだ見つけていない元素と、その作り方。全部そろったら周期表の先 */
+function MissingGoal({ meta }: { meta: GameState["meta"] }) {
+  const missing = nextMissing(meta);
+  if (!missing) {
+    return (
+      <>
+        <b className="text-ignite">周期表の先</b>：トリウム・ウランは Ye 0.14
+        以下の合体で作る（ニュートリノの遮蔽）
+      </>
+    );
+  }
+  const element = elementOf(missing.z);
+  return (
+    <>
+      まだの元素{" "}
+      <b className="text-ignite">
+        {element.name}（{element.symbol}）
+      </b>
+      ：{missing.hint}
     </>
   );
 }

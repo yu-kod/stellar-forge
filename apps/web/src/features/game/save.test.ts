@@ -204,14 +204,24 @@ describe("restoreSave", () => {
   it("遊んだ時間と、83マスが埋まった時を戻す。古いセーブに無ければ 0 と null", () => {
     const game = createGame();
     game.meta.elapsed = 5000;
+    game.meta.blackHoles = 9;
     game.meta.completedAt = 4000;
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
-    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({ elapsed: 5000, completedAt: 4000 });
+    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({
+      elapsed: 5000,
+      completedAt: 4000,
+      blackHoles: 9,
+    });
     raw.game.meta.completedAt = null;
     expect(restoreSave(raw, NOW)?.game.meta.completedAt).toBeNull();
     delete raw.game.meta.completedAt;
     delete raw.game.meta.elapsed;
-    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({ elapsed: 0, completedAt: null });
+    delete raw.game.meta.blackHoles;
+    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({
+      elapsed: 0,
+      completedAt: null,
+      blackHoles: 0,
+    });
   });
 
   it("星団を持っているのに星が保存されていなければ、作り直す", () => {
