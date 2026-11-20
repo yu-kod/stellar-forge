@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { buyShopItem } from "@/game/actions";
+import { LAYER2_AFTER } from "@/game/balance";
 import { createGame, createStar } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { collapsed, manualTicker } from "@/test-utils/game";
@@ -14,7 +15,7 @@ function renderGame(initial: GameState) {
 }
 
 function withCluster(game: GameState = createGame()): GameState {
-  game.meta.supernovae = 5;
+  game.meta.supernovae = LAYER2_AFTER;
   game.meta.dust.N = 30;
   return buyShopItem(game, "cluster");
 }

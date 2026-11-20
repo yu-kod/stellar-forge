@@ -5,6 +5,7 @@ import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { aboutToCollapse, collapsed, manualTicker } from "@/test-utils/game";
 import { GameScreen } from "./GameScreen";
+import { LAYER2_AFTER } from "@/game/balance";
 
 function renderGame(initial: GameState = createGame()) {
   const clock = manualTicker();
@@ -447,7 +448,7 @@ describe("GameScreen：星屑の交換", () => {
     before.unmount();
 
     const game = createGame();
-    game.meta.supernovae = 5;
+    game.meta.supernovae = LAYER2_AFTER;
     const after = renderGame(game);
     await after.user.click(screen.getByRole("tab", { name: "星屑" }));
     expect(screen.getByRole("heading", { name: "第2層（窒素）" })).toBeInTheDocument();

@@ -1,4 +1,6 @@
 import {
+  buyAllShopItems,
+  canAutoRebirth,
   buyShopItem,
   buyStage,
   canBuyStage,
@@ -9,7 +11,9 @@ import {
   shopCost,
 } from "@/game/actions";
 import { isShopItemOpen } from "@/game/shop";
-import { SHOP, TARGET_STAGES } from "@/game/balance";
+import { LAYER2_AFTER, SHOP, TARGET_STAGES } from "@/game/balance";
+import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
+import { nextShopGoal } from "@/game/goal";
 import { stageCost } from "@/game/rates";
 import { step } from "@/game/step";
 import { createGame } from "@/game/star";
@@ -133,4 +137,58 @@ export function playCampaign(
     }
   }
   return { state, elapsed, purchases };
+}
+
+export type IdleReport = {
+  state: GameState;
+  /** 解放などが起きた時刻 [秒] */
+  marks: Partial<Record<"auto" | "layer2" | "autoRebirth" | "cluster" | "layer3", number>>;
+  /** 期間中の星屑の最大値 */
+  maxDust: number;
+  /** 10分ごとの恒久強化の購入数 */
+  purchasesPer10Min: number[];
+};
+
+/**
+ * 画面を開いたまま遊ぶ人をまねる。1秒ごとに、次の目標に合わせて狙いと質量を決め、
+ * 自動制御がなければ狙いの段階を手で買い、恒久強化は買えるだけ買う。星団の星は窒素・炭素狙いの軽い星にする
+ */
+export function playIdle(seconds: number): IdleReport {
+  let state = createGame();
+  const marks: IdleReport["marks"] = {};
+  const purchasesPer10Min: number[] = [];
+  let maxDust = 0;
+  let purchases = 0;
+  const levels = (s: GameState) => SHOP_IDS.reduce((sum, id) => sum + s.meta.shop[id], 0);
+  for (let t = 1; t <= seconds; t++) {
+    if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
+    const currency = SHOP[nextShopGoal(state.meta).item].currency;
+    state = setTarget(state, TARGET_FOR[currency]);
+    const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
+    state = setNextMass(state, light ? 6 : null);
+    state.meta.cluster.forEach((_, i) => {
+      state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
+    });
+    for (let half = 0; half < 2; half++) {
+      state = advanceAll(state, 0.5, 0.1).state;
+      if (!state.meta.shop.auto) state = buyCheapest(state, TARGET_STAGES[TARGET_FOR[currency]]);
+    }
+    const before = levels(state);
+    state = buyAllShopItems(state);
+    purchases += levels(state) - before;
+    if (t % 600 === 0) {
+      purchasesPer10Min.push(purchases);
+      purchases = 0;
+    }
+    maxDust = Math.max(maxDust, ...Object.values(state.meta.dust));
+    const reached: [keyof IdleReport["marks"], boolean][] = [
+      ["auto", state.meta.shop.auto > 0],
+      ["layer2", state.meta.supernovae >= LAYER2_AFTER],
+      ["autoRebirth", canAutoRebirth(state.meta)],
+      ["cluster", state.meta.shop.cluster > 0],
+      ["layer3", state.meta.sProcess.unlocked],
+    ];
+    for (const [mark, done] of reached) if (done && marks[mark] === undefined) marks[mark] = t;
+  }
+  return { state, marks, maxDust, purchasesPer10Min };
 }
