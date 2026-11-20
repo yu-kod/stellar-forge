@@ -1,4 +1,5 @@
 import {
+  buyAllShopItems,
   buyShopItem,
   buyStage,
   buyStageMax,
@@ -10,6 +11,7 @@ import {
 } from "@/game/actions";
 import type { SupernovaEvent } from "@/game/advance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
+import { canAutoRebirth } from "@/game/actions";
 import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
@@ -45,6 +47,7 @@ export type Action =
   | { type: "setSlotMass"; slot: number; mass: number | null }
   | { type: "setSlotTarget"; slot: number; target: Target }
   | { type: "buyShopItem"; item: ShopId }
+  | { type: "buyAllShopItems" }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
   | { type: "setSpeed"; speed: Speed }
@@ -78,7 +81,10 @@ export function gameReducer(model: Model, action: Action): Model {
       if (model.game.star.end && model.game.meta.cluster.length === 0) return model;
       const { state, events, clusterEvents } = advanceAll(model.game, action.seconds * model.speed);
       const discoveries = clusterEvents.filter((e) => e.type === "discover");
-      return notify({ ...model, game: state }, [...events.filter(isNotice), ...discoveries]);
+      // 自動で次の星を生むようになったら、毎周の点火は知らせない
+      const quiet = canAutoRebirth(state.meta);
+      const notices = events.filter(isNotice).filter((e) => !quiet || e.type !== "ignite");
+      return notify({ ...model, game: state }, [...notices, ...discoveries]);
     }
     case "buy":
       return { ...model, game: buyStage(model.game, action.stage) };
@@ -96,6 +102,8 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, game: setNextMass(model.game, action.mass) };
     case "setAutoRebirth":
       return { ...model, game: setAutoRebirth(model.game, action.on) };
+    case "buyAllShopItems":
+      return { ...model, game: buyAllShopItems(model.game) };
     case "buyShopItem":
       return { ...model, game: buyShopItem(model.game, action.item) };
     case "rebirth": {

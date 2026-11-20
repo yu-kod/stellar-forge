@@ -5,6 +5,7 @@ import { isShopItemOpen } from "@/game/shop";
 import { SHOP } from "@/game/balance";
 import { DUST_IDS, SHOP_IDS, type Meta, type ShopId } from "@/game/types";
 import { ELEMENTS } from "../elements";
+import { formatNumber } from "../format";
 import type { Action } from "../model";
 import { ElementChip } from "./ElementChip";
 
@@ -18,9 +19,16 @@ export function ShopView({ meta, dispatch }: Props) {
       </h3>
       <ul aria-labelledby="dust-label" className="flex flex-wrap gap-2">
         {DUST_IDS.map((id) => (
-          <ElementChip key={id} element={id} value={String(meta.dust[id])} />
+          <ElementChip key={id} element={id} value={formatNumber(meta.dust[id])} />
         ))}
       </ul>
+      <Button
+        variant="outline"
+        className="h-11 justify-self-start active:scale-[0.97]"
+        onClick={() => dispatch({ type: "buyAllShopItems" })}
+      >
+        まとめて交換
+      </Button>
       <p className="text-muted-foreground text-sm">
         欲しい星屑に合わせて、どの燃焼を強化するかを変えよう。例：炭素が欲しいなら炭素燃焼を強化しない。ケイ素が欲しいなら酸素燃焼まで強化する。
       </p>
@@ -72,7 +80,7 @@ function ShopItem({ meta, item, dispatch }: Omit<Props, "meta"> & { meta: Meta; 
           <>
             交換
             <small className="text-muted-foreground font-mono text-xs">
-              {ELEMENTS[spec.currency].name}の星屑 {shopCost(meta, item)}
+              {ELEMENTS[spec.currency].name}の星屑 {formatNumber(shopCost(meta, item))}
             </small>
           </>
         )}

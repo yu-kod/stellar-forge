@@ -41,6 +41,8 @@ type Props = {
   storage?: JsonStorage;
   /** 今の時刻 [ms]。保存した時刻と留守中の進行に使う */
   now?: () => number;
+  /** 確認用の早送り（×3）を出すか。開発中だけ出す */
+  showSpeed?: boolean;
 };
 
 type Tab = "table" | "shop" | "records";
@@ -70,6 +72,7 @@ export function GameScreen({
   ticker = animationFrameTicker,
   storage = browserStorage,
   now = Date.now,
+  showSpeed = import.meta.env.DEV,
 }: Props) {
   const [model, dispatch] = useReducer(gameReducer, null, () =>
     initialModel(initial, storage, now)
@@ -131,19 +134,21 @@ export function GameScreen({
           <p className="font-mono tabular-nums">
             第{game.star.generation}世代の星・{Math.floor(game.star.time)}秒
           </p>
-          <div role="group" aria-label="進める速さ" className="flex rounded-full border">
-            {SPEEDS.map((speed) => (
-              <button
-                key={speed}
-                type="button"
-                aria-pressed={model.speed === speed}
-                onClick={() => dispatch({ type: "setSpeed", speed })}
-                className="aria-pressed:bg-accent aria-pressed:text-foreground focus-visible:ring-ring/50 h-11 min-w-11 rounded-full px-3 transition-colors outline-none focus-visible:ring-[3px]"
-              >
-                ×{speed}
-              </button>
-            ))}
-          </div>
+          {showSpeed && (
+            <div role="group" aria-label="進める速さ" className="flex rounded-full border">
+              {SPEEDS.map((speed) => (
+                <button
+                  key={speed}
+                  type="button"
+                  aria-pressed={model.speed === speed}
+                  onClick={() => dispatch({ type: "setSpeed", speed })}
+                  className="aria-pressed:bg-accent aria-pressed:text-foreground focus-visible:ring-ring/50 h-11 min-w-11 rounded-full px-3 transition-colors outline-none focus-visible:ring-[3px]"
+                >
+                  ×{speed}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </header>
       <p role="note" className="bg-muted rounded-lg border px-3 py-2 text-sm">
@@ -151,7 +156,7 @@ export function GameScreen({
       </p>
       <div className="grid items-start gap-4 md:grid-cols-[minmax(17.5rem,23.75rem)_1fr]">
         <StarPanel game={game} />
-        <section aria-labelledby="stages-label" className="grid gap-2">
+        <section aria-labelledby="stages-label" className="order-first grid gap-2 md:order-none">
           <h2 id="stages-label" className="sr-only">
             燃焼段階
           </h2>
@@ -198,7 +203,7 @@ export function GameScreen({
         </Tabs>
       </section>
       <footer className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-3 pb-6 text-sm">
-        <p>進行はこのブラウザに保存されます。×3 は確認用の早送りです。</p>
+        <p>進行はこのブラウザに保存されます。</p>
         <ResetDialog onReset={reset} />
       </footer>
       <SupernovaDialog game={game} onRebirth={startNextStar} dispatch={dispatch} />
@@ -252,7 +257,7 @@ function GoalText({ game }: { game: GameState }) {
   return (
     <>
       次の目標：「<b className="text-ignite">{spec.name}</b>」まで{ELEMENTS[spec.currency].name}
-      の星屑 あと {goal.shortfall.toLocaleString("ja-JP")}（狙い：
+      の星屑 あと {formatNumber(goal.shortfall)}（狙い：
       {TARGET_NAMES[TARGET_FOR_DUST[spec.currency]]}）
     </>
   );

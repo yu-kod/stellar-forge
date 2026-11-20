@@ -132,7 +132,7 @@ export function StarPanel({ game }: { game: GameState }) {
         </h2>
         <ul aria-labelledby="preview-label" className="flex flex-wrap gap-1.5">
           {DUST_IDS.map((id) => (
-            <ElementChip key={id} element={id} value={String(preview[id])} />
+            <ElementChip key={id} element={id} value={formatNumber(preview[id])} />
           ))}
         </ul>
       </div>

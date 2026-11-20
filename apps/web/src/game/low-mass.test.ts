@@ -140,7 +140,7 @@ describe("軽い星（8 M☉ 未満）", () => {
     expect(next.meta.whiteDwarfs).toBe(1);
     expect(next.meta.supernovae).toBe(LAYER2_AFTER);
     expect(next.meta.neutronStars).toBe(0);
-    expect(next.meta.log[0]?.end).toBe("whiteDwarf");
+    expect(next.meta.log).toEqual([]);
     expect(next.star.generation).toBe(LAYER2_AFTER + 2);
   });
 });

@@ -30,6 +30,11 @@ describe("GameScreen：星と時間", () => {
     expect(screen.getByText("第1世代の星・1秒")).toBeInTheDocument();
   });
 
+  it("確認用の早送りは、開発中でなければ出さない", () => {
+    render(<GameScreen initial={createGame()} ticker={manualTicker().ticker} showSpeed={false} />);
+    expect(screen.queryByRole("group", { name: "進める速さ" })).not.toBeInTheDocument();
+  });
+
   it("×3 を押すと3倍の速さで進む", async () => {
     const { tick, user } = renderGame();
 
@@ -96,10 +101,20 @@ describe("GameScreen：2周目からの目標", () => {
   it("一番近い星屑の強化と、あといくつかと、どれを狙えばよいかを出す", () => {
     const game = createGame();
     game.meta.supernovae = 1;
+    game.meta.shop.auto = 1;
     game.meta.dust.C = 2;
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(
       "次の目標：「金属量（CNOサイクル）」まで炭素の星屑 あと 1（狙い：炭素）"
+    );
+  });
+
+  it("燃焼の自動制御をまだ持っていなければ、それを勧める", () => {
+    const game = createGame();
+    game.meta.supernovae = 1;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "次の目標：「燃焼の自動制御」まで硫黄の星屑 あと 4（狙い：ケイ素・硫黄）"
     );
   });
 
@@ -364,6 +379,40 @@ describe("GameScreen：自動で次の星を生む", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "これからは超新星のあと自動で次の星が生まれる"
     );
+  });
+});
+
+describe("GameScreen：大きな数と知らせの量", () => {
+  it("星屑の手持ちと交換の費用は、大きくなったら指数で書く", async () => {
+    const game = createGame();
+    game.meta.dust.O = 123_456_789;
+    game.meta.shop.mass = 30;
+    const { user } = renderGame(game);
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByRole("listitem", { name: "酸素 1.23×10⁸" })).toBeInTheDocument();
+    const item = screen.getByRole("article", { name: "より重い星" });
+    expect(within(item).getByRole("button", { name: /交換/ })).toHaveTextContent("×10");
+  });
+
+  it("自動で次の星を生むようになったら、点火の知らせは出さない", () => {
+    const game = createGame();
+    game.meta.supernovae = 10;
+    game.star.mass.He = 0.04;
+    game.star.mass.C = 1;
+    const { tick } = renderGame(game);
+    tick(0.1);
+    expect(screen.getByRole("status")).not.toHaveTextContent("点火");
+  });
+
+  it("まとめて交換で、買えるものを全部買う", async () => {
+    const game = createGame();
+    game.meta.dust.O = 100;
+    const { user } = renderGame(game);
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    await user.click(screen.getByRole("button", { name: "まとめて交換" }));
+    expect(
+      within(screen.getByRole("article", { name: "より重い星" })).getByText(/Lv[3-9]/)
+    ).toBeVisible();
   });
 });
 

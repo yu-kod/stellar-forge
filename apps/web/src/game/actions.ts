@@ -19,6 +19,7 @@ import {
   type Meta,
   type ShopId,
   type StageId,
+  SHOP_IDS,
   type ClusterSlot,
   type SupernovaRecord,
   type Target,
@@ -120,7 +121,8 @@ export function rebirth(state: GameState): GameState {
       star.end === "whiteDwarf" && meta.whiteDwarfs + 1 >= LAYER3_AFTER
         ? { ...meta.sProcess, unlocked: true }
         : meta.sProcess,
-    log: [record, ...meta.log].slice(0, LOG_LIMIT),
+    // 記録は超新星だけ。白色矮星は数だけ数える（星団で何百も生まれるため）
+    log: star.end === "whiteDwarf" ? meta.log : [record, ...meta.log].slice(0, LOG_LIMIT),
   };
   return { meta: nextMeta, star: createStar(nextMeta) };
 }
@@ -148,6 +150,20 @@ export function buyShopItem(state: GameState, item: ShopId): GameState {
   };
   if (item === "cluster") bought.cluster = [...meta.cluster, createSlot(bought)];
   return { star: state.star, meta: bought };
+}
+
+/** 買える恒久強化を、買えなくなるまで全部買う（手持ちに対して安いものから） */
+export function buyAllShopItems(state: GameState): GameState {
+  let next = state;
+  for (;;) {
+    const affordable = SHOP_IDS.filter((item) => canBuyShopItem(next.meta, item));
+    if (affordable.length === 0) return next;
+    const share = (item: ShopId) => shopCost(next.meta, item) / next.meta.dust[SHOP[item].currency];
+    next = buyShopItem(
+      next,
+      affordable.reduce((a, b) => (share(b) < share(a) ? b : a))
+    );
+  }
 }
 
 /** 星団に新しく加わる星（窒素を作る軽い星・炭素狙い） */

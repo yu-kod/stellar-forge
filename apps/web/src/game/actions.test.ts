@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto, setTarget } from "./actions";
+import {
+  buyAllShopItems,
+  buyShopItem,
+  buyStage,
+  buyStageMax,
+  canBuyShopItem,
+  rebirth,
+  setAuto,
+  setTarget,
+} from "./actions";
 import { createGame } from "./star";
 
 describe("buyStage", () => {
@@ -162,5 +171,44 @@ describe("setTarget（狙う星屑）", () => {
   it("段階をひとつずつ切り替えたら、狙いは「自分で決める」になる", () => {
     const next = setAuto(setTarget(createGame(), "C"), "C", true);
     expect(next.meta.target).toBeNull();
+  });
+});
+
+describe("buyAllShopItems（まとめて交換）", () => {
+  it("買える恒久強化を、買えなくなるまで全部買う", () => {
+    const game = createGame();
+    game.meta.dust.O = 100;
+    game.meta.dust.C = 3;
+    const next = buyAllShopItems(game);
+    expect(next.meta.shop.mass).toBeGreaterThan(2);
+    expect(next.meta.shop.cno).toBe(1);
+    expect(canBuyShopItem(next.meta, "mass")).toBe(false);
+  });
+
+  it("手持ちに対して安いものから買う", () => {
+    const game = createGame();
+    game.meta.dust.O = 3;
+    game.meta.dust.C = 100;
+    const next = buyAllShopItems(game);
+    expect(next.meta.shop.cno).toBeGreaterThan(2);
+    expect(next.meta.shop.mass).toBe(1);
+  });
+
+  it("何も買えなければ同じ状態を返す", () => {
+    const game = createGame();
+    expect(buyAllShopItems(game)).toBe(game);
+  });
+});
+
+describe("rebirth と記録", () => {
+  it("白色矮星は記録に残さず、数だけ数える", () => {
+    const game = createGame();
+    game.meta.supernovae = 5;
+    game.meta.nextMass = 3;
+    game.star.initialMass = 3;
+    game.star.end = "whiteDwarf";
+    const next = rebirth(game);
+    expect(next.meta.log).toEqual([]);
+    expect(next.meta.whiteDwarfs).toBe(1);
   });
 });

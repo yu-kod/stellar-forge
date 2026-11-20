@@ -18,5 +18,9 @@ export function nextShopGoal(meta: Meta): ShopGoal {
     const shortfall = Math.max(0, cost - meta.dust[SHOP[item].currency]);
     return { goal: { item, shortfall, affordable: shortfall === 0 }, ratio: shortfall / cost };
   });
-  return goals.reduce((a, b) => (b.ratio < a.ratio ? b : a)).goal;
+  const best = goals.reduce((a, b) => (b.ratio < a.ratio ? b : a)).goal;
+  if (best.affordable) return best;
+  // 燃焼の自動制御は遊び方を大きく変えるので、交換できるものがなければ真っ先に勧める
+  const auto = goals.find(({ goal }) => goal.item === "auto");
+  return auto ? auto.goal : best;
 }
