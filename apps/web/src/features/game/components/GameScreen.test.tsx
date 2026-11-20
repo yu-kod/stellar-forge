@@ -92,6 +92,40 @@ describe("GameScreen：星と時間", () => {
   });
 });
 
+describe("GameScreen：2周目からの目標", () => {
+  it("一番近い星屑の強化と、あといくつかと、どれを狙えばよいかを出す", () => {
+    const game = createGame();
+    game.meta.supernovae = 1;
+    game.meta.dust.C = 2;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "次の目標：「金属量（CNOサイクル）」まで炭素の星屑 あと 1（狙い：炭素）"
+    );
+  });
+
+  it("もう交換できるものがあれば、そう促す", () => {
+    const game = createGame();
+    game.meta.supernovae = 1;
+    game.meta.dust.O = 5;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent("星屑タブで「より重い星」と交換できる");
+  });
+
+  it("最後の数十秒は、費用が下がることを知らせる", () => {
+    const game = aboutToCollapse();
+    game.meta.supernovae = 1;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(/^最後の30秒/);
+  });
+
+  it("自動で次の星を生むようになったら、最後の数十秒の案内は出さない", () => {
+    const game = aboutToCollapse();
+    game.meta.supernovae = 10;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(/^(次の目標|星屑タブ)/);
+  });
+});
+
 describe("GameScreen：燃焼の強化", () => {
   it("エネルギーが足りれば強化でき、Lv が上がる", async () => {
     const game = createGame();
