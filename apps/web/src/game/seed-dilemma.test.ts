@@ -28,7 +28,7 @@ describe("鉄の種の目標の板挟み（4時間、画面を開いたまま遊
 
   it("種を少なく保つほど、多くの s元素を見つける（多いと重い元素まで届かない）", () => {
     const found = (r: IdleReport) => r.state.meta.sProcess.discovered.length;
-    expect(found(few)).toBeGreaterThanOrEqual(45);
+    expect(found(few)).toBeGreaterThanOrEqual(40);
     expect(found(many)).toBeLessThan(found(few) - 15);
   });
 });

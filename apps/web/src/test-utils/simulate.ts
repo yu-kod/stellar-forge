@@ -10,7 +10,6 @@ import {
   setSeedTarget,
   setTarget,
   shopCost,
-  triggerIa,
 } from "@/game/actions";
 import { funds, isShopItemOpen } from "@/game/shop";
 import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
@@ -168,7 +167,15 @@ export type IdleReport = {
 /** 第3層で保つ鉄の種の量。数か、その時の状態で決める関数 */
 export type SeedPlan = number | ((state: GameState) => number);
 
-export function playIdle(seconds: number, options: { seedTarget?: SeedPlan } = {}): IdleReport {
+/**
+ * 画面を開いたまま遊ぶ。steer（初期値 true）では次の目標に合わせて狙い・質量・星団を決める。
+ * false では狙いと質量を初期のまま触らない（星屑の交換と最初の自動制御までの手での強化だけ）
+ */
+export function playIdle(
+  seconds: number,
+  options: { seedTarget?: SeedPlan; steer?: boolean } = {}
+): IdleReport {
+  const steer = options.steer ?? true;
   let state = createGame();
   const plan = options.seedTarget ?? DEFAULT_SEED_TARGET;
   const marks: IdleReport["marks"] = {};
@@ -181,20 +188,17 @@ export function playIdle(seconds: number, options: { seedTarget?: SeedPlan } = {
   for (let t = 1; t <= seconds; t++) {
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
     const currency = SHOP[nextShopGoal(state.meta).item].currency;
-    const target = targetOr(currency, state.meta.target ?? "C");
-    state = setTarget(state, target);
-    const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
-    state = setNextMass(state, light ? 6 : null);
-    state.meta.cluster.forEach((_, i) => {
-      state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
-    });
-    // 第3層：自動化がなければ、道の上の原子核が目標の量になるまで手で Ia型超新星を起こす
-    const seedTarget = typeof plan === "number" ? plan : plan(state);
-    state = setSeedTarget(state, seedTarget);
-    const onPath = state.meta.sProcess.amounts.reduce((sum, a) => sum + a, 0);
-    if (state.meta.sProcess.unlocked && !state.meta.shop.autoIa && onPath < seedTarget) {
-      state = triggerIa(state);
+    const target = steer ? targetOr(currency, state.meta.target ?? "C") : "Si";
+    if (steer) {
+      state = setTarget(state, target);
+      const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
+      state = setNextMass(state, light ? 6 : null);
+      state.meta.cluster.forEach((_, i) => {
+        state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
+      });
     }
+    // 第3層：道の上の原子核の目標の量（Ia型超新星は自動で補う）
+    state = setSeedTarget(state, typeof plan === "number" ? plan : plan(state));
     for (let half = 0; half < 2; half++) {
       const heavyBefore = state.meta.sProcess.heavy;
       state = advanceAll(state, 0.5, 0.1).state;

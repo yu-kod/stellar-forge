@@ -113,7 +113,7 @@ export function setSeedTarget(state: GameState, target: number): GameState {
 
 /** 自動の Ia型超新星：道の上の原子核が目標の量になるまで、白色矮星を使って補う */
 export function autoIa(state: GameState): GameState {
-  if (!state.meta.shop.autoIa) return state;
+  if (!state.meta.sProcess.unlocked) return state;
   let next = state;
   const total = () => next.meta.sProcess.amounts.reduce((sum, a) => sum + a, 0);
   while (next.meta.whiteDwarfs >= 1 && total() < next.meta.sProcess.seedTarget) {
@@ -144,6 +144,9 @@ export function rebirth(state: GameState): GameState {
       star.end === "whiteDwarf" && meta.whiteDwarfs + 1 >= LAYER3_AFTER
         ? { ...meta.sProcess, unlocked: true }
         : meta.sProcess,
+    bestRate: Object.fromEntries(
+      DUST_IDS.map((id) => [id, Math.max(meta.bestRate[id], gain[id] / Math.max(1, star.time))])
+    ) as Meta["bestRate"],
     rProcess:
       meta.rProcess.unlocked && star.end === "collapse"
         ? addNeutronStars(meta.rProcess, neutronStarBin(star.initialMass), 1)

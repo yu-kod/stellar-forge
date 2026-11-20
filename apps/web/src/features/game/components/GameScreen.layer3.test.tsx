@@ -140,9 +140,8 @@ describe("GameScreen：第3層の強化と自動化", () => {
     expect(screen.getByRole("article", { name: "¹³C ポケット" })).toBeInTheDocument();
   });
 
-  it("Ia型超新星の自動化を持っていれば、鉄の種の目標の量を選べる", async () => {
+  it("第3層では、鉄の種の目標の量を選べる", async () => {
     const game = layer3(0);
-    game.meta.shop.autoIa = 1;
     const { user } = renderGame(game);
     const picker = screen.getByRole("radiogroup", { name: "道の上の原子核を保つ量" });
     expect(within(picker).getByRole("radio", { name: "3" })).toBeChecked();
@@ -150,13 +149,6 @@ describe("GameScreen：第3層の強化と自動化", () => {
     await user.click(within(picker).getByRole("radio", { name: "10" }));
 
     expect(within(picker).getByRole("radio", { name: "10" })).toBeChecked();
-  });
-
-  it("自動化を持っていなければ、目標の量は選べない", () => {
-    renderGame(layer3());
-    expect(
-      screen.queryByRole("radiogroup", { name: "道の上の原子核を保つ量" })
-    ).not.toBeInTheDocument();
   });
 });
 

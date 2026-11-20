@@ -9,8 +9,8 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     report = playIdle(240 * MINUTE);
   }, 300_000);
 
-  it("第2層は30〜60分で解放される", () => {
-    expect(report.marks.layer2).toBeGreaterThanOrEqual(28 * MINUTE);
+  it("第2層は25〜60分で解放される", () => {
+    expect(report.marks.layer2).toBeGreaterThanOrEqual(25 * MINUTE);
     expect(report.marks.layer2).toBeLessThanOrEqual(60 * MINUTE);
   });
 

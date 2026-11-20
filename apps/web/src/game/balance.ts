@@ -378,18 +378,8 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     costGrowth: 4,
     layer: 3,
   },
-  autoIa: {
-    name: "Ia型超新星の自動化",
-    currency: "S",
-    description: "道の上の原子核が目標の量になるまで、白色矮星で自動で補う",
-    baseCost: 200,
-    costGrowth: 1,
-    maxLevel: 1,
-    layer: 3,
-  },
 };
 
-/** 超新星の記録を残す件数 */
 /** 第2層の強化（窒素）の効果 */
 export const RECYCLE_PER_LEVEL = 0.25;
 export const NEBULA_PER_LEVEL = 0.5;
@@ -412,4 +402,5 @@ export const DEFAULT_SEED_TARGET = 3;
 /** 星団の星の初期設定（窒素を作る軽い星） */
 export const CLUSTER_DEFAULT_MASS = 7;
 
+/** 超新星の記録を残す件数 */
 export const LOG_LIMIT = 20;

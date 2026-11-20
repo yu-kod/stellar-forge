@@ -53,7 +53,6 @@ export function createMeta(): Meta {
       pocket: 0,
       flash: 0,
       binary: 0,
-      autoIa: 0,
     },
     autoOn: { H: true, He: true, C: true, Ne: true, O: true, Si: false },
     target: "Si",
@@ -63,6 +62,7 @@ export function createMeta(): Meta {
     sProcess: createSProcess(),
     rProcess: createRProcess(),
     iaSupernovae: 0,
+    bestRate: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
     lightFound: [],
   };
 }
