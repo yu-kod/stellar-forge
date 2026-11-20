@@ -178,7 +178,7 @@ export function GameScreen({
           {game.meta.supernovae >= LAYER2_AFTER && (
             <MassPicker meta={game.meta} dispatch={dispatch} />
           )}
-          <TargetPicker target={game.meta.target} dispatch={dispatch} />
+          <TargetPicker meta={game.meta} dispatch={dispatch} />
           {game.meta.supernovae >= AUTO_REBIRTH_AFTER && (
             <label className="text-muted-foreground flex h-11 items-center gap-2 px-1 text-sm">
               <input

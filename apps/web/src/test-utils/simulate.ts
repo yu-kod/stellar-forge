@@ -173,7 +173,12 @@ export type SeedPlan = number | ((state: GameState) => number);
  */
 export function playIdle(
   seconds: number,
-  options: { seedTarget?: SeedPlan; steer?: boolean } = {}
+  options: {
+    seedTarget?: SeedPlan;
+    steer?: boolean;
+    /** 第3層の解放後に主星として生む質量（省略すると第2層と同じ決め方） */
+    layer3MainMass?: number;
+  } = {}
 ): IdleReport {
   const steer = options.steer ?? true;
   let state = createGame();
@@ -192,7 +197,8 @@ export function playIdle(
     if (steer) {
       state = setTarget(state, target);
       const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
-      state = setNextMass(state, light ? 6 : null);
+      const layer3 = options.layer3MainMass !== undefined && state.meta.sProcess.unlocked;
+      state = setNextMass(state, layer3 ? options.layer3MainMass! : light ? 6 : null);
       state.meta.cluster.forEach((_, i) => {
         state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
       });
