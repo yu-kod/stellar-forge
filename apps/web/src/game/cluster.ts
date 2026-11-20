@@ -4,6 +4,7 @@ import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
 import { dustPreview } from "./dust";
 import { unlockLayer4 } from "./rprocess";
+import { blowWinds, heavyMultiplier } from "./sprocess";
 import type { ClusterSlot, GameState, Meta, Target } from "./types";
 
 /** 星団の星を、主星と同じ形（meta と star）で見る。狙いと次の質量はその星のもの */
@@ -48,6 +49,13 @@ function advanceSlot(view: GameState, seconds: number, maxStep: number): RunsRes
   return { state: current, events };
 }
 
+/** 第3層の解放後、s過程の原子核を恒星風で外へ出す */
+function winds(meta: Meta, seconds: number): Meta {
+  return meta.sProcess.unlocked
+    ? { ...meta, sProcess: blowWinds(meta.sProcess, seconds, heavyMultiplier(meta)) }
+    : meta;
+}
+
 /** 主星と星団の星をすべて進める。events は主星のもの、clusterEvents は星団の星のもの */
 export function advanceAll(
   state: GameState,
@@ -63,7 +71,7 @@ export function advanceAll(
     meta = mergeSlot(meta, index, result.state, slot);
   });
   return {
-    state: unlockLayer4(autoIa({ meta, star: main.state.star })),
+    state: unlockLayer4(autoIa({ meta: winds(meta, seconds), star: main.state.star })),
     events: main.events,
     clusterEvents,
   };

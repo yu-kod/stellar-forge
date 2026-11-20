@@ -3,7 +3,7 @@ import { buyShopItem, canBuyShopItem, setSeedTarget, triggerIa } from "./actions
 import { LAYER2_AFTER } from "./balance";
 import { advanceAll } from "./cluster";
 import { isShopItemOpen } from "./shop";
-import { neutronMultiplier, seedsPerIa } from "./sprocess";
+import { heavyMultiplier, neutronMultiplier, seedsPerIa } from "./sprocess";
 import { createMeta, createStar } from "./star";
 import type { GameState } from "./types";
 
@@ -22,12 +22,25 @@ describe("第3層の強化", () => {
     expect(canBuyShopItem(game.meta, "pocket")).toBe(false);
   });
 
-  it("¹³C ポケット（炭素）と熱パルスの強さ（窒素）で、中性子が Lv ごとに +25%（足し算）", () => {
+  it("¹³C ポケット（重元素の星屑）で、中性子が Lv ごとに ×1.5（掛け算）", () => {
     const game = layer3();
-    game.meta.dust.C = 1e9;
-    game.meta.dust.N = 1e9;
-    const bought = buyShopItem(buyShopItem(game, "pocket"), "flash");
-    expect(neutronMultiplier(bought.meta)).toBeCloseTo(1.5);
+    game.meta.sProcess.heavy = 1e9;
+    const bought = buyShopItem(buyShopItem(game, "pocket"), "pocket");
+    expect(neutronMultiplier(bought.meta)).toBeCloseTo(2.25);
+  });
+
+  it("第3ドレッジアップ（重元素の星屑）で、恒星風で出る s元素の価値が Lv ごとに +50%（足し算）", () => {
+    const game = layer3();
+    game.meta.sProcess.heavy = 1e9;
+    const bought = buyShopItem(buyShopItem(game, "flash"), "flash");
+    expect(neutronMultiplier(bought.meta)).toBe(1);
+    expect(heavyMultiplier(bought.meta)).toBe(2);
+    bought.meta.sProcess.heavy = 0;
+    bought.meta.sProcess.amounts[0] = 1;
+    const plain = layer3();
+    plain.meta.sProcess.amounts[0] = 1;
+    const earned = (g: GameState) => advanceAll(g, 10).state.meta.sProcess.heavy;
+    expect(earned(bought) / earned(plain)).toBeCloseTo(2, 5);
   });
 
   it("連星の質量移動（酸素）で、Ia型超新星1回の鉄の種が Lv ごとに +1", () => {

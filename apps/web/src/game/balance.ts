@@ -1,4 +1,20 @@
-import type { DustId, ElementId, ShopId, StageId, Target } from "./types";
+import type { Currency, DustId, ElementId, ShopId, StageId, Target } from "./types";
+
+/** その星屑を一番多く残す狙い */
+const BEST_TARGET: Record<DustId, Target> = {
+  C: "C",
+  N: "C",
+  O: "O",
+  Ne: "Ne",
+  Mg: "O",
+  Si: "Si",
+  S: "Si",
+};
+
+/** その通貨を一番多く残す狙い。重元素の星屑は狙いでは増えない（null） */
+export function bestTarget(currency: Currency): Target | null {
+  return currency === "heavy" ? null : BEST_TARGET[currency];
+}
 
 /**
  * バランスの数値。正は docs/design.md。ここを変えたら設計書の表とシミュレーションテストも直す。
@@ -214,7 +230,7 @@ export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 /** 第3層（s過程）を解放する白色矮星の数 */
 export const LAYER3_AFTER = 30;
 /** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
-export const NEUTRONS_PER_HELIUM = 0.7;
+export const NEUTRONS_PER_HELIUM = 5;
 
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
@@ -235,8 +251,8 @@ export const FIZZLE_DUST_FACTOR = 0.3;
 
 export type ShopSpec = {
   name: string;
-  /** 支払う星屑の元素 */
-  currency: DustId;
+  /** 支払う星屑の元素（heavy は s過程の重元素の星屑） */
+  currency: Currency;
   description: string;
   baseCost: number;
   costGrowth: number;
@@ -340,18 +356,18 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   },
   pocket: {
     name: "¹³C ポケット",
-    currency: "C",
-    description: "中性子 +25%",
-    baseCost: 2000,
-    costGrowth: 4,
+    currency: "heavy",
+    description: "中性子 ×1.5",
+    baseCost: 10,
+    costGrowth: 2.5,
     layer: 3,
   },
   flash: {
-    name: "熱パルスの強さ",
-    currency: "N",
-    description: "中性子 +25%",
-    baseCost: 1000,
-    costGrowth: 4,
+    name: "第3ドレッジアップ",
+    currency: "heavy",
+    description: "恒星風で外へ出る s元素の価値 +50%",
+    baseCost: 15,
+    costGrowth: 2.5,
     layer: 3,
   },
   binary: {
@@ -379,11 +395,17 @@ export const RECYCLE_PER_LEVEL = 0.25;
 export const NEBULA_PER_LEVEL = 0.5;
 export const PULSE_PER_LEVEL = 2;
 
+/** s過程の原子核が恒星風で星の外へ出る割合 [/秒] */
+export const S_WIND_RATE = 0.0011;
+
 /** 軽い元素1つあたりの、すべての星屑の上乗せ（足し算） */
 export const LAYER3_LIGHT_DUST = 0.05;
 
 /** 第3層の強化の効果 */
-export const NEUTRONS_PER_UPGRADE = 0.25;
+/** ¹³C ポケット1つあたりの中性子の倍率（掛け算） */
+export const NEUTRONS_PER_POCKET = 1.5;
+/** 第3ドレッジアップ1つあたりの、恒星風で出る s元素の価値の上乗せ（足し算） */
+export const HEAVY_PER_DREDGE_UP = 0.5;
 /** 鉄の種の目標の量（自動の Ia型超新星）の初期値 */
 export const DEFAULT_SEED_TARGET = 3;
 

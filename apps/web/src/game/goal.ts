@@ -1,6 +1,6 @@
 import { shopCost } from "./actions";
 import { SHOP } from "./balance";
-import { isShopItemOpen } from "./shop";
+import { funds, isShopItemOpen } from "./shop";
 import { SHOP_IDS, type Meta, type ShopId } from "./types";
 
 export type ShopGoal = { item: ShopId; shortfall: number; affordable: boolean };
@@ -15,7 +15,7 @@ export function nextShopGoal(meta: Meta): ShopGoal {
     return isShopItemOpen(meta, item) && (maxLevel === undefined || meta.shop[item] < maxLevel);
   }).map((item) => {
     const cost = shopCost(meta, item);
-    const shortfall = Math.max(0, cost - meta.dust[SHOP[item].currency]);
+    const shortfall = Math.max(0, cost - funds(meta, SHOP[item].currency));
     return { goal: { item, shortfall, affordable: shortfall === 0 }, ratio: shortfall / cost };
   });
   const best = goals.reduce((a, b) => (b.ratio < a.ratio ? b : a)).goal;

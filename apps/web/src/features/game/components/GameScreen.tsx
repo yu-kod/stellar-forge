@@ -15,8 +15,8 @@ import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame } from "@/game/star";
-import { STAGE_IDS, type DustId, type GameState, type Target } from "@/game/types";
-import { ELEMENTS, TARGET_NAMES } from "../elements";
+import { STAGE_IDS, type GameState } from "@/game/types";
+import { currencyName, targetHint } from "../elements";
 import { formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
@@ -215,17 +215,6 @@ export function GameScreen({
   );
 }
 
-/** その星屑を一番多く残す狙い */
-const TARGET_FOR_DUST: Record<DustId, Target> = {
-  C: "C",
-  N: "C",
-  O: "O",
-  Ne: "Ne",
-  Mg: "O",
-  Si: "Si",
-  S: "Si",
-};
-
 function GoalText({ game }: { game: GameState }) {
   const { meta, star } = game;
   if (isLowMass(star) && star.agbStartedAt !== null) {
@@ -261,9 +250,9 @@ function GoalText({ game }: { game: GameState }) {
   }
   return (
     <>
-      次の目標：「<b className="text-ignite">{spec.name}</b>」まで{ELEMENTS[spec.currency].name}
-      の星屑 あと {formatNumber(goal.shortfall)}（狙い：
-      {TARGET_NAMES[TARGET_FOR_DUST[spec.currency]]}）
+      次の目標：「<b className="text-ignite">{spec.name}</b>」まで{currencyName(spec.currency)} あと{" "}
+      {formatNumber(goal.shortfall)}
+      {targetHint(spec.currency)}
     </>
   );
 }
