@@ -128,7 +128,10 @@ export function step(state: GameState, dt: number): StepResult {
   for (const stage of STAGE_IDS) {
     if (star.ignitedAt[stage] !== undefined || !isIgnited(star, stage)) continue;
     star.ignitedAt[stage] = star.time;
-    if (!STAGES[stage].final && star.levels[stage] === 0) star.levels[stage] = 1;
+    // 狙いの内（自動強化が ON）の段階だけ、点火した瞬間に Lv1 から燃え始める
+    if (!STAGES[stage].final && star.levels[stage] === 0 && meta.autoOn[stage]) {
+      star.levels[stage] = 1;
+    }
     events.push({ type: "ignite", stage });
   }
 

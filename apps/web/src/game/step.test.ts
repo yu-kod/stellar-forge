@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "./star";
 import { energyRate, finalStageSeconds, secondsToCollapse, step } from "./step";
+import { RATE_CAP } from "./balance";
+import { effectiveRate } from "./rates";
+
+/** Lv1 の段階の速度定数（上限を掛けたもの） */
+const K1 = effectiveRate(0.4 * 0.004, RATE_CAP.H);
 
 describe("step：燃焼", () => {
   it("燃焼量 = k × 燃料 × dt だけ燃料が生成物に変わり、エネルギーが入る", () => {
     const game = createGame();
-    const burned = 0.4 * 0.004 * 25 * 0.5;
+    const burned = K1 * 25 * 0.5;
 
     const { state } = step(game, 0.5);
 
@@ -29,7 +34,7 @@ describe("step：燃焼", () => {
     game.star.mass.H = 0;
     game.star.mass.He = 10;
     // ヘリウムの燃焼量は更新前の He から決まり、同じ更新で生まれた He は燃えない
-    const burned = 0.4 * 0.004 * 10 * 1;
+    const burned = effectiveRate(0.4 * 0.004, RATE_CAP.He) * 10 * 1;
 
     const { state } = step(game, 1);
 
@@ -50,7 +55,7 @@ describe("step：燃焼", () => {
     // ケイ素燃焼は 1.4/30 M☉/s で Si と S を 3:1 で減らす（O 燃焼の生成分は更新後に加わる）
     const fe = (1.4 / 30) * 0.1;
     expect(state.star.mass.Fe).toBeCloseTo(fe);
-    const oBurned = 0.4 * 0.004 * 4 * 0.1;
+    const oBurned = effectiveRate(0.4 * 0.004, RATE_CAP.O) * 4 * 0.1;
     expect(state.star.mass.Si).toBeCloseTo(3 - fe * 0.75 + oBurned * 0.8);
     expect(state.star.mass.S).toBeCloseTo(1 - fe * 0.25 + oBurned * 0.2);
   });
@@ -59,7 +64,7 @@ describe("step：燃焼", () => {
     const game = createGame();
     game.meta.shop.yield = 1;
     const { state } = step(game, 1);
-    expect(state.star.energy / (0.4 * 0.004 * 25 * 1.27e45 * 2)).toBeCloseTo(1);
+    expect(state.star.energy / (K1 * 25 * 1.27e45 * 2)).toBeCloseTo(1);
   });
 });
 
@@ -74,6 +79,18 @@ describe("step：コア温度と点火", () => {
     expect(state.star.temperature).toBeGreaterThanOrEqual(2e8);
     expect(state.star.levels.He).toBe(1);
     expect(state.star.ignitedAt.He).toBeCloseTo(0.1);
+    expect(events).toContainEqual({ type: "ignite", stage: "He" });
+  });
+
+  it("狙いの外（自動強化が OFF）の段階は、点火しても Lv0 のままで燃えない", () => {
+    const game = createGame();
+    game.meta.autoOn.He = false;
+    game.star.mass.H = 22;
+    game.star.mass.He = 3.2;
+
+    const { state, events } = step(game, 0.1);
+
+    expect(state.star.levels.He).toBe(0);
     expect(events).toContainEqual({ type: "ignite", stage: "He" });
   });
 
@@ -245,7 +262,7 @@ describe("energyRate：いま毎秒入るエネルギー", () => {
   it("燃えている段階の 燃焼量 × 1 M☉あたりのエネルギー × 倍率 の合計", () => {
     const game = createGame();
     game.meta.shop.yield = 1;
-    const rate = 0.4 * 0.004 * 25 * 1.27e45 * 2;
+    const rate = K1 * 25 * 1.27e45 * 2;
     expect(energyRate(game) / rate).toBeCloseTo(1);
   });
 

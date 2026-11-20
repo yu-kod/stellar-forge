@@ -131,7 +131,20 @@ export const STAGES: Record<StageId, StageSpec> = {
 export const PACE = 0.4;
 /** この Lv ごとに速度が2倍 */
 export const MILESTONE_EVERY = 10;
-export const CROSS_SECTION_PER_LEVEL = 1.25;
+/** 反応断面積の1 Lv ごとの上乗せ（足し算） */
+export const CROSS_SECTION_PER_LEVEL = 0.25;
+/**
+ * 段階ごとの速度定数の上限 [1/秒]（1秒に燃料のこの割合まで）。実際の星と同じく、水素燃焼（主系列）が
+ * いちばん長く、後の段階ほど速い。強化をいくら重ねても、水素燃焼が周回の長さを決める
+ */
+export const RATE_CAP: Record<StageId, number> = {
+  H: 0.03,
+  He: 0.12,
+  C: 0.3,
+  Ne: 0.3,
+  O: 0.3,
+  Si: 0.3,
+};
 export const CNO_BONUS_PER_LEVEL = 0.25;
 export const MAGNESIUM_DISCOUNT = 0.85;
 /** ケイ素燃焼が始まった後（最後の数十秒）の燃焼強化の費用の倍率。貯めたエネルギーを使い切る見せ場にする */
@@ -248,7 +261,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   xs: {
     name: "反応断面積",
     currency: "Si",
-    description: "全燃焼の速度 ×1.25",
+    description: "全燃焼の速度 +25%",
     baseCost: 3,
     costGrowth: 2.5,
   },

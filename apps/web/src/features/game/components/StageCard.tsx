@@ -157,6 +157,9 @@ function StageDetail({ game, stage }: Omit<Props, "dispatch">) {
     );
   }
   const level = star.levels[stage];
+  if (level === 0) {
+    return <p className="text-muted-foreground text-sm">点火済み。強化すると燃え始める</p>;
+  }
   return (
     <p className="text-muted-foreground flex flex-wrap gap-x-3 text-sm">
       <span>
