@@ -1,3 +1,4 @@
+import { createRProcess, type RProcess } from "@/game/rprocess";
 import { advanceAll } from "@/game/cluster";
 import { createSProcess, type SProcess } from "@/game/sprocess";
 import { canAutoRebirth, createSlot } from "@/game/actions";
@@ -166,6 +167,16 @@ function parseSProcess(value: unknown): SProcess {
   };
 }
 
+function parseRProcess(value: unknown): RProcess {
+  const fresh = createRProcess();
+  if (value === undefined) return fresh;
+  const raw = requireObject(value);
+  const { unlocked } = withDefaults({ unlocked: raw.unlocked }, { unlocked: fresh.unlocked });
+  const pool = parseNumbers(raw.pool);
+  if (pool.length !== fresh.pool.length) throw new InvalidSave();
+  return { unlocked, pool };
+}
+
 function parseNumbers(value: unknown): number[] {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new InvalidSave();
@@ -198,6 +209,7 @@ function parseMeta(value: unknown): Meta {
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
     cluster: ((raw.cluster as unknown[] | undefined) ?? []).map(parseSlot),
     sProcess: parseSProcess(raw.sProcess),
+    rProcess: parseRProcess(raw.rProcess),
     iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
     lightFound: parseNumbers(raw.lightFound),
   };

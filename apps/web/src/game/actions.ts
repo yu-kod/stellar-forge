@@ -11,6 +11,7 @@ import {
 import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
 import { findLightElements } from "./light";
+import { addNeutronStars, neutronStarBin } from "./rprocess";
 import { isShopItemOpen } from "./shop";
 import { seedsPerIa } from "./sprocess";
 import { createStar } from "./star";
@@ -143,6 +144,10 @@ export function rebirth(state: GameState): GameState {
       star.end === "whiteDwarf" && meta.whiteDwarfs + 1 >= LAYER3_AFTER
         ? { ...meta.sProcess, unlocked: true }
         : meta.sProcess,
+    rProcess:
+      meta.rProcess.unlocked && star.end === "collapse"
+        ? addNeutronStars(meta.rProcess, neutronStarBin(star.initialMass), 1)
+        : meta.rProcess,
     // 記録は超新星だけ。白色矮星は数だけ数える（星団で何百も生まれるため）
     log: star.end === "whiteDwarf" ? meta.log : [record, ...meta.log].slice(0, LOG_LIMIT),
   };

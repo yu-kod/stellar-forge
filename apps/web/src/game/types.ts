@@ -1,3 +1,4 @@
+import type { RProcess } from "./rprocess";
 import type { SProcess } from "./sprocess";
 
 export const ELEMENT_IDS = ["H", "He", "C", "N", "O", "Ne", "Mg", "Si", "S", "Fe"] as const;
@@ -84,6 +85,8 @@ export type Meta = {
   cluster: ClusterSlot[];
   /** 第3層 s過程の道 */
   sProcess: SProcess;
+  /** 第4層 中性子星と r過程 */
+  rProcess: RProcess;
   /** 起こした Ia型超新星の数 */
   iaSupernovae: number;
   /** 見つけた軽い元素（リチウム〜マンガン）の原子番号 */

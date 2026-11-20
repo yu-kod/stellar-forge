@@ -1,3 +1,4 @@
+import { createRProcess } from "./rprocess";
 import {
   BASE_MASS,
   BIRTH_TEMPERATURE,
@@ -60,6 +61,7 @@ export function createMeta(): Meta {
     log: [],
     cluster: [],
     sProcess: createSProcess(),
+    rProcess: createRProcess(),
     iaSupernovae: 0,
     lightFound: [],
   };
