@@ -61,6 +61,24 @@ Tailwind のユーティリティに結びつけてある。
 
 トークンを決めたら、主要な組み合わせのコントラスト比を測り、この節に表で残す（WCAG AA は本文 4.5:1 以上）。
 
+このアプリの測定値（`apps/web/src/index.css`）:
+
+| 組み合わせ | 比 | 用途 |
+|---|---|---|
+| `foreground` / `background` | 16.5 | 本文 |
+| `foreground` / `card` | 15.5 | カードの本文 |
+| `muted-foreground` / `background` | 7.6 | 補助テキスト |
+| `muted-foreground` / `card` | 7.1 | カードの補助テキスト |
+| `muted-foreground` / `popover` | 6.6 | 知らせ |
+| `ignite` / `card` | 10.2 | 点火・崩壊・次の目標 |
+| `ignite` / `muted` | 9.6 | 目標の行 |
+| `primary-foreground` / `primary` | 10.2 | 次の星を生むボタン |
+| `ring` / `background` | 9.7 | フォーカスリング |
+| `input` / `card` | 3.7 | 入力欄・outline ボタンの枠 |
+| `background` / `el-*` | 5.4（Fe）〜15.2（He） | 元素チップ・周期表の文字 |
+
+鉄の色は試作の `#8a5a44` だと元素チップの文字が 3.4 しかなかったため、`#b07a5e` に明るくした。
+
 ### 角丸・余白・文字
 
 - 角丸は `--radius` から派生する `rounded-sm` / `rounded-md` / `rounded-lg` / `rounded-xl` だけを使う
