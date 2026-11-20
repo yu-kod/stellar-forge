@@ -179,6 +179,15 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({ lightFound: [], iaSupernovae: 0 });
   });
 
+  it("中性子星の在庫も戻し、古いセーブに無ければ空で始める", () => {
+    const game = createGame();
+    game.meta.rProcess = { unlocked: true, pool: [1, 0, 0, 0, 0, 0, 0, 0, 5] };
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual(game.meta.rProcess);
+    delete raw.game.meta.rProcess;
+    expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual(createGame().meta.rProcess);
+  });
+
   it("星団を持っているのに星が保存されていなければ、作り直す", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     save.game.meta.shop.cluster = 1;
@@ -207,6 +216,9 @@ describe("restoreSave", () => {
     ["s過程の発見が配列でない", saveWith((g) => (g.meta.sProcess.discovered = 38))],
     ["s過程の解放が真偽値でない", saveWith((g) => (g.meta.sProcess.unlocked = "yes"))],
     ["軽い元素が配列でない", saveWith((g) => (g.meta.lightFound = 3))],
+    ["中性子星の在庫の段の数が違う", saveWith((g) => (g.meta.rProcess.pool = [1]))],
+    ["中性子星の在庫が配列でない", saveWith((g) => (g.meta.rProcess.pool = 1))],
+    ["第4層の解放が真偽値でない", saveWith((g) => (g.meta.rProcess.unlocked = 1))],
     ["軽い元素が数でない", saveWith((g) => (g.meta.lightFound = ["Li"]))],
     [
       "星団の星の狙いがない",

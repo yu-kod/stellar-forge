@@ -3,6 +3,7 @@ export { createSlot } from "./actions";
 import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
 import { dustPreview } from "./dust";
+import { unlockLayer4 } from "./rprocess";
 import type { ClusterSlot, GameState, Meta, Target } from "./types";
 
 /** 星団の星を、主星と同じ形（meta と star）で見る。狙いと次の質量はその星のもの */
@@ -62,7 +63,7 @@ export function advanceAll(
     meta = mergeSlot(meta, index, result.state, slot);
   });
   return {
-    state: autoIa({ meta, star: main.state.star }),
+    state: unlockLayer4(autoIa({ meta, star: main.state.star })),
     events: main.events,
     clusterEvents,
   };
