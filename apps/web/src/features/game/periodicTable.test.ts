@@ -37,6 +37,18 @@ describe("PERIODIC_TABLE：水素からビスマスまでの83マス", () => {
     expect(cell("Lu")).toMatchObject({ row: 7, column: 17 });
   });
 
+  it.each([
+    ["H", "水素"],
+    ["Fe", "鉄"],
+    ["Sr", "ストロンチウム"],
+    ["Ba", "バリウム"],
+    ["Au", "金"],
+    ["Pb", "鉛"],
+    ["Bi", "ビスマス"],
+  ])("%s の名前は %s", (symbol, name) => {
+    expect(cell(symbol)?.name).toBe(name);
+  });
+
   it("同じマスに2つの元素は置かない", () => {
     const keys = PERIODIC_TABLE.map((c) => `${c.row}-${c.column}`);
     expect(new Set(keys).size).toBe(83);

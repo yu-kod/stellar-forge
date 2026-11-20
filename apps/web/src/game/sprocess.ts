@@ -24,6 +24,13 @@ const MAGIC_CROSS_SECTION = 0.05;
 /** 主に r過程で作られる元素。s過程の道は通り抜けるが、第3層では発見しない */
 const R_PROCESS_ONLY = new Set([63, 76, 77, 78, 79]);
 
+/** 道の上で見つけられる元素（鉄の先からビスマスまで。r過程の元素を除く） */
+export const S_DISCOVERABLE_ELEMENTS: readonly number[] = Array.from(
+  { length: S_PATH_END - S_PATH_START },
+  (_, i) => S_PATH_START + 1 + i
+).filter((z) => !R_PROCESS_ONLY.has(z));
+export const S_DISCOVERABLE = S_DISCOVERABLE_ELEMENTS.length;
+
 /** 元素を発見する量 */
 export const S_DISCOVERY_THRESHOLD = 0.01;
 

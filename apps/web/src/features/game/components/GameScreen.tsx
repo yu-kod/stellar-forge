@@ -11,6 +11,7 @@ import {
 } from "@/game/balance";
 import { canAutoRebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
+import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame } from "@/game/star";
@@ -27,6 +28,8 @@ import { ResetDialog } from "./ResetDialog";
 import { ShopView } from "./ShopView";
 import { ClusterPanel } from "./ClusterPanel";
 import { MassPicker } from "./MassPicker";
+import { elementOf } from "../periodicTable";
+import { SProcessPanel } from "./SProcessPanel";
 import { StageCard } from "./StageCard";
 import { TargetPicker } from "./TargetPicker";
 import { StarPanel } from "./StarPanel";
@@ -181,6 +184,7 @@ export function GameScreen({
         </section>
       </div>
       <ClusterPanel meta={game.meta} dispatch={dispatch} />
+      <SProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
       <section aria-labelledby="book-label" className="bg-card rounded-xl border p-4">
         <h2 id="book-label" className="sr-only">
           周期表・星屑・記録
@@ -247,6 +251,7 @@ function GoalText({ game }: { game: GameState }) {
   }
   const goal = nextShopGoal(meta);
   const spec = SHOP[goal.item];
+  if (!goal.affordable && meta.sProcess.unlocked) return <SProcessGoal meta={meta} />;
   if (goal.affordable) {
     return (
       <>
@@ -259,6 +264,29 @@ function GoalText({ game }: { game: GameState }) {
       次の目標：「<b className="text-ignite">{spec.name}</b>」まで{ELEMENTS[spec.currency].name}
       の星屑 あと {formatNumber(goal.shortfall)}（狙い：
       {TARGET_NAMES[TARGET_FOR_DUST[spec.currency]]}）
+    </>
+  );
+}
+
+/** 第3層の目標：s過程で次に見つける元素 */
+function SProcessGoal({ meta }: { meta: GameState["meta"] }) {
+  if (meta.sProcess.looped) {
+    return (
+      <>
+        <b className="text-ignite">第3層クリア</b>
+        ：s過程はビスマスで行き止まり。金は中性子星合体で作る
+      </>
+    );
+  }
+  const next = S_DISCOVERABLE_ELEMENTS.find((z) => !meta.sProcess.discovered.includes(z))!;
+  const element = elementOf(next);
+  return (
+    <>
+      s過程：次は{" "}
+      <b className="text-ignite">
+        {element.name}（{element.symbol}）
+      </b>
+      を見つける
     </>
   );
 }
