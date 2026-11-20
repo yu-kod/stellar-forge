@@ -11,6 +11,7 @@ import {
   crossSection,
   isRProcessOnly,
   neutronMultiplier,
+  sDustMultiplier,
   seedsPerIa,
   type SProcess,
 } from "./sprocess";
@@ -143,8 +144,14 @@ describe("発見の効果", () => {
     star.mass.C = 4;
     const before = dustPreview(meta, star).C;
     meta.sProcess.discovered = [56];
-    expect(dustPreview(meta, star).C).toBe(Math.floor(4 ** 1.1 * 2));
+    expect(dustPreview(meta, star).C).toBe(Math.floor(4 ** 1.1 * 1.05 * 2));
     expect(before).toBe(Math.floor(4 ** 1.1));
+  });
+
+  it("発見した s元素1つにつき、すべての星屑 +5%（足し算）", () => {
+    const meta = layer3Meta();
+    meta.sProcess.discovered = [27, 28, 29, 30];
+    expect(sDustMultiplier(meta)).toBeCloseTo(1.2, 10);
   });
 });
 
@@ -174,8 +181,8 @@ describe("Ia型超新星", () => {
 });
 
 describe("第3層の解放と中性子", () => {
-  it("白色矮星が30個になると第3層が解放される", () => {
-    expect(LAYER3_AFTER).toBe(30);
+  it("白色矮星が規定の数になると第3層が解放される", () => {
+    expect(LAYER3_AFTER).toBe(40);
   });
 
   it("第3層の解放後、軽い星のヘリウム燃焼が中性子を出し、鉄の種が捕まえる", () => {

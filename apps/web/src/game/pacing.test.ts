@@ -52,4 +52,12 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(Math.min(...firstTwoHours)).toBeGreaterThanOrEqual(1);
     expect(Math.max(...firstTwoHours)).toBeLessThanOrEqual(30);
   });
+
+  it("90分以降も、10分ごとに平均5回以上恒久強化を買い、30分以上何も買えない時間がない", () => {
+    const late = report.purchasesPer10Min.slice(9);
+    expect(late.reduce((sum, n) => sum + n, 0) / late.length).toBeGreaterThanOrEqual(5);
+    late.slice(0, -2).forEach((n, i) => {
+      expect(n + late[i + 1]! + late[i + 2]!).toBeGreaterThan(0);
+    });
+  });
 });
