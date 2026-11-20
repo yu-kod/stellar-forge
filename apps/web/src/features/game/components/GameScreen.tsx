@@ -22,10 +22,11 @@ import {
 } from "@/game/merger";
 import { NEUTRON_STAR_MASSES } from "@/game/rprocess";
 import { nextMissing } from "@/game/progress";
+import { massForOneDust } from "@/game/dust";
 import { nextSDiscovery } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
-import { createGame } from "@/game/star";
+import { createGame, maxMass } from "@/game/star";
 import { SHOP_IDS, STAGE_IDS, type GameState } from "@/game/types";
 import { currencyName, targetHint } from "../elements";
 import { formatDuration, formatMass, formatNumber } from "../format";
@@ -317,7 +318,11 @@ function LayerGoal({ game }: { game: GameState }) {
       {formatNumber(goal.shortfall)}
       {targetHint(spec.currency)}
       {spec.currency === "S" && meta.bestRate.S === 0 && (
-        <>。硫黄はケイ素燃焼が鉄に変えてしまう。「より重い星」で星を大きくすると外層に残る</>
+        <>
+          。硫黄はケイ素燃焼が鉄に変えてしまう。「より重い星」で星を大きくすると外層に残る（星の上限{" "}
+          {maxMass(meta)} M☉・いまの星の硫黄 {star.mass.S.toFixed(2)} M☉／星屑1つに{" "}
+          {massForOneDust(meta, star).toFixed(2)} M☉）
+        </>
       )}
     </>
   );

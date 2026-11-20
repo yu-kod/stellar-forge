@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dustPreview, ejectedMetals } from "./dust";
+import { dustPreview, ejectedMetals, massForOneDust } from "./dust";
 import { createGame } from "./star";
 
 const withOnion = () => {
@@ -49,5 +49,16 @@ describe("dustPreview", () => {
     const { meta, star } = withOnion();
     star.end = "fizzle";
     expect(dustPreview(meta, star).O).toBe(Math.floor(5 ** 1.1 * 0.3));
+  });
+});
+
+describe("massForOneDust", () => {
+  it("崩壊のとき外層にこの質量が残れば、その星屑が1つになる", () => {
+    const { meta, star } = createGame();
+    const needed = massForOneDust(meta, star);
+    star.mass.S = needed * 1.001;
+    expect(dustPreview(meta, star).S).toBe(1);
+    star.mass.S = needed * 0.99;
+    expect(dustPreview(meta, star).S).toBe(0);
   });
 });
