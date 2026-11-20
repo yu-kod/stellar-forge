@@ -7,6 +7,9 @@ import { formatDuration, formatNumber } from "../format";
 import type { Notice, NoticeEvent } from "../model";
 import { elementOf } from "../periodicTable";
 
+/** 安定な同位体のない元素（s過程の証拠） */
+const TECHNETIUM = 43;
+
 const NOTICE_MS = 4200;
 
 type Props = { notices: Notice[]; onDismiss: (id: number) => void };
@@ -91,6 +94,8 @@ function NoticeText({ event }: { event: NoticeEvent }) {
             新元素 {element.name}（{element.symbol}）
           </b>{" "}
           s過程で作った
+          {event.z === TECHNETIUM &&
+            "。テクネチウムには安定な同位体がない。1952年に赤色巨星のスペクトルで見つかり、星の中でいまも元素が作られている証拠になった"}
         </>
       );
     }
@@ -126,6 +131,8 @@ function NoticeText({ event }: { event: NoticeEvent }) {
             新元素 {element.name}（{element.symbol}）
           </b>{" "}
           中性子星合体で作った
+          {(event.z === 90 || event.z === 92) &&
+            "。ウラン238（半減期45億年）とトリウム232（140億年）の比は、古い星の年齢を測る時計になる"}
         </>
       );
     }

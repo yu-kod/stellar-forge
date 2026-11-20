@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { LAYER2_AFTER } from "@/game/balance";
@@ -27,6 +27,21 @@ function lowMassStar(): GameState {
 }
 
 describe("GameScreen：第2層 星の質量を選ぶ", () => {
+  it("40 M☉ を超えるとブラックホール。130 M☉ を超える星には対不安定型超新星の一言を添える", () => {
+    const game = layer2();
+    game.meta.shop.mass = 3; // 上限 40 M☉
+    renderGame(game);
+    expect(screen.getByRole("group", { name: "次に生む星の質量" })).not.toHaveTextContent(
+      "ブラックホール"
+    );
+    cleanup();
+    game.meta.shop.mass = 21; // 上限 130 M☉
+    renderGame(game);
+    const picker = screen.getByRole("group", { name: "次に生む星の質量" });
+    expect(picker).toHaveTextContent("超新星になる（40 M☉ を超えるとブラックホールが残る）");
+    expect(picker).toHaveTextContent("対不安定型超新星");
+  });
+
   it("超新星5回までは質量を選べない", () => {
     renderGame(createGame());
     expect(screen.queryByRole("group", { name: "次に生む星の質量" })).not.toBeInTheDocument();

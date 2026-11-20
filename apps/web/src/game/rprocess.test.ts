@@ -2,7 +2,13 @@ import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
 import { describe, expect, it } from "vitest";
 import { createSlot, rebirth } from "./actions";
 import { advanceAll } from "./cluster";
-import { NEUTRON_STAR_MASSES, createRProcess, neutronStarBin, unlockLayer4 } from "./rprocess";
+import {
+  NEUTRON_STAR_MASSES,
+  STARTER_SECONDS,
+  createRProcess,
+  neutronStarBin,
+  unlockLayer4,
+} from "./rprocess";
 import { createGame, createMeta, createStar } from "./star";
 import type { GameState, Meta } from "./types";
 
@@ -78,6 +84,26 @@ describe("第4層の解放（s過程の循環を見たら）", () => {
     const game = createGame();
     game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, looped: true, discovered: [27] };
     expect(unlockLayer4(game)).toBe(game);
+  });
+
+  it("解放のとき、在庫の一番軽い2つは、すでに重力波で近づいていた連星として2分で合体する", () => {
+    const game = createGame();
+    game.meta.sProcess = {
+      ...game.meta.sProcess,
+      unlocked: true,
+      looped: true,
+      discovered: [...S_DISCOVERABLE_ELEMENTS],
+    };
+    game.meta.rProcess.pool[4] = 1;
+    game.meta.rProcess.pool[5] = 2;
+    game.meta.rProcess.pool[7] = 1;
+    const next = unlockLayer4(game);
+    expect(next.meta.rProcess.binaries).toEqual([{ a: 4, b: 5, remaining: STARTER_SECONDS }]);
+    expect(next.meta.rProcess.pool.slice(4, 8)).toEqual([0, 1, 0, 1]);
+    expect(STARTER_SECONDS).toBe(120);
+    game.meta.rProcess.pool = game.meta.rProcess.pool.map(() => 0);
+    game.meta.rProcess.pool[5] = 1; // 1つだけなら組まない
+    expect(unlockLayer4(game).meta.rProcess.binaries).toEqual([]);
   });
 
   it("循環を見る前は解放しない", () => {

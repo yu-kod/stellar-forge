@@ -17,6 +17,12 @@ describe("第4層とエンディングのペーシング（画面を開いたま
     expect(report.marks.layer4! - report.marks.loop!).toBeLessThanOrEqual(15 * MINUTE);
   });
 
+  it("第4層の最初の発見は、解放から5分以内", () => {
+    expect(Math.min(...Object.values(report.rAt)) - report.marks.layer4!).toBeLessThanOrEqual(
+      5 * MINUTE
+    );
+  });
+
   it("第4層の発見（金まで）は15分以上途切れない", () => {
     const rTimes = R_ELEMENTS.flatMap((z) => (report.rAt[z] === undefined ? [] : [report.rAt[z]]));
     const times = [report.marks.layer4!, ...rTimes.sort((a, b) => a - b)];
