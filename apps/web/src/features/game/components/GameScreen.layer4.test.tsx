@@ -195,3 +195,22 @@ describe("第4層の強化", () => {
     expect(screen.getByRole("article", { name: "連星の自動化" })).toBeInTheDocument();
   });
 });
+
+describe("エンディングの後（周期表の先）", () => {
+  it("r過程の元素がすべてそろっても、r過程タブを描ける（作りたい元素はウラン）", () => {
+    const game = layer4();
+    game.meta.rProcess.discovered = [...R_ELEMENTS];
+    renderGame(game);
+    expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
+      "ウラン（U）"
+    );
+  });
+
+  it("トリウム・ウランの発見を知らせられる", async () => {
+    const { Notices } = await import("./Notices");
+    render(
+      <Notices notices={[{ id: 1, event: { type: "rDiscover", z: 90 } }]} onDismiss={() => {}} />
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("新元素 トリウム（Th）");
+  });
+});
