@@ -112,14 +112,14 @@ describe("軽い星（8 M☉ 未満）", () => {
 });
 
 describe("CNO サイクル", () => {
-  it("水素燃焼は、燃えた水素の5%ぶんの炭素を窒素に変える", () => {
+  it("重い星の水素燃焼は、燃えた水素の1%ぶんの炭素を窒素に変える", () => {
     const game = createGame();
     game.star.mass.H = 24;
     game.star.mass.C = 1;
     const burned = 0.4 * 0.004 * 24 * 1;
     const { state } = step(game, 1);
-    expect(state.star.mass.N / (burned * 0.05)).toBeCloseTo(1);
-    expect((1 - state.star.mass.C) / (burned * 0.05)).toBeCloseTo(1);
+    expect(state.star.mass.N / (burned * 0.01)).toBeCloseTo(1);
+    expect((1 - state.star.mass.C) / (burned * 0.01)).toBeCloseTo(1);
   });
 
   it("軽い星では外層の対流で炭素がよく混ざり、燃えた水素の20%ぶんを窒素に変える", () => {

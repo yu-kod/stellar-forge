@@ -4,9 +4,11 @@ import {
   canBuyStage,
   canBuyShopItem,
   rebirth,
+  setNextMass,
   setTarget,
   shopCost,
 } from "@/game/actions";
+import { isShopItemOpen } from "@/game/shop";
 import { SHOP, TARGET_STAGES } from "@/game/balance";
 import { stageCost } from "@/game/rates";
 import { step } from "@/game/step";
@@ -84,17 +86,29 @@ const TARGET_FOR: Record<DustId, Target> = {
  * 一番近く買える恒久強化を狙い、その通貨の元素を残すように遊び続ける。
  * 自動制御を持ったら手では買わず、狙いだけを切り替える。星屑の強化を買った時刻（秒）も返す
  */
-export function playCampaign(gameSeconds: number): {
+export function playCampaign(
+  gameSeconds: number,
+  {
+    start = createGame(),
+    lightMassForNitrogen = null,
+  }: {
+    start?: GameState;
+    /** 窒素の強化を狙うときに生む軽い星の質量。null なら常に上限の質量 */
+    lightMassForNitrogen?: number | null;
+  } = {}
+): {
   state: GameState;
   elapsed: number;
   purchases: number[];
 } {
-  let state = createGame();
+  let state = start;
   let elapsed = 0;
   const purchases: number[] = [];
   while (elapsed < gameSeconds) {
     const wanted = SHOP_IDS.filter(
-      (id) => SHOP[id].maxLevel === undefined || state.meta.shop[id] < SHOP[id].maxLevel
+      (id) =>
+        isShopItemOpen(state.meta, id) &&
+        (SHOP[id].maxLevel === undefined || state.meta.shop[id] < SHOP[id].maxLevel)
     ).reduce((a, b) => {
       const shortfall = (id: typeof a) =>
         shopCost(state.meta, id) - state.meta.dust[SHOP[id].currency];
@@ -102,6 +116,8 @@ export function playCampaign(gameSeconds: number): {
     });
     const target = TARGET_FOR[SHOP[wanted].currency];
     state = setTarget(state, target);
+    const forNitrogen = SHOP[wanted].currency === "N" ? lightMassForNitrogen : null;
+    state = setNextMass(state, forNitrogen);
     const ended = playStar(state, state.meta.shop.auto ? autoOnly : aimFor(SHOP[wanted].currency));
     elapsed += ended.star.time;
     state = rebirth(ended);

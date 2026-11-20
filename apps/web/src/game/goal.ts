@@ -1,5 +1,6 @@
 import { shopCost } from "./actions";
 import { SHOP } from "./balance";
+import { isShopItemOpen } from "./shop";
 import { SHOP_IDS, type Meta, type ShopId } from "./types";
 
 export type ShopGoal = { item: ShopId; shortfall: number; affordable: boolean };
@@ -11,7 +12,7 @@ export type ShopGoal = { item: ShopId; shortfall: number; affordable: boolean };
 export function nextShopGoal(meta: Meta): ShopGoal {
   const goals = SHOP_IDS.filter((item) => {
     const { maxLevel } = SHOP[item];
-    return maxLevel === undefined || meta.shop[item] < maxLevel;
+    return isShopItemOpen(meta, item) && (maxLevel === undefined || meta.shop[item] < maxLevel);
   }).map((item) => {
     const cost = shopCost(meta, item);
     const shortfall = Math.max(0, cost - meta.dust[SHOP[item].currency]);

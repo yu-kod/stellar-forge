@@ -7,7 +7,17 @@ import { aimFor, playStar, type Strategy } from "@/test-utils/simulate";
 /** 数回目の星（星屑の強化を少し買った、自動制御はまだない） */
 function earlyStar(): GameState {
   const game = createGame();
-  game.meta.shop = { mass: 2, cno: 2, yield: 1, xs: 0, boom: 0, accel: 0, auto: 0, pre: 0 };
+  game.meta.shop = {
+    ...game.meta.shop,
+    mass: 2,
+    cno: 2,
+    yield: 1,
+    xs: 0,
+    boom: 0,
+    accel: 0,
+    auto: 0,
+    pre: 0,
+  };
   game.meta.supernovae = 4;
   game.meta.discovered = { He: true, C: true, O: true, Ne: true };
   return { ...game, star: createStar(game.meta) };

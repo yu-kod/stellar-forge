@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { GameState } from "./types";
 import { aimFor, greedy, playCampaign, playStar } from "@/test-utils/simulate";
 import { dustPreview } from "./dust";
 import { createGame } from "./star";
@@ -42,5 +43,18 @@ describe("バランス", () => {
     const gaps = purchases.slice(1).map((t, i) => t - purchases[i]!);
     expect(Math.max(...gaps)).toBeLessThan(15 * 60);
     expect(purchases.at(-1)).toBeGreaterThan(45 * 60);
+  });
+
+  it("第2層では、窒素を狙うときに軽い星を混ぜたほうが、重い星だけより速く進む", () => {
+    const { state: start } = playCampaign(20 * 60);
+    const layer1Levels = (state: GameState) =>
+      (["mass", "cno", "yield", "xs", "boom", "accel"] as const).reduce(
+        (sum, id) => sum + state.meta.shop[id],
+        0
+      );
+    const heavy = playCampaign(30 * 60, { start });
+    const mixed = playCampaign(30 * 60, { start, lightMassForNitrogen: 7 });
+    expect(mixed.state.meta.whiteDwarfs).toBeGreaterThan(0);
+    expect(layer1Levels(mixed.state)).toBeGreaterThan(layer1Levels(heavy.state) + 5);
   });
 });

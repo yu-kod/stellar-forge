@@ -8,7 +8,17 @@ import { playStar, autoOnly } from "@/test-utils/simulate";
 /** 中盤（星屑の強化をひととおり買い、自動制御を持っている）の星 */
 function midGame(target: Target): GameState {
   const game = createGame();
-  game.meta.shop = { mass: 6, cno: 5, yield: 5, xs: 8, boom: 6, accel: 0, auto: 1, pre: 1 };
+  game.meta.shop = {
+    ...game.meta.shop,
+    mass: 6,
+    cno: 5,
+    yield: 5,
+    xs: 8,
+    boom: 6,
+    accel: 0,
+    auto: 1,
+    pre: 1,
+  };
   game.meta.supernovae = 30;
   game.meta.discovered = {
     He: true,
