@@ -47,3 +47,8 @@ export function dustPreview(meta: Meta, star: Star): Record<DustId, number> {
     ])
   ) as Record<DustId, number>;
 }
+
+/** 崩壊のとき外層にこの質量 [M☉] が残れば、その星屑が1つになる（炭素星の倍率は除く） */
+export function massForOneDust(meta: Meta, star: Star): number {
+  return (1 / dustMultiplier(meta, star)) ** (1 / DUST_EXPONENT);
+}

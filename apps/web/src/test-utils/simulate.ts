@@ -192,6 +192,8 @@ export function playIdle(
     start?: GameState;
     /** この印に届いたら止める */
     stopAt?: keyof IdleReport["marks"];
+    /** 狙いを固定する（省略すると次の目標に合わせる） */
+    target?: Target | ((state: GameState) => Target);
     /** これが true になったら止める */
     stopWhen?: (state: GameState) => boolean;
     /** 第4層で手で組む組（省略すると画面のはじめの選び方）。null なら組まない */
@@ -217,7 +219,9 @@ export function playIdle(
     if (options.stopWhen?.(state)) break;
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
     const currency = SHOP[nextShopGoal(state.meta).item].currency;
-    const target = steer ? targetOr(currency, state.meta.target ?? "C") : "Si";
+    const fixedTarget =
+      typeof options.target === "function" ? options.target(state) : options.target;
+    const target = fixedTarget ?? (steer ? targetOr(currency, state.meta.target ?? "C") : "Si");
     if (steer) {
       state = setTarget(state, target);
       const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;

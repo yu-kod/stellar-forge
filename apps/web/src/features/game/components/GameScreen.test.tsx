@@ -1,7 +1,8 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { createGame } from "@/game/star";
+import { massForOneDust } from "@/game/dust";
+import { createGame, maxMass } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { aboutToCollapse, collapsed, manualTicker } from "@/test-utils/game";
 import { GameScreen } from "./GameScreen";
@@ -125,6 +126,16 @@ describe("GameScreen：2周目からの目標", () => {
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(
       "硫黄はケイ素燃焼が鉄に変えてしまう。「より重い星」で星を大きくすると外層に残る"
+    );
+  });
+
+  it("硫黄の残し方には、いまの星の硫黄と、星屑1つに要る量を出す（燃えるにつれて動く）", () => {
+    const game = createGame();
+    game.meta.supernovae = 3;
+    game.star.mass.S = 0.42;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      `（星の上限 ${maxMass(game.meta)} M☉・いまの星の硫黄 0.42 M☉／星屑1つに ${massForOneDust(game.meta, game.star).toFixed(2)} M☉）`
     );
   });
 
