@@ -16,22 +16,47 @@ function record(overrides: Partial<SupernovaRecord> = {}): SupernovaRecord {
 }
 
 describe("RecordsView", () => {
-  it("超新星が5回に満たないうちは、次の層を伏せておく", () => {
+  it("超新星が5回に満たないうちは、第1層がいまの層で、第2層は回数だけ見せる", () => {
     const meta = createMeta();
     meta.supernovae = 4;
     render(<RecordsView meta={meta} />);
     const layers = screen.getByRole("list", { name: "層" });
+    expect(within(layers).getByRole("listitem", { name: /第1層/ })).toHaveTextContent("いまの層");
     expect(within(layers).getByText(/超新星 4\/5 回/)).toBeInTheDocument();
     expect(within(layers).getAllByText("？？？")).toHaveLength(3);
   });
 
-  it("5回目の超新星で次の層の予告を見せる", () => {
+  it("超新星5回で第2層がいまの層になり、第3層は白色矮星の数で予告する", () => {
     const meta = createMeta();
     meta.supernovae = 5;
+    meta.whiteDwarfs = 2;
+    render(<RecordsView meta={meta} />);
+    const layers = screen.getByRole("list", { name: "層" });
+    expect(within(layers).getByRole("listitem", { name: /第2層/ })).toHaveTextContent("いまの層");
+    expect(within(layers).getByText(/白色矮星 2\/3 個/)).toBeInTheDocument();
+    expect(within(layers).getAllByText("？？？")).toHaveLength(2);
+  });
+
+  it("白色矮星3つで第3層と第4層の予告を見せる", () => {
+    const meta = createMeta();
+    meta.supernovae = 5;
+    meta.whiteDwarfs = 3;
     meta.neutronStars = 4;
     render(<RecordsView meta={meta} />);
     expect(screen.queryByText("？？？")).not.toBeInTheDocument();
     expect(screen.getByText(/いま 4 個/)).toBeInTheDocument();
+  });
+
+  it("これまでの超新星・白色矮星・中性子星の数を見せる", () => {
+    const meta = createMeta();
+    meta.supernovae = 12;
+    meta.whiteDwarfs = 3;
+    meta.neutronStars = 10;
+    render(<RecordsView meta={meta} />);
+    const counts = screen.getByRole("list", { name: "これまでに残したもの" });
+    expect(counts).toHaveTextContent("超新星12");
+    expect(counts).toHaveTextContent("白色矮星3");
+    expect(counts).toHaveTextContent("中性子星10");
   });
 
   it("まだ超新星がなければ、記録が空だと伝える", () => {

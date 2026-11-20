@@ -1,40 +1,45 @@
+import { LAYER2_AFTER } from "@/game/balance";
 import { DUST_IDS, type Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatMass } from "../format";
 import { ElementChip } from "./ElementChip";
 
-/** 次の層の予告を見せるまでの超新星の回数 */
-const PREVIEW_AFTER = 5;
+/** 第3層の予告を見せるまでの白色矮星の数 */
+const LAYER3_PREVIEW_AFTER = 3;
 
 type Layer = { title: string; status?: string; body: string; current?: boolean };
 
 function layers(meta: Meta): Layer[] {
-  const open = meta.supernovae >= PREVIEW_AFTER;
+  const layer2 = meta.supernovae >= LAYER2_AFTER;
+  const layer3Preview = meta.whiteDwarfs >= LAYER3_PREVIEW_AFTER;
   const hidden = "？？？";
   return [
     {
       title: "第1層　大質量星の一生",
-      current: true,
+      current: !layer2,
       body: "水素からケイ素まで6段階の燃焼。鉄のコアが1.4 M☉に達すると崩壊して超新星になる。外層に残した元素が星屑になる。",
     },
     {
       title: "第2層　星の質量を選ぶ",
-      status: open ? "（準備中）" : `（超新星 ${meta.supernovae}/${PREVIEW_AFTER} 回で予告を解放）`,
-      body: open
-        ? "8 M☉未満の星は超新星にならず、赤色巨星を経て白色矮星になる。重い星は速く燃えて超新星になる。周回ごとに星の質量を選び、狙う元素を変える。"
+      current: layer2,
+      status: layer2 ? undefined : `（超新星 ${meta.supernovae}/${LAYER2_AFTER} 回で解放）`,
+      body: layer2
+        ? "8 M☉未満の星は超新星にならず、赤色巨星を経て白色矮星になり、窒素をくれる。窒素で星団を作り、軽い星と重い星を並べて燃やす。"
         : hidden,
     },
     {
       title: "第3層　漸近巨星分枝星とs過程",
-      status: open ? "（準備中）" : "（ロック中）",
-      body: open
+      status: layer3Preview
+        ? "（準備中）"
+        : `（白色矮星 ${meta.whiteDwarfs}/${LAYER3_PREVIEW_AFTER} 個で予告を解放）`,
+      body: layer3Preview
         ? "軽い星の中で中性子をゆっくり捕まえ、鉄を種に一歩ずつ重い元素へ。ビスマス209で行き止まりになる。"
         : hidden,
     },
     {
       title: "第4層　中性子星合体",
-      status: open ? "（準備中）" : "（ロック中）",
-      body: open
+      status: layer3Preview ? "（準備中）" : "（ロック中）",
+      body: layer3Preview
         ? `これまでの超新星が残した中性子星（いま ${meta.neutronStars} 個）を合体させ、速い中性子捕獲で金やウランを作る。`
         : hidden,
     },
@@ -44,10 +49,22 @@ function layers(meta: Meta): Layer[] {
 export function RecordsView({ meta }: { meta: Meta }) {
   return (
     <div className="grid gap-4">
+      <ul aria-label="これまでに残したもの" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <li>
+          超新星<b className="ml-1 font-mono">{meta.supernovae}</b>
+        </li>
+        <li>
+          白色矮星<b className="ml-1 font-mono">{meta.whiteDwarfs}</b>
+        </li>
+        <li>
+          中性子星<b className="ml-1 font-mono">{meta.neutronStars}</b>
+        </li>
+      </ul>
       <ul aria-label="層" className="grid gap-2">
         {layers(meta).map((layer) => (
           <li
             key={layer.title}
+            aria-label={layer.title}
             className={cn(
               "grid gap-1 rounded-xl border px-4 py-3",
               layer.current && "border-ignite"
@@ -55,6 +72,7 @@ export function RecordsView({ meta }: { meta: Meta }) {
           >
             <h3 className="text-base font-semibold">
               {layer.title}
+              {layer.current && <span className="text-ignite ml-2 text-sm">いまの層</span>}
               {layer.status && (
                 <span className="text-muted-foreground ml-2 text-sm font-normal">
                   {layer.status}
