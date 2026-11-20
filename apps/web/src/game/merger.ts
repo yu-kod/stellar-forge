@@ -251,7 +251,11 @@ export type PairAdvice =
   | { type: "ready" }
   | { type: "wait" }
   | { type: "masses"; bins: [number, number]; masses: [number, number] }
-  | { type: "shield" };
+  | {
+      type: "shield";
+      /** 遮蔽を待たずに、星団の質量を変えて届く組（なければ null） */
+      alternative: { bins: [number, number]; masses: [number, number] } | null;
+    };
 
 /**
  * その元素に届く組があるか。なければ、在庫と星団の星がこれから残す中性子星で届くなら待つ、
@@ -270,9 +274,11 @@ export function pairAdvice(meta: Meta, z: number): PairAdvice {
     fastestPair(m, z, (a, b) => (a === b ? enough(a, 2) : enough(a, 1) && enough(b, 1))) !== null;
   if (reachable(meta)) return { type: "wait" };
   const shielded = { ...meta, shop: { ...meta.shop, shield: meta.shop.shield + 1 } };
-  if (meta.shop.shield < SHOP.shield.maxLevel! && reachable(shielded)) return { type: "shield" };
   const hint = pairHint(meta, z);
-  return hint ? { type: "masses", ...hint } : { type: "shield" };
+  if (meta.shop.shield < SHOP.shield.maxLevel! && reachable(shielded)) {
+    return { type: "shield", alternative: hint };
+  }
+  return hint ? { type: "masses", ...hint } : { type: "shield", alternative: null };
 }
 
 /** いま作りたい元素：まだの r過程の元素のうち、在庫で届く組のあるものの一番近いもの（なければ一番近いもの）。すべて見つけていればおまけ（ウラン） */

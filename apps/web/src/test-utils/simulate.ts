@@ -242,8 +242,10 @@ export function playIdle(
         });
       } else if (!options.pairing) {
         const advice = pairAdvice(state.meta, rGoal(state.meta));
-        if (advice.type === "masses") {
-          advice.masses.forEach((mass, i) => {
+        const hint =
+          advice.type === "masses" ? advice : advice.type === "shield" ? advice.alternative : null;
+        if (hint) {
+          hint.masses.forEach((mass, i) => {
             if (i < state.meta.cluster.length) state = setSlotMass(state, i, mass);
           });
         }

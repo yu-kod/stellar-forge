@@ -225,7 +225,8 @@ describe("届く組がないときの案内", () => {
 
     it("遮蔽をあと1回強化すれば、作っている中性子星で届くなら遮蔽を勧める", () => {
       const meta = layer4({ [2]: 5, [HEAVY]: 5 }); // 1.4 + 2.0 はランタノイド
-      expect(pairAdvice(meta, 75)).toEqual({ type: "shield" });
+      // 質量を変える手もあわせて出す（遮蔽が高いあいだの別の道）
+      expect(pairAdvice(meta, 75)).toEqual({ type: "shield", alternative: pairHint(meta, 75) });
       meta.shop.shield = SHOP.shield.maxLevel!;
       meta.rProcess.discovered = [78];
       meta.rProcess.pool = meta.rProcess.pool.map((_, bin) => (bin === 2 || bin === HEAVY ? 1 : 0));
@@ -233,7 +234,7 @@ describe("届く組がないときの案内", () => {
     });
 
     it("どの組でも届かなければ遮蔽", () => {
-      expect(pairAdvice(layer4(), 92)).toEqual({ type: "shield" });
+      expect(pairAdvice(layer4(), 92)).toEqual({ type: "shield", alternative: null });
     });
   });
 });
