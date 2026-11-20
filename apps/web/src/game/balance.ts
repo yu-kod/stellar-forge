@@ -228,7 +228,7 @@ export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.25;
 export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 
 /** 第3層（s過程）を解放する白色矮星の数 */
-export const LAYER3_AFTER = 30;
+export const LAYER3_AFTER = 40;
 /** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
 export const NEUTRONS_PER_HELIUM = 5;
 
@@ -268,14 +268,14 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "O",
     description: "次の星の初期質量 +5 M☉",
     baseCost: 3,
-    costGrowth: 2.2,
+    costGrowth: 1.8,
   },
   cno: {
     name: "金属量（CNOサイクル）",
     currency: "C",
     description: "炭素を触媒に水素燃焼 +25%。星が炭素を少し持って生まれる",
     baseCost: 3,
-    costGrowth: 2.2,
+    costGrowth: 1.8,
   },
   yield: {
     name: "質量欠損の回収",
@@ -289,7 +289,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "Si",
     description: "全燃焼の速度 +25%",
     baseCost: 3,
-    costGrowth: 2.5,
+    costGrowth: 1.8,
   },
   boom: {
     name: "爆発エネルギー",
@@ -326,7 +326,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "N",
     description: "すべての星屑 +25%",
     baseCost: 10,
-    costGrowth: 2.5,
+    costGrowth: 1.8,
     layer: 2,
   },
   nebula: {
@@ -334,7 +334,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "N",
     description: "白色矮星になったときの星屑 +50%",
     baseCost: 5,
-    costGrowth: 2.5,
+    costGrowth: 1.8,
     layer: 2,
   },
   pulse: {
@@ -359,7 +359,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "heavy",
     description: "中性子 ×1.5",
     baseCost: 10,
-    costGrowth: 2.5,
+    costGrowth: 1.6,
     layer: 3,
   },
   flash: {
@@ -367,7 +367,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "heavy",
     description: "恒星風で外へ出る s元素の価値 +50%",
     baseCost: 15,
-    costGrowth: 2.5,
+    costGrowth: 1.6,
     layer: 3,
   },
   binary: {
@@ -375,7 +375,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "O",
     description: "Ia型超新星1回の鉄の種 +1",
     baseCost: 3000,
-    costGrowth: 4,
+    costGrowth: 2,
     layer: 3,
   },
 };

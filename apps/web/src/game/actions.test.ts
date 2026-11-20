@@ -10,6 +10,7 @@ import {
   setTarget,
 } from "./actions";
 import { createGame } from "./star";
+import { SHOP } from "./balance";
 
 describe("buyStage", () => {
   it("費用を払って Lv を1上げる。渡した状態は書き換えない", () => {
@@ -109,7 +110,7 @@ describe("buyShopItem", () => {
     const next = buyShopItem(game, "mass");
     expect(next.meta.shop.mass).toBe(1);
     expect(next.meta.dust.O).toBe(7);
-    expect(buyShopItem(next, "mass").meta.dust.O).toBe(7 - Math.floor(3 * 2.2));
+    expect(buyShopItem(next, "mass").meta.dust.O).toBe(7 - Math.floor(3 * SHOP.mass.costGrowth));
   });
 
   it("星屑が足りなければ何もしない", () => {

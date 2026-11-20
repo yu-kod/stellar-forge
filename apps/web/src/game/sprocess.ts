@@ -43,6 +43,8 @@ const CAPTURES_FOR_FULL_THRESHOLD = 4;
 
 /** 発見の効果 */
 export const NEUTRONS_PER_DISCOVERY = 0.05;
+/** 発見した s元素1つあたりの、すべての星屑の上乗せ（足し算） */
+export const DUST_PER_S_DISCOVERY = 0.05;
 export const STRONTIUM = 38;
 export const BARIUM = 56;
 export const LEAD = 82;
@@ -199,5 +201,6 @@ export function seedsPerIa(meta: Meta): number {
 
 /** すべての星屑の倍率（バリウムで ×2） */
 export function sDustMultiplier(meta: Meta): number {
-  return meta.sProcess.discovered.includes(BARIUM) ? 2 : 1;
+  const { discovered } = meta.sProcess;
+  return (1 + DUST_PER_S_DISCOVERY * discovered.length) * (discovered.includes(BARIUM) ? 2 : 1);
 }
