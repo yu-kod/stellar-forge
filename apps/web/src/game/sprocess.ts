@@ -38,8 +38,13 @@ export const S_DISCOVERABLE_ELEMENTS: readonly number[] = Array.from(
 ).filter((z) => !R_PROCESS_ONLY.has(z));
 export const S_DISCOVERABLE = S_DISCOVERABLE_ELEMENTS.length;
 
-/** 元素を発見する、作った量（その元素に進んできた原子核の合計） */
+/** 元素を発見する、作った量（その元素に進んできた原子核の合計）の、道の上の原子核の合計に対する比 */
 export const S_DISCOVERY_THRESHOLD = 0.05;
+/**
+ * 中性子毒：道の外の軽い原子核（¹⁴N・²²Ne など）が中性子を捕まえる強さ（量 × 断面積 と同じ単位）。
+ * 鉄の種が少ないと、中性子の多くを毒に取られる
+ */
+export const NEUTRON_POISON = 3;
 
 /** 発見の効果 */
 export const NEUTRONS_PER_DISCOVERY = 0.05;
@@ -99,6 +104,14 @@ export function isRProcessOnly(z: number): boolean {
 }
 
 /**
+ * 元素を発見する作った量：道の上の原子核の合計の5%（実際の観測も [Ba/Fe] のように鉄との比で測る）。合計が1未満なら 0.05
+ */
+export function discoveryThreshold(sProcess: SProcess): number {
+  const total = sProcess.amounts.reduce((sum, a) => sum + a, 0);
+  return S_DISCOVERY_THRESHOLD * Math.max(1, total);
+}
+
+/**
  * 中性子を道の上の原子核に配る。各元素は 量 × 断面積 の比で受け取り、
  * 捕まえた数 / 次へ進む数 だけ次の元素へ進む（1回で1つ先まで）。ビスマスの先は鉛に戻る
  */
@@ -107,8 +120,10 @@ export function captureNeutrons(
   neutrons: number
 ): { sProcess: SProcess; discovered: number[]; looped: boolean } {
   const { amounts } = sProcess;
-  const weight = amounts.reduce((sum, a, i) => sum + a * crossSection(i + S_PATH_START), 0);
-  if (weight === 0 || neutrons <= 0) return { sProcess, discovered: [], looped: false };
+  const onPath = amounts.reduce((sum, a, i) => sum + a * crossSection(i + S_PATH_START), 0);
+  if (onPath === 0 || neutrons <= 0) return { sProcess, discovered: [], looped: false };
+  const weight = onPath + NEUTRON_POISON;
+  const threshold = discoveryThreshold(sProcess);
   const next = [...amounts];
   const produced = [...sProcess.produced];
   let loopedNow = false;
@@ -124,14 +139,14 @@ export function captureNeutrons(
     next[to]! += moved;
     produced[to]! += moved;
     // ごくわずかな量（数値の端数）がビスマスに届いただけでは、循環を見たことにしない
-    if (isLast && produced[i]! >= S_DISCOVERY_THRESHOLD) loopedNow = true;
+    if (isLast && produced[i]! >= threshold) loopedNow = true;
   });
   const found = produced
     .map((a, i) => ({ a, z: i + S_PATH_START }))
     .filter(
       ({ a, z }) =>
         z !== S_PATH_START &&
-        a >= S_DISCOVERY_THRESHOLD &&
+        a >= threshold &&
         !isRProcessOnly(z) &&
         !sProcess.discovered.includes(z)
     )
@@ -150,10 +165,11 @@ export function captureNeutrons(
   };
 }
 
-/** 星の外へ出た原子核1つの、重元素の星屑としての価値（鉄 1 〜 ビスマス 2） */
+/** 星の外へ出た原子核1つの、重元素の星屑としての価値（鉄 6 〜 ビスマス 12） */
 export function heavyValue(z: number): number {
-  return 1 + (z - S_PATH_START) / (S_PATH_END - S_PATH_START);
+  return HEAVY_PER_NUCLEUS * (1 + (z - S_PATH_START) / (S_PATH_END - S_PATH_START));
 }
+const HEAVY_PER_NUCLEUS = 6;
 
 /**
  * 漸近巨星分枝星の恒星風（惑星状星雲）で、道の上の原子核が毎秒一定の割合で星の外へ出る。
@@ -198,7 +214,7 @@ export function nextSDiscovery(sProcess: SProcess): { z: number; progress: numbe
   const candidates = S_DISCOVERABLE_ELEMENTS.filter((z) => !sProcess.discovered.includes(z)).map(
     (z) => ({
       z,
-      progress: Math.min(1, sProcess.produced[z - S_PATH_START]! / S_DISCOVERY_THRESHOLD),
+      progress: Math.min(1, sProcess.produced[z - S_PATH_START]! / discoveryThreshold(sProcess)),
     })
   );
   if (candidates.length === 0) return null;

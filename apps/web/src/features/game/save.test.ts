@@ -139,7 +139,7 @@ describe("restoreSave", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     delete save.game.meta.sProcess.seedTarget;
     delete save.game.meta.sProcess.heavy;
-    expect(restoreSave(save, NOW)?.game.meta.sProcess).toMatchObject({ seedTarget: 3, heavy: 0 });
+    expect(restoreSave(save, NOW)?.game.meta.sProcess).toMatchObject({ seedTarget: 10, heavy: 0 });
   });
 
   it("作った量が古いセーブに無ければ、今道の上にある量とみなす", () => {

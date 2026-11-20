@@ -3,8 +3,10 @@ import { triggerIa } from "./actions";
 import { LAYER2_AFTER, LAYER3_AFTER } from "./balance";
 import { dustPreview } from "./dust";
 import {
+  NEUTRON_POISON,
   S_DISCOVERY_THRESHOLD,
   S_PATH_END,
+  discoveryThreshold,
   S_PATH_START,
   captureNeutrons,
   captures,
@@ -68,9 +70,34 @@ describe("s過程の道", () => {
   });
 });
 
+/** 中性子毒の分を足して、道の上に n 個届くようにした中性子の数 */
+function reaching(sp: SProcess, n: number): number {
+  const weight = sp.amounts.reduce((sum, a, i) => sum + a * crossSection(i + S_PATH_START), 0);
+  return (n * (weight + NEUTRON_POISON)) / weight;
+}
+
 describe("captureNeutrons", () => {
+  it("中性子の一部は道の外の軽い原子核（中性子毒）が捕まえる。道に届くのは 重み /（重み + 毒）", () => {
+    const sp = withAmounts({ 26: 1 });
+    const { sProcess } = captureNeutrons(sp, 1);
+    const weight = crossSection(26);
+    expect(sProcess.amounts[index(27)]! * captures(26)).toBeCloseTo(
+      weight / (weight + NEUTRON_POISON)
+    );
+  });
+
+  it("種が少ないと、中性子の多くを毒に取られる（種を減らしても速さは頭打ち）", () => {
+    const speed = (amount: number) => {
+      const { sProcess } = captureNeutrons(withAmounts({ 26: amount }), 0.1);
+      return sProcess.amounts[index(27)]! / amount;
+    };
+    expect(speed(1) / speed(10)).toBeLessThan(4);
+    expect(speed(0.1) / speed(1)).toBeLessThan(1.3);
+  });
+
   it("中性子が足りれば、鉄の種は捕まえた数に応じて次の元素へ進む", () => {
-    const { sProcess } = captureNeutrons(withAmounts({ 26: 1 }), 1.5);
+    const start = withAmounts({ 26: 1 });
+    const { sProcess } = captureNeutrons(start, reaching(start, 1.5));
     // 鉄 → コバルトは3個。1.5個なら半分が進む
     expect(sProcess.amounts[index(26)]).toBeCloseTo(0.5);
     expect(sProcess.amounts[index(27)]).toBeCloseTo(0.5);
@@ -85,7 +112,8 @@ describe("captureNeutrons", () => {
 
   it("中性子は 量 × 断面積 の比で配られる", () => {
     // Fe（σ 0.65）と Mo（σ 1.05）が同じ量なら、Mo のほうが多く捕まえる
-    const { sProcess } = captureNeutrons(withAmounts({ 26: 1, 42: 1 }), 0.2);
+    const start = withAmounts({ 26: 1, 42: 1 });
+    const { sProcess } = captureNeutrons(start, reaching(start, 0.2));
     const ironMoved = sProcess.amounts[index(27)]!;
     const molyMoved = sProcess.amounts[index(43)]!;
     expect((molyMoved * captures(42)) / (ironMoved * captures(26))).toBeCloseTo(42 / 26);
@@ -97,19 +125,31 @@ describe("captureNeutrons", () => {
   });
 
   it("作った量（その元素に進んできた原子核の合計）が発見の量を超えたら発見する（鉄は最初から）", () => {
-    const { discovered, sProcess } = captureNeutrons(withAmounts({ 26: 1 }), 0.3);
+    const start = withAmounts({ 26: 1 });
+    const { discovered, sProcess } = captureNeutrons(start, reaching(start, 0.3));
     expect(sProcess.produced[index(27)]).toBeGreaterThanOrEqual(S_DISCOVERY_THRESHOLD);
     expect(discovered).toEqual([27]);
+  });
+
+  it("発見の量は、道の上の原子核の合計の5%（鉄との比で測る。合計が1未満なら 0.05）", () => {
+    expect(discoveryThreshold(withAmounts({ 26: 0.5 }))).toBeCloseTo(S_DISCOVERY_THRESHOLD);
+    expect(discoveryThreshold(withAmounts({ 26: 8, 40: 2 }))).toBeCloseTo(
+      S_DISCOVERY_THRESHOLD * 10
+    );
+    // 種を30にすると、同じだけ作っても見つからない
+    const many = withAmounts({ 26: 30 });
+    many.produced[index(27)] = 0.1;
+    expect(captureNeutrons(many, 1e-9).discovered).toEqual([]);
   });
 
   it("今の量が少なくても、通り抜けた分を数えて発見する（すぐ通り抜ける元素も見つかる）", () => {
     let sp = withAmounts({ 31: S_DISCOVERY_THRESHOLD * 0.6 });
     sp.discovered = [27, 28, 29, 30, 31];
-    for (let i = 0; i < 4; i++) sp = captureNeutrons(sp, 1).sProcess;
+    for (let i = 0; i < 4; i++) sp = captureNeutrons(sp, 100).sProcess;
     expect(sp.amounts[index(32)]).toBeLessThan(S_DISCOVERY_THRESHOLD);
     expect(sp.discovered).not.toContain(32);
     sp.amounts[index(31)] = S_DISCOVERY_THRESHOLD * 0.6;
-    for (let i = 0; i < 4; i++) sp = captureNeutrons(sp, 1).sProcess;
+    for (let i = 0; i < 4; i++) sp = captureNeutrons(sp, 100).sProcess;
     expect(sp.discovered).toContain(32);
   });
 
@@ -121,7 +161,7 @@ describe("captureNeutrons", () => {
   it("一度発見した元素は、もう一度は数えない", () => {
     const sp = withAmounts({ 26: 1 });
     sp.discovered = [27];
-    expect(captureNeutrons(sp, 0.3).discovered).toEqual([]);
+    expect(captureNeutrons(sp, reaching(sp, 0.3)).discovered).toEqual([]);
   });
 
   it("ビスマスがごくわずか（発見の量に満たない）なら、循環を見たことにはしない", () => {

@@ -56,7 +56,7 @@ describe("GameScreen：第3層 s過程", () => {
     renderGame(game);
     const panel = screen.getByRole("region", { name: "s過程" });
     expect(panel).toHaveTextContent("重元素の星屑12.3");
-    expect(panel).toHaveTextContent("毎秒 +2.20");
+    expect(panel).toHaveTextContent("毎秒 +13.20");
   });
 
   it("Ia型超新星を起こすと、白色矮星を1つ使って鉄の種を道に入れる", async () => {
@@ -154,8 +154,9 @@ describe("GameScreen：第3層 s過程", () => {
   it("ビスマスから鉛に戻る循環を見たら知らせる", () => {
     const game = agbStar();
     game.meta.sProcess.amounts[index(S_PATH_END)] = 1;
+    game.meta.sProcess.seedTarget = 1; // 種を足さない（発見の量は道の上の合計の5%）
     const { tick } = renderGame(game);
-    tick(0.5);
+    for (let i = 0; i < 8; i++) tick(0.25);
     expect(screen.getByRole("status")).toHaveTextContent("ビスマス → ポロニウム → 鉛");
   });
 });
@@ -172,11 +173,11 @@ describe("GameScreen：第3層の強化と自動化", () => {
     const game = layer3(0);
     const { user } = renderGame(game);
     const picker = screen.getByRole("radiogroup", { name: "道の上の原子核を保つ量" });
-    expect(within(picker).getByRole("radio", { name: "3" })).toBeChecked();
-
-    await user.click(within(picker).getByRole("radio", { name: "10" }));
-
     expect(within(picker).getByRole("radio", { name: "10" })).toBeChecked();
+
+    await user.click(within(picker).getByRole("radio", { name: "3" }));
+
+    expect(within(picker).getByRole("radio", { name: "3" })).toBeChecked();
   });
 });
 

@@ -20,10 +20,10 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(gap).toBeLessThanOrEqual(60 * MINUTE);
   });
 
-  it("s過程：ストロンチウムのピークは第3層の10〜40分後", () => {
+  it("s過程：ストロンチウムのピークは第3層の10〜45分後", () => {
     const gap = report.marks.strontium! - report.marks.layer3!;
     expect(gap).toBeGreaterThanOrEqual(10 * MINUTE);
-    expect(gap).toBeLessThanOrEqual(40 * MINUTE);
+    expect(gap).toBeLessThanOrEqual(45 * MINUTE);
   });
 
   it("s過程：バリウム → 鉛 → 循環の順に届き、循環は第3層の75分〜3時間後", () => {

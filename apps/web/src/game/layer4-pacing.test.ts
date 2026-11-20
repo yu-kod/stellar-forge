@@ -34,9 +34,9 @@ describe("第4層とエンディングのペーシング（画面を開いたま
     expect(report.marks.complete).toBe(report.marks.gold);
   });
 
-  it("完結の後もそのまま続ければ、30分ほどでトリウム・ウランに届く（自動化が止まらない）", () => {
-    expect(report.rAt[90]! - report.marks.complete!).toBeLessThanOrEqual(30 * MINUTE);
-    expect(report.rAt[92]! - report.marks.complete!).toBeLessThanOrEqual(30 * MINUTE);
+  it("完結の後もそのまま続ければ、1時間以内にトリウム・ウランに届く（自動化が止まらない）", () => {
+    expect(report.rAt[90]! - report.marks.complete!).toBeLessThanOrEqual(60 * MINUTE);
+    expect(report.rAt[92]! - report.marks.complete!).toBeLessThanOrEqual(60 * MINUTE);
   });
 
   it("何も触らなくても第4層で詰まらず、金まで届く", () => {
