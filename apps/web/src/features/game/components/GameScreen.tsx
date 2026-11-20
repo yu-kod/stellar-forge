@@ -24,6 +24,7 @@ import { PeriodicTableView } from "./PeriodicTableView";
 import { RecordsView } from "./RecordsView";
 import { ResetDialog } from "./ResetDialog";
 import { ShopView } from "./ShopView";
+import { ClusterPanel } from "./ClusterPanel";
 import { MassPicker } from "./MassPicker";
 import { StageCard } from "./StageCard";
 import { TargetPicker } from "./TargetPicker";
@@ -173,6 +174,7 @@ export function GameScreen({
           ))}
         </section>
       </div>
+      <ClusterPanel meta={game.meta} dispatch={dispatch} />
       <section aria-labelledby="book-label" className="bg-card rounded-xl border p-4">
         <h2 id="book-label" className="sr-only">
           周期表・星屑・記録

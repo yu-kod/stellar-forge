@@ -1,3 +1,4 @@
+import { buyShopItem } from "@/game/actions";
 import { describe, expect, it } from "vitest";
 import { createGame } from "@/game/star";
 import { aboutToCollapse, collapsed } from "@/test-utils/game";
@@ -118,5 +119,29 @@ describe("gameReducer：reset", () => {
     const model = gameReducer(start, { type: "reset" });
     expect(model.game).toEqual(createGame());
     expect(model.notices).toEqual([]);
+  });
+});
+
+describe("gameReducer：星団", () => {
+  it("星団の星が見つけた元素は知らせるが、星団の星の超新星は知らせない", () => {
+    const start = modelWith();
+    start.game.meta.supernovae = 5;
+    start.game.meta.dust.N = 30;
+    const game = buyShopItem(start.game, "cluster");
+    game.meta.cluster[0]!.star.mass.Mg = 0.06;
+    game.meta.cluster[0]!.star.mass.H = 0.69;
+    const model = gameReducer({ ...start, game }, { type: "tick", seconds: 0.1 });
+    expect(model.notices.map((n) => n.event)).toEqual([{ type: "discover", element: "Mg" }]);
+    expect(model.game.meta.whiteDwarfs).toBe(1);
+  });
+
+  it("setSlotMass と setSlotTarget は星団の星の設定を変える", () => {
+    const start = modelWith();
+    start.game.meta.supernovae = 5;
+    start.game.meta.dust.N = 30;
+    const withSlot = { ...start, game: buyShopItem(start.game, "cluster") };
+    const massed = gameReducer(withSlot, { type: "setSlotMass", slot: 0, mass: 3 });
+    const targeted = gameReducer(massed, { type: "setSlotTarget", slot: 0, target: "Si" });
+    expect(targeted.game.meta.cluster[0]).toMatchObject({ nextMass: 3, target: "Si" });
   });
 });

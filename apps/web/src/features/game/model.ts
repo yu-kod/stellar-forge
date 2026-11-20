@@ -8,7 +8,8 @@ import {
   setNextMass,
   setTarget,
 } from "@/game/actions";
-import { advanceRuns, type SupernovaEvent } from "@/game/advance";
+import type { SupernovaEvent } from "@/game/advance";
+import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
@@ -41,6 +42,8 @@ export type Action =
   | { type: "setTarget"; target: Target }
   | { type: "setAutoRebirth"; on: boolean }
   | { type: "setNextMass"; mass: number | null }
+  | { type: "setSlotMass"; slot: number; mass: number | null }
+  | { type: "setSlotTarget"; slot: number; target: Target }
   | { type: "buyShopItem"; item: ShopId }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
@@ -72,9 +75,10 @@ function isNotice(
 export function gameReducer(model: Model, action: Action): Model {
   switch (action.type) {
     case "tick": {
-      if (model.game.star.end) return model;
-      const { state, events } = advanceRuns(model.game, action.seconds * model.speed);
-      return notify({ ...model, game: state }, events.filter(isNotice));
+      if (model.game.star.end && model.game.meta.cluster.length === 0) return model;
+      const { state, events, clusterEvents } = advanceAll(model.game, action.seconds * model.speed);
+      const discoveries = clusterEvents.filter((e) => e.type === "discover");
+      return notify({ ...model, game: state }, [...events.filter(isNotice), ...discoveries]);
     }
     case "buy":
       return { ...model, game: buyStage(model.game, action.stage) };
@@ -84,6 +88,10 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, game: setAuto(model.game, action.stage, action.on) };
     case "setTarget":
       return { ...model, game: setTarget(model.game, action.target) };
+    case "setSlotMass":
+      return { ...model, game: setSlotMass(model.game, action.slot, action.mass) };
+    case "setSlotTarget":
+      return { ...model, game: setSlotTarget(model.game, action.slot, action.target) };
     case "setNextMass":
       return { ...model, game: setNextMass(model.game, action.mass) };
     case "setAutoRebirth":

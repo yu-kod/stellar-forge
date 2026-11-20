@@ -24,6 +24,7 @@ export const SHOP_IDS = [
   "recycle",
   "nebula",
   "pulse",
+  "cluster",
 ] as const;
 export type ShopId = (typeof SHOP_IDS)[number];
 
@@ -71,6 +72,11 @@ export type Meta = {
   /** 超新星のあと自動で次の星を生むか（超新星の回数が足りれば効く） */
   autoRebirth: boolean;
   log: SupernovaRecord[];
+  /** 星団の星（主星のほかに最大2つ） */
+  cluster: ClusterSlot[];
 };
+
+/** 星団で主星と一緒に燃やす星。いつも自動で強化し、終わったら自動で次の星を生む */
+export type ClusterSlot = { star: Star; nextMass: number | null; target: Target };
 
 export type GameState = { meta: Meta; star: Star };
