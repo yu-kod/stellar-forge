@@ -59,6 +59,13 @@ export const PERIODIC_TABLE: readonly PeriodicCell[] = SYMBOLS.map((symbol, i) =
 }));
 
 /** 原子番号から周期表のマス */
+/** 周期表の先のおまけ（第4層の後に作る）。周期表の83マスには並べない */
+const BEYOND: Readonly<Record<number, PeriodicCell>> = {
+  90: { number: 90, symbol: "Th", name: "トリウム", row: 7, column: 4 },
+  92: { number: 92, symbol: "U", name: "ウラン", row: 7, column: 6 },
+};
+
+/** 原子番号の元素（83マスとおまけのトリウム・ウラン） */
 export function elementOf(z: number): PeriodicCell {
-  return PERIODIC_TABLE[z - 1]!;
+  return PERIODIC_TABLE[z - 1] ?? BEYOND[z]!;
 }
