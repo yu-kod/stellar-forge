@@ -3,8 +3,9 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { STAGES } from "@/game/balance";
 import { isIgnited } from "@/game/rates";
+import { finalStageSeconds } from "@/game/step";
 import { createGame } from "@/game/star";
-import { STAGE_IDS, type GameState, type Star } from "@/game/types";
+import { STAGE_IDS, type GameState } from "@/game/types";
 import { formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
@@ -134,7 +135,7 @@ export function GameScreen({
         </div>
       </header>
       <p role="note" className="bg-muted rounded-lg border px-3 py-2 text-sm">
-        <GoalText star={game.star} />
+        <GoalText game={game} />
       </p>
       <div className="grid items-start gap-4 md:grid-cols-[minmax(17.5rem,23.75rem)_1fr]">
         <StarPanel game={game} />
@@ -178,13 +179,13 @@ export function GameScreen({
   );
 }
 
-function GoalText({ star }: { star: Star }) {
+function GoalText({ game: { meta, star } }: { game: GameState }) {
   const next = STAGE_IDS.find((stage) => !isIgnited(star, stage));
   if (next === undefined) {
     return (
       <>
-        <b className="text-ignite">最後の30秒</b>
-        ：残っているヘリウムや炭素を、欲しい元素に変えきろう
+        <b className="text-ignite">最後の{Math.round(finalStageSeconds(meta))}秒</b>
+        ：強化の費用が4分の1になる。貯めたエネルギーで、残りを欲しい元素に変えきろう
       </>
     );
   }
@@ -193,7 +194,8 @@ function GoalText({ star }: { star: Star }) {
     return (
       <>
         次の目標：<b className="text-ignite">{spec.name}</b>
-        が始まると30秒でコアが崩壊する。それまでに外層の元素を育てておこう
+        が始まると{Math.round(finalStageSeconds(meta))}
+        秒でコアが崩壊する。それまでに外層の元素を育てておこう
       </>
     );
   }

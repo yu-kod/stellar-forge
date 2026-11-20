@@ -7,6 +7,8 @@ import {
   FIZZLE_RATE,
   FINAL_STAGE_FALLBACK_FUEL,
   FINAL_STAGE_SECONDS,
+  ACCEL_PER_LEVEL,
+  MIN_FINAL_STAGE_SECONDS,
   STAGES,
 } from "./balance";
 import { burnRate, energyMultiplier, isIgnited, stageCost } from "./rates";
@@ -31,14 +33,25 @@ export type GameEvent =
 
 export type StepResult = { state: GameState; events: GameEvent[] };
 
-const FINAL_RATE = CHANDRASEKHAR_MASS / FINAL_STAGE_SECONDS;
+/** ケイ素燃焼が始まってから崩壊するまでの秒数 */
+export function finalStageSeconds(meta: Meta): number {
+  return Math.max(
+    MIN_FINAL_STAGE_SECONDS,
+    FINAL_STAGE_SECONDS * ACCEL_PER_LEVEL ** meta.shop.accel
+  );
+}
+
+/** ケイ素燃焼が鉄を作る一定の速さ [M☉/s] */
+function finalRate(meta: Meta): number {
+  return CHANDRASEKHAR_MASS / finalStageSeconds(meta);
+}
 
 /** その更新で燃える量と、減らす燃料 */
 function plannedBurn(meta: Meta, star: Star, stage: StageId, dt: number) {
   const spec = STAGES[stage];
   if (!spec.final) return { amount: burnRate(meta, star, stage) * dt, fuel: spec.fuel };
   if (!isIgnited(star, stage)) return { amount: 0, fuel: spec.fuel };
-  const amount = FINAL_RATE * dt;
+  const amount = finalRate(meta) * dt;
   const ownFuel = spec.fuel.reduce((sum, id) => sum + star.mass[id], 0);
   return { amount, fuel: ownFuel >= amount ? spec.fuel : FINAL_STAGE_FALLBACK_FUEL };
 }
@@ -55,8 +68,8 @@ export function energyRate({ meta, star }: GameState): number {
 }
 
 /** 鉄のコアが限界に達するまでの秒数（ケイ素燃焼は一定の速さで鉄を作る） */
-export function secondsToCollapse(star: Star): number {
-  return Math.max(0, (CHANDRASEKHAR_MASS - star.mass.Fe) / FINAL_RATE);
+export function secondsToCollapse(meta: Meta, star: Star): number {
+  return Math.max(0, (CHANDRASEKHAR_MASS - star.mass.Fe) / finalRate(meta));
 }
 
 function totalBurnRate(meta: Meta, star: Star): number {

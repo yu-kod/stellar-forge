@@ -133,11 +133,16 @@ export const MILESTONE_EVERY = 10;
 export const CROSS_SECTION_PER_LEVEL = 1.25;
 export const CNO_BONUS_PER_LEVEL = 0.25;
 export const MAGNESIUM_DISCOUNT = 0.85;
+/** ケイ素燃焼が始まった後（最後の数十秒）の燃焼強化の費用の倍率。貯めたエネルギーを使い切る見せ場にする */
+export const FINAL_PHASE_COST = 0.25;
 
 /** 鉄のコアがこの質量 [M☉] に達すると崩壊する（チャンドラセカール質量） */
 export const CHANDRASEKHAR_MASS = 1.4;
 /** ケイ素燃焼の点火から崩壊までの秒数（実際の星では約1日。ゲーム用に圧縮） */
 export const FINAL_STAGE_SECONDS = 30;
+/** ケイ素燃焼の加速の1 Lv ごとの倍率と、崩壊までの時間の下限 [秒] */
+export const ACCEL_PER_LEVEL = 0.85;
+export const MIN_FINAL_STAGE_SECONDS = 8;
 /** ケイ素燃焼の燃料が足りないときに、鉄に変える元素の順 */
 export const FINAL_STAGE_FALLBACK_FUEL: readonly ElementId[] = [
   "Si",
@@ -225,6 +230,13 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     description: "超新星で得る星屑 ×1.5",
     baseCost: 4,
     costGrowth: 3,
+  },
+  accel: {
+    name: "ケイ素燃焼の加速",
+    currency: "S",
+    description: "崩壊までの時間 ×0.85（下限 8 秒）",
+    baseCost: 8,
+    costGrowth: 2.5,
   },
   auto: {
     name: "燃焼の自動制御",
