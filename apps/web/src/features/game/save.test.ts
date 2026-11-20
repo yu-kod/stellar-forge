@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 壊れたセーブを作るために型を外す */
 import { describe, expect, it } from "vitest";
+import { buyShopItem } from "@/game/actions";
 import { createGame } from "@/game/star";
 import { aboutToCollapse, collapsed } from "@/test-utils/game";
 import { OFFLINE_LIMIT_SECONDS, SAVE_VERSION, restoreSave, toSave } from "./save";
@@ -99,6 +100,42 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.meta).toEqual(game.meta);
   });
 
+  it("星団の星も戻す", () => {
+    const game = createGame();
+    game.meta.supernovae = 5;
+    game.meta.dust.N = 30;
+    const withCluster = buyShopItem(game, "cluster");
+    withCluster.meta.cluster[0]!.nextMass = null;
+    const raw = JSON.parse(JSON.stringify(toSave(withCluster, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta.cluster).toEqual(withCluster.meta.cluster);
+  });
+
+  it("留守中は星団の星も燃える", () => {
+    const game = createGame();
+    game.meta.supernovae = 5;
+    game.meta.dust.N = 30;
+    const withCluster = buyShopItem(game, "cluster");
+    const restored = restoreSave(toSave(withCluster, NOW), NOW + 60_000);
+    expect(restored?.game.meta.cluster[0]?.star.time).toBeCloseTo(60);
+  });
+
+  it("主星が超新星の画面で止まっていても、星団の星は燃え続ける", () => {
+    const game = collapsed();
+    game.meta.supernovae = 5;
+    game.meta.dust.N = 30;
+    const withCluster = buyShopItem(game, "cluster");
+    const restored = restoreSave(toSave(withCluster, NOW), NOW + 60_000);
+    expect(restored?.game.star.end).toBe("collapse");
+    expect(restored?.game.meta.cluster[0]?.star.time).toBeCloseTo(60);
+  });
+
+  it("星団を持っているのに星が保存されていなければ、作り直す", () => {
+    const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
+    save.game.meta.shop.cluster = 1;
+    delete save.game.meta.cluster;
+    expect(restoreSave(save, NOW)?.game.meta.cluster).toHaveLength(1);
+  });
+
   function saveWith(change: (game: Record<string, any>) => void) {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     change(save.game);
@@ -114,6 +151,11 @@ describe("restoreSave", () => {
     ],
     ["自動の切り替えが真偽値でない", saveWith((g) => (g.meta.autoOn.H = 1))],
     ["狙いが知らない値", saveWith((g) => (g.meta.target = "Au"))],
+    ["星団が配列でない", saveWith((g) => (g.meta.cluster = {}))],
+    [
+      "星団の星の狙いがない",
+      saveWith((g) => (g.meta.cluster = [{ star: g.star, nextMass: 7, target: null }])),
+    ],
   ])("壊れたセーブは読まない：%s", (_, raw) => {
     expect(restoreSave(raw, NOW)).toBeNull();
   });

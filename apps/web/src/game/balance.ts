@@ -301,6 +301,15 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     costGrowth: 3,
     layer: 2,
   },
+  cluster: {
+    name: "星団",
+    currency: "N",
+    description: "主星と一緒に燃やす星を1つ増やす（全部で3つまで）",
+    baseCost: 30,
+    costGrowth: 10,
+    maxLevel: 2,
+    layer: 2,
+  },
 };
 
 /** 超新星の記録を残す件数 */
@@ -308,5 +317,8 @@ export const SHOP: Record<ShopId, ShopSpec> = {
 export const RECYCLE_PER_LEVEL = 1.25;
 export const NEBULA_PER_LEVEL = 1.5;
 export const PULSE_PER_LEVEL = 2;
+
+/** 星団の星の初期設定（窒素を作る軽い星） */
+export const CLUSTER_DEFAULT_MASS = 7;
 
 export const LOG_LIMIT = 20;

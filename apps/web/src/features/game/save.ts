@@ -1,8 +1,9 @@
-import { advanceRuns } from "@/game/advance";
-import { canAutoRebirth } from "@/game/actions";
+import { advanceAll } from "@/game/cluster";
+import { canAutoRebirth, createSlot } from "@/game/actions";
 import { createMeta } from "@/game/star";
 import {
   ELEMENT_IDS,
+  type ClusterSlot,
   STAGE_IDS,
   type GameState,
   type Meta,
@@ -36,10 +37,11 @@ export function restoreSave(raw: unknown, now: number): Restored | null {
     if (!isObject(raw) || raw.version !== SAVE_VERSION) return null;
     const savedAt = requireNumber(raw.savedAt);
     const game = parseGame(raw.game);
-    if (game.star.end && !canAutoRebirth(game.meta)) return { game, awaySeconds: 0 };
+    const stopped = game.star.end && !canAutoRebirth(game.meta) && game.meta.cluster.length === 0;
+    if (stopped) return { game, awaySeconds: 0 };
     const awaySeconds = Math.min(OFFLINE_LIMIT_SECONDS, Math.max(0, (now - savedAt) / 1000));
     if (awaySeconds === 0) return { game, awaySeconds };
-    return { game: advanceRuns(game, awaySeconds, OFFLINE_STEP_SECONDS).state, awaySeconds };
+    return { game: advanceAll(game, awaySeconds, OFFLINE_STEP_SECONDS).state, awaySeconds };
   } catch {
     return null;
   }
@@ -127,6 +129,17 @@ function parseRecord(value: unknown): SupernovaRecord {
   };
 }
 
+function parseSlot(value: unknown): ClusterSlot {
+  const raw = requireObject(value);
+  const target = parseTarget(raw.target);
+  if (target === null) throw new InvalidSave();
+  return {
+    star: parseStar(raw.star),
+    nextMass: raw.nextMass === null ? null : requireNumber(raw.nextMass),
+    target,
+  };
+}
+
 function parseMeta(value: unknown): Meta {
   const raw = requireObject(value);
   const defaults = createMeta();
@@ -135,7 +148,8 @@ function parseMeta(value: unknown): Meta {
     Object.fromEntries(ELEMENT_IDS.map((id) => [id, false])) as Record<string, boolean>
   );
   if (raw.log !== undefined && !Array.isArray(raw.log)) throw new InvalidSave();
-  return {
+  if (raw.cluster !== undefined && !Array.isArray(raw.cluster)) throw new InvalidSave();
+  const meta: Meta = {
     dust: withDefaults(raw.dust, defaults.dust),
     supernovae: raw.supernovae === undefined ? 0 : requireNumber(raw.supernovae),
     neutronStars: raw.neutronStars === undefined ? 0 : requireNumber(raw.neutronStars),
@@ -150,7 +164,11 @@ function parseMeta(value: unknown): Meta {
     target: parseTarget(raw.target),
     autoRebirth: withDefaults({ on: raw.autoRebirth }, { on: defaults.autoRebirth }).on,
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
+    cluster: ((raw.cluster as unknown[] | undefined) ?? []).map(parseSlot),
   };
+  // 星団を買ったのに星が無ければ作り直す
+  while (meta.cluster.length < meta.shop.cluster) meta.cluster.push(createSlot(meta));
+  return meta;
 }
 
 function parseGame(value: unknown): GameState {

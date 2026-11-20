@@ -1,5 +1,6 @@
 import {
   AUTO_REBIRTH_AFTER,
+  CLUSTER_DEFAULT_MASS,
   LOG_LIMIT,
   MAX_BUY_PER_ACTION,
   SHOP,
@@ -16,6 +17,7 @@ import {
   type Meta,
   type ShopId,
   type StageId,
+  type ClusterSlot,
   type SupernovaRecord,
   type Target,
   STAGE_IDS,
@@ -121,12 +123,21 @@ export function buyShopItem(state: GameState, item: ShopId): GameState {
   const { meta } = state;
   if (!canBuyShopItem(meta, item)) return state;
   const currency = SHOP[item].currency;
-  return {
-    star: state.star,
-    meta: {
-      ...meta,
-      dust: { ...meta.dust, [currency]: meta.dust[currency] - shopCost(meta, item) },
-      shop: { ...meta.shop, [item]: meta.shop[item] + 1 },
-    },
+  const bought: Meta = {
+    ...meta,
+    dust: { ...meta.dust, [currency]: meta.dust[currency] - shopCost(meta, item) },
+    shop: { ...meta.shop, [item]: meta.shop[item] + 1 },
   };
+  if (item === "cluster") bought.cluster = [...meta.cluster, createSlot(bought)];
+  return { star: state.star, meta: bought };
+}
+
+/** 星団に新しく加わる星（窒素を作る軽い星・炭素狙い） */
+export function createSlot(meta: Meta): ClusterSlot {
+  const settings = { nextMass: CLUSTER_DEFAULT_MASS, target: "C" as const };
+  const view = setNextMass(
+    setTarget({ meta, star: createStar(meta) }, settings.target),
+    settings.nextMass
+  );
+  return { ...settings, star: createStar(view.meta) };
 }

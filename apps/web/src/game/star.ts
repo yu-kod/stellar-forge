@@ -47,11 +47,13 @@ export function createMeta(): Meta {
       recycle: 0,
       nebula: 0,
       pulse: 0,
+      cluster: 0,
     },
     autoOn: { H: true, He: true, C: true, Ne: true, O: true, Si: false },
     target: "Si",
     autoRebirth: true,
     log: [],
+    cluster: [],
   };
 }
 
