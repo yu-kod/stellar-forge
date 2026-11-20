@@ -72,6 +72,7 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
     const game = lowMassStar();
     game.meta.supernovae = 10;
     game.star.mass.H = 0.29;
+    game.star.agbStartedAt = -20;
     game.star.mass.He = 2.71;
     const { tick } = renderGame(game);
     tick(0.1);
@@ -95,6 +96,16 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
     expect(carbon).toHaveTextContent("軽い星（8 M☉ 未満）では点火しない");
     expect(screen.getByRole("note")).toHaveTextContent(
       "外層の水素が 0.30 M☉ を下回ると白色矮星になる。それまでにヘリウムを炭素・酸素に変えよう"
+    );
+  });
+
+  it("漸近巨星分枝星になったら、白色矮星までの秒数を出す", () => {
+    const game = lowMassStar();
+    game.star.agbStartedAt = 0;
+    game.star.time = 5;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "漸近巨星分枝星：あと 15 秒で外層を放って白色矮星になる"
     );
   });
 

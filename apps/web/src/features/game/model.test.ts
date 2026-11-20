@@ -130,6 +130,7 @@ describe("gameReducer：星団", () => {
     const game = buyShopItem(start.game, "cluster");
     game.meta.cluster[0]!.star.mass.Mg = 0.06;
     game.meta.cluster[0]!.star.mass.H = 0.69;
+    game.meta.cluster[0]!.star.agbStartedAt = -20;
     const model = gameReducer({ ...start, game }, { type: "tick", seconds: 0.1 });
     expect(model.notices.map((n) => n.event)).toEqual([{ type: "discover", element: "Mg" }]);
     expect(model.game.meta.whiteDwarfs).toBe(1);

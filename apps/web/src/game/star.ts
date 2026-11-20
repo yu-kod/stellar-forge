@@ -74,6 +74,7 @@ export function createStar(meta: Meta): Star {
     levels: { H: 1, He: 0, C: 0, Ne: 0, O: 0, Si: 0 },
     ignitedAt: { H: 0 },
     end: null,
+    agbStartedAt: null,
   };
 }
 

@@ -29,23 +29,23 @@ describe("窒素で買う第2層の強化", () => {
     expect(next.meta.dust.N).toBe(0);
   });
 
-  it("星間ガスの再利用：すべての星屑 ×1.25（Lv ごと）", () => {
+  it("星間ガスの再利用：すべての星屑 +25%（Lv ごと、足し算）", () => {
     const game = layer2();
     game.star.mass.C = 4;
     const before = dustPreview(game.meta, game.star).C;
     game.meta.shop.recycle = 2;
     expect(before).toBe(Math.floor(4 ** 1.1));
-    expect(dustPreview(game.meta, game.star).C).toBe(Math.floor(4 ** 1.1 * 1.25 ** 2));
+    expect(dustPreview(game.meta, game.star).C).toBe(Math.floor(4 ** 1.1 * 1.5));
   });
 
-  it("惑星状星雲の濃縮：白色矮星の星屑 ×1.5（Lv ごと）。超新星には効かない", () => {
+  it("惑星状星雲の濃縮：白色矮星の星屑 +50%（Lv ごと、足し算）。超新星には効かない", () => {
     const game = layer2();
-    game.meta.shop.nebula = 1;
+    game.meta.shop.nebula = 2;
     game.star.mass.C = 4;
     game.star.end = "collapse";
     expect(dustPreview(game.meta, game.star).C).toBe(Math.floor(4 ** 1.1));
     game.star.end = "whiteDwarf";
-    expect(dustPreview(game.meta, game.star).C).toBe(Math.floor(4 ** 1.1 * 2 * 1.5));
+    expect(dustPreview(game.meta, game.star).C).toBe(Math.floor(4 ** 1.1 * 2 * 2));
   });
 
   it("熱パルス：軽い星のヘリウム燃焼 ×2（Lv ごと）。重い星には効かない", () => {

@@ -48,6 +48,8 @@ export type Star = {
   levels: Record<StageId, number>;
   ignitedAt: Partial<Record<StageId, number>>;
   end: StarEnd;
+  /** 軽い星が漸近巨星分枝星になった時刻 [秒]。まだなら null */
+  agbStartedAt: number | null;
 };
 
 export type SupernovaRecord = {

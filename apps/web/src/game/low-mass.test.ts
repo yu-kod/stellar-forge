@@ -70,13 +70,35 @@ describe("軽い星（8 M☉ 未満）", () => {
     expect(isIgnited(state.star, "C")).toBe(false);
   });
 
-  it("外層の水素が初期質量の10%を下回ると、白色矮星になって終わる", () => {
+  it("外層の水素が初期質量の10%を下回ると、漸近巨星分枝星になる（まだ終わらない）", () => {
     const game = lowMassGame(5);
     game.star.mass.H = 0.49;
     game.star.mass.He = 4.51;
+    game.star.time = 50;
+    const { state, events } = step(game, 0.1);
+    expect(state.star.agbStartedAt).toBeCloseTo(50.1);
+    expect(state.star.end).toBeNull();
+    expect(events).toContainEqual({ type: "agb" });
+  });
+
+  it("漸近巨星分枝星になって20秒たつと、白色矮星になって終わる", () => {
+    const game = lowMassGame(5);
+    game.star.mass.H = 0.49;
+    game.star.mass.He = 4.51;
+    game.star.time = 50;
+    game.star.agbStartedAt = 30.05;
     const { state, events } = step(game, 0.1);
     expect(state.star.end).toBe("whiteDwarf");
     expect(events).toContainEqual({ type: "whiteDwarf" });
+  });
+
+  it("漸近巨星分枝星の段階は20秒続く", () => {
+    const game = lowMassGame(5);
+    game.star.mass.H = 0.49;
+    game.star.mass.He = 4.51;
+    game.star.agbStartedAt = 0;
+    game.star.time = 19.8;
+    expect(step(game, 0.1).state.star.end).toBeNull();
   });
 
   it("重い星は水素が減っても白色矮星にならない", () => {
@@ -84,6 +106,14 @@ describe("軽い星（8 M☉ 未満）", () => {
     game.star.mass.H = 1;
     game.star.mass.He = 24;
     expect(step(game, 0.1).state.star.end).toBeNull();
+  });
+
+  it("1〜3 M☉ の星は炭素星になり、白色矮星になったときの炭素の星屑がさらに ×2", () => {
+    const game = lowMassGame(3);
+    game.star.mass.C = 2;
+    game.star.end = "whiteDwarf";
+    expect(dustPreview(game.meta, game.star).C).toBe(Math.floor(2 ** 1.1 * 2 * 2));
+    expect(dustPreview(game.meta, game.star).O).toBe(0);
   });
 
   it("白色矮星になったら、星屑 ×2（惑星状星雲）", () => {
@@ -126,13 +156,22 @@ describe("CNO サイクル", () => {
     expect((1 - state.star.mass.C) / (burned * 0.01)).toBeCloseTo(1);
   });
 
-  it("軽い星では外層の対流で炭素がよく混ざり、燃えた水素の20%ぶんを窒素に変える", () => {
+  it("4〜8 M☉ の星は外層の底で水素が燃え（hot bottom burning）、燃えた水素の25%ぶんを窒素に変える", () => {
     const game = lowMassGame(5);
     game.star.mass.H = 4;
     game.star.mass.C = 1;
     const burned = K1 * 4 * 1;
     const { state } = step(game, 1);
-    expect(state.star.mass.N / (burned * 0.2)).toBeCloseTo(1);
+    expect(state.star.mass.N / (burned * 0.25)).toBeCloseTo(1);
+  });
+
+  it("1〜3 M☉ の星は窒素をあまり作らない（3%）", () => {
+    const game = lowMassGame(3);
+    game.star.mass.H = 2.5;
+    game.star.mass.C = 0.5;
+    const burned = K1 * 2.5 * 1;
+    const { state } = step(game, 1);
+    expect(state.star.mass.N / (burned * 0.03)).toBeCloseTo(1);
   });
 
   it("炭素がなければ窒素はできない", () => {

@@ -193,13 +193,23 @@ export const LOW_MASS_LIMIT = 8;
 export const LOW_MASS_MAX_TEMPERATURE = 3.5e8;
 /** 軽い星は、外層の水素が初期質量のこの割合を下回ると白色矮星になる */
 export const WHITE_DWARF_HYDROGEN = 0.1;
+/** 軽い星が漸近巨星分枝星として過ごす時間 [秒]。その後、白色矮星になる */
+export const AGB_SECONDS = 20;
+/** これより軽い星は炭素星になる（窒素は少なく、炭素と中性子が多い）[M☉] */
+export const CARBON_STAR_LIMIT = 4;
+/** 炭素星が白色矮星になったときの炭素の星屑の倍率 */
+export const CARBON_STAR_DUST = 2;
+/** 炭素星の中性子の倍率（¹³C ポケット） */
+export const CARBON_STAR_NEUTRONS = 3;
 /** 惑星状星雲（白色矮星になったとき）の星屑の倍率と、窒素を発見済みなら掛ける倍率 */
 export const PLANETARY_NEBULA_DUST = 2;
 export const NITROGEN_DUST_BONUS = 1.5;
 /** 水素燃焼で、燃えた水素に対して炭素を窒素に変える割合（CNO サイクル） */
 export const CNO_NITROGEN_PER_HYDROGEN = 0.01;
-/** 軽い星では外層の対流で炭素がよく混ざり、窒素をたくさん作る */
-export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.2;
+/** 4〜8 M☉ の星は外層の底で水素が燃え（hot bottom burning）、窒素をたくさん作る */
+export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.25;
+/** 炭素星（4 M☉ 未満）の窒素 */
+export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 
 /** 第3層（s過程）を解放する白色矮星の数 */
 export const LAYER3_AFTER = 3;
@@ -298,7 +308,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   recycle: {
     name: "星間ガスの再利用",
     currency: "N",
-    description: "すべての星屑 ×1.25",
+    description: "すべての星屑 +25%",
     baseCost: 10,
     costGrowth: 2.5,
     layer: 2,
@@ -306,7 +316,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   nebula: {
     name: "惑星状星雲の濃縮",
     currency: "N",
-    description: "白色矮星になったときの星屑 ×1.5",
+    description: "白色矮星になったときの星屑 +50%",
     baseCost: 5,
     costGrowth: 2.5,
     layer: 2,
@@ -332,8 +342,8 @@ export const SHOP: Record<ShopId, ShopSpec> = {
 
 /** 超新星の記録を残す件数 */
 /** 第2層の強化（窒素）の効果 */
-export const RECYCLE_PER_LEVEL = 1.25;
-export const NEBULA_PER_LEVEL = 1.5;
+export const RECYCLE_PER_LEVEL = 0.25;
+export const NEBULA_PER_LEVEL = 0.5;
 export const PULSE_PER_LEVEL = 2;
 
 /** 星団の星の初期設定（窒素を作る軽い星） */

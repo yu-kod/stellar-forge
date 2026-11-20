@@ -29,6 +29,15 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game).toEqual(game);
   });
 
+  it("漸近巨星分枝星になった時刻も戻す。古いセーブに無ければ null", () => {
+    const game = createGame();
+    game.star.agbStartedAt = 12;
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(raw, NOW)?.game.star.agbStartedAt).toBe(12);
+    delete raw.game.star.agbStartedAt;
+    expect(restoreSave(raw, NOW)?.game.star.agbStartedAt).toBeNull();
+  });
+
   it("閉じていた時間だけ星を進める", () => {
     const restored = restoreSave(toSave(createGame(), NOW), NOW + 60_000);
     expect(restored?.awaySeconds).toBe(60);
