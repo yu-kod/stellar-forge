@@ -3,6 +3,7 @@ import { triggerIa } from "./actions";
 import { LAYER2_AFTER, LAYER3_AFTER } from "./balance";
 import { dustPreview } from "./dust";
 import {
+  S_DISCOVERY_THRESHOLD,
   S_PATH_END,
   S_PATH_START,
   captureNeutrons,
@@ -23,7 +24,11 @@ const index = (z: number) => z - S_PATH_START;
 
 function withAmounts(entries: Record<number, number>): SProcess {
   const sp = createSProcess();
-  for (const [z, amount] of Object.entries(entries)) sp.amounts[index(Number(z))] = amount;
+  // 道に置いた量は、その元素で作ったものとして数える
+  for (const [z, amount] of Object.entries(entries)) {
+    sp.amounts[index(Number(z))] = amount;
+    sp.produced[index(Number(z))] = amount;
+  }
   return sp;
 }
 
@@ -90,12 +95,24 @@ describe("captureNeutrons", () => {
     expect(sProcess.amounts.every((a) => a === 0)).toBe(true);
   });
 
-  it("量が 0.01 を超えた元素を発見する（鉄は最初から）", () => {
-    const { discovered } = captureNeutrons(withAmounts({ 26: 1 }), 0.3);
+  it("作った量（その元素に進んできた原子核の合計）が発見の量を超えたら発見する（鉄は最初から）", () => {
+    const { discovered, sProcess } = captureNeutrons(withAmounts({ 26: 1 }), 0.3);
+    expect(sProcess.produced[index(27)]).toBeGreaterThanOrEqual(S_DISCOVERY_THRESHOLD);
     expect(discovered).toEqual([27]);
   });
 
-  it("r過程で作る元素は、量が増えても発見しない", () => {
+  it("今の量が少なくても、通り抜けた分を数えて発見する（すぐ通り抜ける元素も見つかる）", () => {
+    let sp = withAmounts({ 31: S_DISCOVERY_THRESHOLD * 0.6 });
+    sp.discovered = [27, 28, 29, 30, 31];
+    for (let i = 0; i < 4; i++) sp = captureNeutrons(sp, 1).sProcess;
+    expect(sp.amounts[index(32)]).toBeLessThan(S_DISCOVERY_THRESHOLD);
+    expect(sp.discovered).not.toContain(32);
+    sp.amounts[index(31)] = S_DISCOVERY_THRESHOLD * 0.6;
+    for (let i = 0; i < 4; i++) sp = captureNeutrons(sp, 1).sProcess;
+    expect(sp.discovered).toContain(32);
+  });
+
+  it("r過程で作る元素は、作っても発見しない", () => {
     const { discovered } = captureNeutrons(withAmounts({ 78: 1 }), 100);
     expect(discovered).toEqual([]);
   });
@@ -203,6 +220,7 @@ describe("第3層の解放と中性子", () => {
     const meta = layer3Meta({ nextMass: 3 });
     meta.sProcess.amounts[0] = 1;
     meta.sProcess.amounts[S_PATH_END - S_PATH_START] = 1;
+    meta.sProcess.produced[S_PATH_END - S_PATH_START] = 1;
     const game: GameState = { meta, star: createStar(meta) };
     game.star.mass.H = 1;
     game.star.mass.He = 2;

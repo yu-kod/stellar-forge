@@ -6,7 +6,7 @@ import {
   S_DISCOVERABLE_ELEMENTS,
   S_PATH_END,
   S_PATH_START,
-  discoveryThreshold,
+  S_DISCOVERY_THRESHOLD,
 } from "@/game/sprocess";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
@@ -114,8 +114,8 @@ describe("GameScreen：第3層 s過程", () => {
   it("一番発見に近い元素と、その進み具合を出す（魔法数で詰まっている間の目安）", () => {
     const game = layer3();
     game.meta.sProcess.discovered = [27, 28, 29];
-    game.meta.sProcess.amounts[index(40)] = discoveryThreshold(40) * 0.42;
-    game.meta.sProcess.amounts[index(30)] = discoveryThreshold(30) * 0.1;
+    game.meta.sProcess.produced[index(40)] = S_DISCOVERY_THRESHOLD * 0.42;
+    game.meta.sProcess.produced[index(30)] = S_DISCOVERY_THRESHOLD * 0.1;
     game.meta.shop.auto = 1;
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(

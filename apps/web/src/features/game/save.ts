@@ -157,6 +157,9 @@ function parseSProcess(value: unknown): SProcess {
     seedTarget: raw.seedTarget === undefined ? fresh.seedTarget : requireNumber(raw.seedTarget),
     heavy: raw.heavy === undefined ? 0 : requireNumber(raw.heavy),
     amounts: raw.amounts.map(requireNumber),
+    // 作った量は後から足した。古いセーブでは、今道の上にある量を作った量とみなす
+    produced:
+      raw.produced === undefined ? raw.amounts.map(requireNumber) : parseNumbers(raw.produced),
     discovered: raw.discovered.map(requireNumber),
   };
 }

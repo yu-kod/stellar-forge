@@ -230,7 +230,7 @@ export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 /** 第3層（s過程）を解放する白色矮星の数 */
 export const LAYER3_AFTER = 40;
 /** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
-export const NEUTRONS_PER_HELIUM = 5;
+export const NEUTRONS_PER_HELIUM = 2.8;
 
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
@@ -371,11 +371,12 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     layer: 3,
   },
   binary: {
-    name: "連星の質量移動",
-    currency: "O",
-    description: "Ia型超新星1回の鉄の種 +1",
-    baseCost: 3000,
-    costGrowth: 2,
+    name: "バリウム星",
+    currency: "heavy",
+    description: "恒星風で出た原子核のうち Lv ごとに 10% を、連星の相手が受け取って道に戻す",
+    baseCost: 40,
+    costGrowth: 2.5,
+    maxLevel: 5,
     layer: 3,
   },
 };
@@ -384,6 +385,9 @@ export const SHOP: Record<ShopId, ShopSpec> = {
 export const RECYCLE_PER_LEVEL = 0.25;
 export const NEBULA_PER_LEVEL = 0.5;
 export const PULSE_PER_LEVEL = 2;
+
+/** バリウム星1つあたりの、恒星風で出た原子核が道に戻る割合 */
+export const BARIUM_STAR_KEPT = 0.1;
 
 /** s過程の原子核が恒星風で星の外へ出る割合 [/秒] */
 export const S_WIND_RATE = 0.0011;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSProcess, discoveryThreshold, nextSDiscovery, S_PATH_START } from "./sprocess";
+import { createSProcess, S_DISCOVERY_THRESHOLD, nextSDiscovery, S_PATH_START } from "./sprocess";
 
 const index = (z: number) => z - S_PATH_START;
 
@@ -7,8 +7,8 @@ describe("s過程で次に見つかる元素", () => {
   it("まだの元素のうち、発見の量に一番近いものと、その割合", () => {
     const sp = createSProcess();
     sp.discovered = [27];
-    sp.amounts[index(38)] = discoveryThreshold(38) / 2;
-    sp.amounts[index(28)] = discoveryThreshold(28) / 4;
+    sp.produced[index(38)] = S_DISCOVERY_THRESHOLD / 2;
+    sp.produced[index(28)] = S_DISCOVERY_THRESHOLD / 4;
     expect(nextSDiscovery(sp)).toEqual({ z: 38, progress: 0.5 });
   });
 
@@ -20,7 +20,7 @@ describe("s過程で次に見つかる元素", () => {
 
   it("r過程だけの元素は数えない", () => {
     const sp = createSProcess();
-    sp.amounts[index(79)] = 1;
+    sp.produced[index(79)] = 1;
     expect(nextSDiscovery(sp)?.z).not.toBe(79);
   });
 
