@@ -112,4 +112,11 @@ describe("RecordsView", () => {
         .map((li) => li.getAttribute("aria-label"))
     ).toEqual(["炭素 3", "酸素 5", "ケイ素 2"]);
   });
+
+  it("世代・寿命・放出量の列は折り返さない（スマホで1字ずつ縦に折れない）", () => {
+    const meta = createMeta();
+    meta.log = [record({ generation: 58 })];
+    render(<RecordsView meta={meta} />);
+    expect(screen.getByRole("cell", { name: "第58世代" })).toHaveClass("whitespace-nowrap");
+  });
 });

@@ -86,19 +86,20 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
   const scale = (a: number) =>
     a <= 0 ? 0 : Math.max(0, (Math.log10(a) - floor) / (Math.log10(top) - floor));
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height + 16}`}
-      role="img"
-      aria-label="s過程の道の組成（鉄〜ビスマス）"
-      className="w-full"
-    >
-      {amounts.map((amount, i) => {
-        const z = S_PATH_START + i;
-        const h = scale(amount) * height;
-        const found = z === S_PATH_START || discovered.includes(z);
-        return (
-          <g key={z}>
+    <div className="grid gap-1">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="s過程の道の組成（鉄〜ビスマス）"
+        className="w-full"
+      >
+        {amounts.map((amount, i) => {
+          const z = S_PATH_START + i;
+          const h = scale(amount) * height;
+          const found = z === S_PATH_START || discovered.includes(z);
+          return (
             <rect
+              key={z}
               x={i * barWidth + 1}
               y={height - h}
               width={barWidth - 2}
@@ -108,20 +109,27 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
                 isMagic(z) && "fill-el-s"
               )}
             />
-            {LABELED.has(z) && (
-              <text
-                x={i * barWidth + barWidth / 2}
-                y={height + 12}
-                textAnchor="middle"
-                className="fill-muted-foreground text-[10px]"
+          );
+        })}
+      </svg>
+      {/* 目印は SVG の外の文字にして、グラフが縮んでも読める大きさを保つ */}
+      <div aria-hidden className="relative h-4">
+        {amounts.map((_, i) => {
+          const z = S_PATH_START + i;
+          return (
+            LABELED.has(z) && (
+              <span
+                key={z}
+                className="text-muted-foreground absolute -translate-x-1/2 text-xs"
+                style={{ left: `${((i + 0.5) / amounts.length) * 100}%` }}
               >
                 {LABELED.get(z)}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
+              </span>
+            )
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

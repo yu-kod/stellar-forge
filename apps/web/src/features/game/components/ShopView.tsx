@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { canBuyShopItem, shopCost } from "@/game/actions";
 import { isShopItemOpen, isShopItemUseful } from "@/game/shop";
@@ -29,27 +29,29 @@ export function ShopView({ meta, dispatch }: Props) {
       >
         まとめて交換
       </Button>
-      <p className="text-muted-foreground text-sm">
-        欲しい星屑に合わせて、どの燃焼を強化するかを変えよう。例：炭素が欲しいなら炭素燃焼を強化しない。ケイ素が欲しいなら酸素燃焼まで強化する。
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {SHOP_IDS.filter((item) => SHOP[item].layer === undefined).map((item) => (
-          <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
-        ))}
-      </div>
-      {isShopItemOpen(meta, "recycle") && (
-        <>
-          <h3 className="mt-2 text-base font-semibold">第2層（窒素）</h3>
-          <p className="text-muted-foreground text-sm">
-            窒素は主に軽い星（8 M☉ 未満）が白色矮星になるときに手に入る。
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {SHOP_IDS.filter((item) => SHOP[item].layer === 2).map((item) => (
-              <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
-            ))}
-          </div>
-        </>
-      )}{" "}
+      <Fold folded={meta.rProcess.unlocked} summary="第1・2層の強化（まとめて交換で買える）">
+        <p className="text-muted-foreground text-sm">
+          欲しい星屑に合わせて、どの燃焼を強化するかを変えよう。例：炭素が欲しいなら炭素燃焼を強化しない。ケイ素が欲しいなら酸素燃焼まで強化する。
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {SHOP_IDS.filter((item) => SHOP[item].layer === undefined).map((item) => (
+            <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
+          ))}
+        </div>
+        {isShopItemOpen(meta, "recycle") && (
+          <>
+            <h3 className="mt-2 text-base font-semibold">第2層（窒素）</h3>
+            <p className="text-muted-foreground text-sm">
+              窒素は主に軽い星（8 M☉ 未満）が白色矮星になるときに手に入る。
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {SHOP_IDS.filter((item) => SHOP[item].layer === 2).map((item) => (
+                <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
+              ))}
+            </div>
+          </>
+        )}
+      </Fold>
       {isShopItemOpen(meta, "pocket") && (
         <>
           <h3 className="mt-2 text-base font-semibold">第3層（s過程）</h3>
@@ -85,6 +87,25 @@ export function ShopView({ meta, dispatch }: Props) {
         </>
       )}
     </div>
+  );
+}
+
+/** folded なら閉じた details に入れる（第4層では第1・2層の強化を畳んで、星屑タブを短くする） */
+function Fold({
+  folded,
+  summary,
+  children,
+}: {
+  folded: boolean;
+  summary: string;
+  children: ReactNode;
+}) {
+  if (!folded) return <>{children}</>;
+  return (
+    <details>
+      <summary className="cursor-pointer py-2 text-base font-semibold">{summary}</summary>
+      <div className="grid gap-3">{children}</div>
+    </details>
   );
 }
 

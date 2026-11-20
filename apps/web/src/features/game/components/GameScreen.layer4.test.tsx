@@ -43,6 +43,24 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(screen.queryByRole("tab", { name: "r過程" })).not.toBeInTheDocument();
   });
 
+  it("しくみの説明は畳んでおき、操作を上に出す（スマホで長くならない）", () => {
+    renderGame(layer4());
+    const details = within(panel())
+      .getByText(/超新星の後に残った中性子星/)
+      .closest("details");
+    expect(details).not.toBeNull();
+    expect(details).not.toHaveAttribute("open");
+    expect(within(details!).getByText("しくみ")).toBeInTheDocument();
+  });
+
+  it("第4層では、星屑タブの第1・2層の強化を畳む（まとめて交換で買える）", async () => {
+    const { user } = renderGame(layer4());
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    const fold = screen.getByText(/第1・2層の強化/).closest("details");
+    expect(fold).not.toHaveAttribute("open");
+    expect(within(fold!).getByRole("article", { name: "より重い星" })).toBeInTheDocument();
+  });
+
   it("中性子星の在庫を質量ごとに見せる", () => {
     renderGame(layer4());
     const pool = within(panel()).getByRole("list", { name: "中性子星の在庫" });
