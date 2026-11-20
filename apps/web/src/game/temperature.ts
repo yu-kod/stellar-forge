@@ -1,4 +1,4 @@
-import { MASS_NUMBER, REFERENCE_MASS, TEMPERATURE_CURVE } from "./balance";
+import { MASS_NUMBER, MAX_CORE_TEMPERATURE, REFERENCE_MASS, TEMPERATURE_CURVE } from "./balance";
 import { ELEMENT_IDS, type Star } from "./types";
 
 /** 水素以外の元素を質量数 / 4 で重みづけした「灰の重さ」。25 M☉ の星に換算する */
@@ -30,5 +30,5 @@ export function temperatureFromWeight(weight: number): number {
   }
   const last = TEMPERATURE_CURVE.at(-1)!;
   const prev = TEMPERATURE_CURVE.at(-2)!;
-  return lerpLog(prev, last, weight);
+  return Math.min(MAX_CORE_TEMPERATURE, lerpLog(prev, last, weight));
 }

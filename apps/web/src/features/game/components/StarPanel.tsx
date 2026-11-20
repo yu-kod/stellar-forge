@@ -29,7 +29,7 @@ function CrossSection({ star }: { star: Star }) {
       viewBox="-105 -105 210 210"
       role="img"
       aria-label="星の断面（玉ねぎ構造）"
-      className="mx-auto block aspect-square w-full max-w-72"
+      className="mx-auto block aspect-square w-full max-w-40 sm:max-w-72"
     >
       {rings
         .filter((ring) => ring.radius > 0.2)

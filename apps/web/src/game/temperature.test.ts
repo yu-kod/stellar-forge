@@ -26,6 +26,12 @@ describe("temperatureFromWeight", () => {
   });
 });
 
+describe("temperatureFromWeight の上限", () => {
+  it("どれだけ灰が重くなっても 5×10⁹ K を超えない（鉄のコアの崩壊直前の温度）", () => {
+    expect(temperatureFromWeight(1000)).toBe(5e9);
+  });
+});
+
 describe("coreWeight", () => {
   it("水素以外を質量数 / 4 で重みづけして足し、25 M☉ の星に換算する", () => {
     const { star } = createGame();

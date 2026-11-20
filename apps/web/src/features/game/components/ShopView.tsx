@@ -48,7 +48,7 @@ function ShopItem({ meta, item, dispatch }: Omit<Props, "meta"> & { meta: Meta; 
       <p className="text-muted-foreground text-sm">{spec.description}</p>
       <Button
         variant="outline"
-        className="h-11 flex-col gap-0 active:scale-[0.97]"
+        className="h-11 flex-col gap-0 enabled:border-foreground/40 active:scale-[0.97] disabled:opacity-35"
         disabled={!canBuyShopItem(meta, item)}
         onClick={() => dispatch({ type: "buyShopItem", item })}
       >

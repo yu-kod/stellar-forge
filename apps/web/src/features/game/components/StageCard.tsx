@@ -64,7 +64,7 @@ export function StageCard({ game, stage, dispatch }: Props) {
             )}
             <Button
               variant="outline"
-              className="h-11 min-w-24 flex-col gap-0 active:scale-[0.97]"
+              className="h-11 min-w-24 flex-col gap-0 enabled:border-foreground/40 active:scale-[0.97] disabled:opacity-35"
               disabled={!canBuyStage(game, stage)}
               onClick={() => dispatch({ type: "buy", stage })}
             >
@@ -75,7 +75,7 @@ export function StageCard({ game, stage, dispatch }: Props) {
             </Button>
             <Button
               variant="outline"
-              className="h-11 active:scale-[0.97]"
+              className="h-11 enabled:border-foreground/40 active:scale-[0.97] disabled:opacity-35"
               aria-label={`${spec.name}を買えるだけ強化`}
               disabled={!canBuyStage(game, stage)}
               onClick={() => dispatch({ type: "buyMax", stage })}
