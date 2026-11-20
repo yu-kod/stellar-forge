@@ -100,6 +100,13 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
     );
   });
 
+  it("軽い星を燃やしている間も、層の目標を2行目に出す", () => {
+    const game = lowMassStar();
+    game.meta.shop.auto = 1;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(/白色矮星になる。.*次の目標：/);
+  });
+
   it("漸近巨星分枝星になったら、白色矮星までの秒数を出す", () => {
     const game = lowMassStar();
     game.star.agbStartedAt = 0;
@@ -112,6 +119,7 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
 
   it("白色矮星になったら、惑星状星雲を放ったと伝える", () => {
     const game = lowMassStar();
+    game.meta.autoRebirth = false;
     game.star.end = "whiteDwarf";
     renderGame(game);
     expect(
@@ -121,6 +129,7 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
 
   it("超新星の画面でも次の星の質量を選べ、その質量で生まれる", async () => {
     const game = collapsed();
+    game.meta.autoRebirth = false;
     game.meta.supernovae = LAYER2_AFTER;
     const { user } = renderGame(game);
     const dialog = screen.getByRole("dialog");
@@ -136,6 +145,7 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
 
   it("第2層を解放する回数目の超新星で、質量を選べるようになったと知らせる", async () => {
     const game = collapsed();
+    game.meta.autoRebirth = false;
     game.meta.supernovae = LAYER2_AFTER - 1;
     const { user } = renderGame(game);
 

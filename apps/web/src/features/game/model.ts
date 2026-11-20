@@ -202,7 +202,7 @@ function reduce(model: Model, action: Action): Model {
     }
     case "tick": {
       if (model.away) return catchUp(model, model.away);
-      if (model.game.star.end && model.game.meta.cluster.length === 0) return model;
+      if (isStopped(model.game)) return model;
       const { state, events, clusterEvents } = advanceAll(model.game, action.seconds * model.speed);
       const discoveries = clusterEvents.filter(isClusterNotice);
       // 自動で次の星を生むようになったら、毎周の点火は知らせない

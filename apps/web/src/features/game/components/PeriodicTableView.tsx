@@ -1,5 +1,6 @@
 import { ELEMENT_IDS, type Meta } from "@/game/types";
 import { LIGHT_SITES } from "@/game/light";
+import { foundElements } from "@/game/progress";
 import { cn } from "@/lib/utils";
 import { ELEMENTS, isGameElement } from "../elements";
 import { PERIODIC_TABLE, type PeriodicCell } from "../periodicTable";
@@ -39,11 +40,7 @@ function describe(meta: Meta, cell: PeriodicCell): string {
 }
 
 export function PeriodicTableView({ meta }: { meta: Meta }) {
-  const found =
-    ELEMENT_IDS.filter((id) => isDiscovered(meta, id)).length +
-    meta.sProcess.discovered.length +
-    meta.lightFound.length +
-    meta.rProcess.discovered.filter((z) => z <= BISMUTH).length;
+  const found = foundElements(meta).length;
   return (
     <div className="grid gap-3">
       <p className="text-muted-foreground text-sm">
@@ -53,7 +50,7 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
       <div className="overflow-x-auto">
         <ol
           aria-label="周期表"
-          className="grid min-w-[560px] grid-cols-[repeat(18,minmax(0,1fr))] gap-0.5"
+          className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-px sm:gap-0.5"
         >
           {PERIODIC_TABLE.map((cell) => {
             const got = isDiscovered(meta, cell.symbol);
@@ -69,7 +66,7 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
                 title={label}
                 style={{ gridRow: cell.row, gridColumn: cell.column }}
                 className={cn(
-                  "relative grid aspect-square place-items-center rounded-sm border text-xs",
+                  "relative grid aspect-square place-items-center rounded-sm border text-[0.55rem] sm:text-xs",
                   got && isGameElement(cell.symbol)
                     ? cn(ELEMENTS[cell.symbol].bg, "text-background border-transparent font-bold")
                     : sFound
@@ -83,7 +80,10 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
                   cell.row === 7 && "mt-1"
                 )}
               >
-                <span aria-hidden className="absolute top-0 left-0.5 font-mono text-[0.5rem]">
+                <span
+                  aria-hidden
+                  className="absolute top-0 left-0.5 hidden font-mono text-[0.5rem] sm:block"
+                >
                   {cell.number}
                 </span>
                 <span aria-hidden>{cell.symbol}</span>
