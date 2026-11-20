@@ -1,6 +1,7 @@
 import {
   CNO_BONUS_PER_LEVEL,
   CROSS_SECTION_PER_LEVEL,
+  FINAL_PHASE_COST,
   MAGNESIUM_DISCOUNT,
   MILESTONE_EVERY,
   PACE,
@@ -38,7 +39,8 @@ export function burnRate(meta: Meta, star: Star, stage: StageId): number {
 export function stageCost(meta: Meta, star: Star, stage: StageId): number {
   const spec = STAGES[stage];
   const discount = meta.discovered.Mg ? MAGNESIUM_DISCOUNT : 1;
-  return spec.initialCost * spec.costGrowth ** star.levels[stage] * discount;
+  const finalPhase = isIgnited(star, "Si") ? FINAL_PHASE_COST : 1;
+  return spec.initialCost * spec.costGrowth ** star.levels[stage] * discount * finalPhase;
 }
 
 export function energyMultiplier(meta: Meta): number {

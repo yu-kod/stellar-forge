@@ -36,4 +36,11 @@ describe("バランス", () => {
     );
     expect(state.meta.shop.auto).toBe(1);
   });
+
+  it("1時間遊ぶあいだ、星屑の強化を15分以上買えない区間がない", () => {
+    const { purchases } = playCampaign(60 * 60);
+    const gaps = purchases.slice(1).map((t, i) => t - purchases[i]!);
+    expect(Math.max(...gaps)).toBeLessThan(15 * 60);
+    expect(purchases.at(-1)).toBeGreaterThan(45 * 60);
+  });
 });

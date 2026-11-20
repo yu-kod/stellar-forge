@@ -4,13 +4,21 @@ import {
   canBuyStage,
   canBuyShopItem,
   rebirth,
+  setTarget,
   shopCost,
 } from "@/game/actions";
 import { SHOP, TARGET_STAGES } from "@/game/balance";
 import { stageCost } from "@/game/rates";
 import { step } from "@/game/step";
 import { createGame } from "@/game/star";
-import { SHOP_IDS, STAGE_IDS, type DustId, type GameState, type StageId } from "@/game/types";
+import {
+  SHOP_IDS,
+  STAGE_IDS,
+  type DustId,
+  type GameState,
+  type StageId,
+  type Target,
+} from "@/game/types";
 
 /** その元素を外層に残すために強化する段階（狙う星屑と同じ） */
 export const STAGES_FOR: Record<DustId, readonly StageId[]> = {
@@ -60,20 +68,32 @@ export function playStar(start: GameState, strategy: Strategy, dt = 0.1): GameSt
   return state;
 }
 
-/** 一番近く買える恒久強化を狙い、その通貨の元素を残すように遊び続ける */
-export function playCampaign(gameSeconds: number): { state: GameState; elapsed: number } {
+/** その星屑を一番多く残す狙い */
+const TARGET_FOR: Record<DustId, Target> = { C: "C", O: "O", Ne: "Ne", Mg: "O", Si: "Si", S: "Si" };
+
+/**
+ * 一番近く買える恒久強化を狙い、その通貨の元素を残すように遊び続ける。
+ * 自動制御を持ったら手では買わず、狙いだけを切り替える。星屑の強化を買った時刻（秒）も返す
+ */
+export function playCampaign(gameSeconds: number): {
+  state: GameState;
+  elapsed: number;
+  purchases: number[];
+} {
   let state = createGame();
   let elapsed = 0;
+  const purchases: number[] = [];
   while (elapsed < gameSeconds) {
-    const target = SHOP_IDS.filter(
+    const wanted = SHOP_IDS.filter(
       (id) => SHOP[id].maxLevel === undefined || state.meta.shop[id] < SHOP[id].maxLevel
-    ).reduce((a, b) =>
-      shopCost(state.meta, b) - state.meta.dust[SHOP[b].currency] <
-      shopCost(state.meta, a) - state.meta.dust[SHOP[a].currency]
-        ? b
-        : a
-    );
-    const ended = playStar(state, aimFor(SHOP[target].currency));
+    ).reduce((a, b) => {
+      const shortfall = (id: typeof a) =>
+        shopCost(state.meta, id) - state.meta.dust[SHOP[id].currency];
+      return shortfall(b) < shortfall(a) ? b : a;
+    });
+    const target = TARGET_FOR[SHOP[wanted].currency];
+    state = setTarget(state, target);
+    const ended = playStar(state, state.meta.shop.auto ? autoOnly : aimFor(SHOP[wanted].currency));
     elapsed += ended.star.time;
     state = rebirth(ended);
     for (let bought = true; bought;) {
@@ -82,9 +102,10 @@ export function playCampaign(gameSeconds: number): { state: GameState; elapsed: 
         if (canBuyShopItem(state.meta, id)) {
           state = buyShopItem(state, id);
           bought = true;
+          purchases.push(elapsed);
         }
       }
     }
   }
-  return { state, elapsed };
+  return { state, elapsed, purchases };
 }

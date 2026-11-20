@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "./star";
-import { energyRate, secondsToCollapse, step } from "./step";
+import { energyRate, finalStageSeconds, secondsToCollapse, step } from "./step";
 
 describe("step：燃焼", () => {
   it("燃焼量 = k × 燃料 × dt だけ燃料が生成物に変わり、エネルギーが入る", () => {
@@ -268,12 +268,36 @@ describe("secondsToCollapse：鉄のコアが限界に達するまでの秒数",
   it("残りの鉄を一定の速さで作る時間", () => {
     const game = createGame();
     game.star.mass.Fe = 0.7;
-    expect(secondsToCollapse(game.star)).toBeCloseTo(15);
+    expect(secondsToCollapse(game.meta, game.star)).toBeCloseTo(15);
   });
 
   it("限界を超えていれば 0", () => {
     const game = createGame();
     game.star.mass.Fe = 1.5;
-    expect(secondsToCollapse(game.star)).toBe(0);
+    expect(secondsToCollapse(game.meta, game.star)).toBe(0);
+  });
+});
+
+describe("ケイ素燃焼の加速（硫黄の星屑の強化）", () => {
+  it("Lv ごとに崩壊までの時間が 0.85 倍になる", () => {
+    const game = createGame();
+    game.meta.shop.accel = 2;
+    expect(finalStageSeconds(game.meta)).toBeCloseTo(30 * 0.85 ** 2);
+  });
+
+  it("8秒より短くはならない", () => {
+    const game = createGame();
+    game.meta.shop.accel = 50;
+    expect(finalStageSeconds(game.meta)).toBe(8);
+  });
+
+  it("鉄のコアはその時間で 1.4 M☉ に育つ", () => {
+    const game = createGame();
+    game.meta.shop.accel = 2;
+    game.star.mass.H = 0;
+    game.star.mass.Si = 5;
+    game.star.temperature = 2.7e9;
+    const { state } = step(game, 1);
+    expect(state.star.mass.Fe).toBeCloseTo(1.4 / (30 * 0.85 ** 2));
   });
 });

@@ -119,7 +119,7 @@ export function StageCard({ game, stage, dispatch }: Props) {
       )}
       {spec.final && ignited && (
         <p className="text-ignite font-mono text-sm tabular-nums">
-          崩壊まで {Math.ceil(secondsToCollapse(star))} 秒
+          崩壊まで {Math.ceil(secondsToCollapse(meta, star))} 秒
         </p>
       )}
     </article>

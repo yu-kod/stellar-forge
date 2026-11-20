@@ -87,7 +87,7 @@ describe("GameScreen：星と時間", () => {
     const game = aboutToCollapse();
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(
-      "最後の30秒：残っているヘリウムや炭素を、欲しい元素に変えきろう"
+      "最後の30秒：強化の費用が4分の1になる。貯めたエネルギーで、残りを欲しい元素に変えきろう"
     );
   });
 });

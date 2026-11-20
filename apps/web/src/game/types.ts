@@ -12,7 +12,7 @@ export type DustId = (typeof DUST_IDS)[number];
 export const TARGET_IDS = ["C", "Ne", "O", "Si"] as const;
 export type Target = (typeof TARGET_IDS)[number];
 
-export const SHOP_IDS = ["mass", "cno", "yield", "xs", "boom", "auto", "pre"] as const;
+export const SHOP_IDS = ["mass", "cno", "yield", "xs", "boom", "accel", "auto", "pre"] as const;
 export type ShopId = (typeof SHOP_IDS)[number];
 
 export type Composition = Record<ElementId, number>;
