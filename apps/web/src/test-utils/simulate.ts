@@ -15,6 +15,8 @@ import { funds, isShopItemOpen } from "@/game/shop";
 import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
+import { formBinary } from "@/game/merger";
+import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { stageCost } from "@/game/rates";
 import { step } from "@/game/step";
 import { createGame } from "@/game/star";
@@ -137,6 +139,8 @@ export type IdleReport = {
   state: GameState;
   /** 恒星風で得た重元素の星屑の合計 */
   heavyEarned: number;
+  /** r過程で元素を見つけた時刻 [秒]（原子番号ごと） */
+  rAt: Record<number, number>;
   /** s過程で元素を見つけた時刻 [秒]（原子番号ごと） */
   sAt: Record<number, number>;
   /** 軽い元素を見つけた時刻 [秒]（原子番号ごと） */
@@ -152,7 +156,10 @@ export type IdleReport = {
       | "strontium"
       | "barium"
       | "lead"
-      | "loop",
+      | "loop"
+      | "layer4"
+      | "gold"
+      | "complete",
       number
     >
   >;
@@ -191,6 +198,7 @@ export function playIdle(
   let purchases = 0;
   const lightAt: Record<number, number> = {};
   const sAt: Record<number, number> = {};
+  const rAt: Record<number, number> = {};
   let heavyEarned = 0;
   const levels = (s: GameState) => SHOP_IDS.reduce((sum, id) => sum + s.meta.shop[id], 0);
   for (let t = 1; t <= seconds; t++) {
@@ -202,12 +210,21 @@ export function playIdle(
       const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
       const layer3 = options.layer3MainMass !== undefined && state.meta.sProcess.unlocked;
       state = setNextMass(state, layer3 ? options.layer3MainMass! : light ? 6 : null);
+      // 第4層：星団の1つ目は軽い中性子星（1.2 M☉）を残す 10 M☉ の星にし、主星の重い中性子星と組む
+      const layer4 = state.meta.rProcess.unlocked;
       state.meta.cluster.forEach((_, i) => {
-        state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
+        const mass = i === 0 ? (layer4 ? 10 : 6) : 2;
+        state = setSlotTarget(setSlotMass(state, i, mass), i, "C");
       });
     }
-    // 第3層：道の上の原子核の目標の量（Ia型超新星は自動で補う）
-    state = setSeedTarget(state, typeof plan === "number" ? plan : plan(state));
+    // 第3層：道の上の原子核の目標の量（Ia型超新星は自動で補う）。循環を見たら、重元素の星屑と Ia型超新星を稼ぐ
+    const seeds = typeof plan === "number" ? plan : plan(state);
+    const farm = state.meta.sProcess.looped && steer && options.seedTarget === undefined;
+    state = setSeedTarget(state, farm ? 30 : seeds);
+    if (state.meta.rProcess.unlocked && !state.meta.shop.rAuto) {
+      const held = state.meta.rProcess.pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
+      if (held.length > 0) state = formBinary(state, held[0]!, held.at(-1)!);
+    }
     for (let half = 0; half < 2; half++) {
       const heavyBefore = state.meta.sProcess.heavy;
       state = advanceAll(state, 0.5, 0.1).state;
@@ -224,6 +241,7 @@ export function playIdle(
     maxDust = Math.max(maxDust, ...Object.values(state.meta.dust));
     for (const z of state.meta.lightFound) lightAt[z] ??= t;
     for (const z of state.meta.sProcess.discovered) sAt[z] ??= t;
+    for (const z of state.meta.rProcess.discovered) rAt[z] ??= t;
     const reached: [keyof IdleReport["marks"], boolean][] = [
       ["auto", state.meta.shop.auto > 0],
       ["layer2", state.meta.supernovae >= LAYER2_AFTER],
@@ -234,8 +252,11 @@ export function playIdle(
       ["barium", state.meta.sProcess.discovered.includes(56)],
       ["lead", state.meta.sProcess.discovered.includes(82)],
       ["loop", state.meta.sProcess.looped],
+      ["layer4", state.meta.rProcess.unlocked],
+      ["gold", state.meta.rProcess.discovered.includes(79)],
+      ["complete", foundElements(state.meta).length === ALL_ELEMENTS],
     ];
     for (const [mark, done] of reached) if (done && marks[mark] === undefined) marks[mark] = t;
   }
-  return { state, marks, maxDust, purchasesPer10Min, lightAt, sAt, heavyEarned };
+  return { state, marks, maxDust, purchasesPer10Min, lightAt, sAt, rAt, heavyEarned };
 }

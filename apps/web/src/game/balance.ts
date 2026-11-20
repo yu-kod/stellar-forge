@@ -259,7 +259,7 @@ export type ShopSpec = {
   /** 1回だけ買える強化は 1 */
   maxLevel?: number;
   /** 解放される層。省略すると第1層 */
-  layer?: 2 | 3;
+  layer?: 2 | 3 | 4;
 };
 
 export const SHOP: Record<ShopId, ShopSpec> = {
@@ -379,12 +379,62 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     maxLevel: 5,
     layer: 3,
   },
+  envelope: {
+    name: "共通外層",
+    currency: "Si",
+    description: "連星が近い状態で生まれる。合体までの時間 ×0.6",
+    baseCost: 3e6,
+    costGrowth: 4,
+    maxLevel: 3,
+    layer: 4,
+  },
+  slots: {
+    name: "連星の枠",
+    currency: "Mg",
+    description: "同時に持てる連星 +1",
+    baseCost: 1e7,
+    costGrowth: 5,
+    maxLevel: 3,
+    layer: 4,
+  },
+  tail: {
+    name: "潮汐の尾",
+    currency: "Ne",
+    description: "合体の放出物 +50%",
+    baseCost: 1e7,
+    costGrowth: 3,
+    maxLevel: 5,
+    layer: 4,
+  },
+  shield: {
+    name: "ニュートリノの遮蔽",
+    currency: "O",
+    description: "放出物の Ye −0.025（重い元素まで届きやすい）",
+    baseCost: 1e8,
+    costGrowth: 3,
+    maxLevel: 4,
+    layer: 4,
+  },
+  rAuto: {
+    name: "連星の自動化",
+    currency: "S",
+    description: "枠が空いたら、在庫の一番軽い星と一番重い星を組む",
+    baseCost: 1e6,
+    costGrowth: 1,
+    maxLevel: 1,
+    layer: 4,
+  },
 };
 
 /** 第2層の強化（窒素）の効果 */
 export const RECYCLE_PER_LEVEL = 0.25;
 export const NEBULA_PER_LEVEL = 0.5;
 export const PULSE_PER_LEVEL = 2;
+
+/** 第4層の強化の効果 */
+export const ENVELOPE_TIME = 0.6;
+export const TAIL_EJECTA = 0.5;
+export const SHIELD_YE = 0.025;
 
 /** バリウム星1つあたりの、恒星風で出た原子核が道に戻る割合 */
 export const BARIUM_STAR_KEPT = 0.1;

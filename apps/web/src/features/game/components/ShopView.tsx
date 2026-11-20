@@ -63,6 +63,19 @@ export function ShopView({ meta, dispatch }: Props) {
           </div>
         </>
       )}
+      {isShopItemOpen(meta, "envelope") && (
+        <>
+          <h3 className="mt-2 text-base font-semibold">第4層（中性子星合体）</h3>
+          <p className="text-muted-foreground text-sm">
+            合体を速く・多く・中性子の多いものにする。
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SHOP_IDS.filter((item) => SHOP[item].layer === 4).map((item) => (
+              <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

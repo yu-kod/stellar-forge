@@ -5,19 +5,25 @@ import {
   type Binary,
   type RProcess,
 } from "./rprocess";
+import { ENVELOPE_TIME, SHIELD_YE, TAIL_EJECTA } from "./balance";
 import type { GameState, Meta } from "./types";
 
 export { R_PATH_START, createRProcess } from "./rprocess";
 
 /** 合体までの時間 [秒]（重力波で近づく） */
-export const MERGER_SECONDS = 600;
+export const MERGER_SECONDS = 900;
 /** 合計がこれを超えると、すぐブラックホールになる [M☉] */
 export const BLACK_HOLE_MASS = 3.4;
 /** ブラックホールになったときの放出物 */
 export const BLACK_HOLE_EJECTA = 0.25;
-/** r過程だけで作る元素を発見する量（金だけは GOLD_THRESHOLD） */
-export const R_DISCOVERY_THRESHOLD = 3;
-const GOLD_THRESHOLD = 10;
+/** r過程だけで作る元素を発見する量 */
+const R_THRESHOLDS: Readonly<Record<number, number>> = {
+  63: 5,
+  76: 8,
+  77: 20,
+  78: 40,
+  79: 200,
+};
 /** おまけ（トリウム・ウラン）を発見する量 */
 const ACTINIDE_THRESHOLD = 0.5;
 
@@ -59,12 +65,14 @@ const has = (rProcess: RProcess, z: number) => rProcess.discovered.includes(z);
 
 /** 同時に持てる連星の数 */
 export function binarySlots(meta: Meta): number {
-  return 1 + (has(meta.rProcess, IRIDIUM) ? 1 : 0);
+  return 1 + meta.shop.slots + (has(meta.rProcess, IRIDIUM) ? 1 : 0);
 }
 
 /** 連星が合体するまでの時間 [秒] */
 export function mergerSeconds(meta: Meta): number {
-  return MERGER_SECONDS * (has(meta.rProcess, OSMIUM) ? 0.5 : 1);
+  return (
+    MERGER_SECONDS * ENVELOPE_TIME ** meta.shop.envelope * (has(meta.rProcess, OSMIUM) ? 0.5 : 1)
+  );
 }
 
 export type MergerPreview = {
@@ -81,8 +89,10 @@ export function predictMerger(meta: Meta, a: number, b: number): MergerPreview {
   const m2 = NEUTRON_STAR_MASSES[b]!;
   const q = Math.min(m1, m2) / Math.max(m1, m2);
   const blackHole = m1 + m2 > BLACK_HOLE_MASS + 1e-9;
-  const ye = 0.4 - 0.55 * (1 - q) - (has(meta.rProcess, PLATINUM) ? 0.025 : 0);
-  const ejectaMultiplier = has(meta.rProcess, EUROPIUM) ? 2 : 1;
+  const shielded = meta.shop.shield + (has(meta.rProcess, PLATINUM) ? 1 : 0);
+  const ye = 0.4 - 0.55 * (1 - q) - SHIELD_YE * shielded;
+  const ejectaMultiplier =
+    (has(meta.rProcess, EUROPIUM) ? 2 : 1) * (1 + TAIL_EJECTA * meta.shop.tail);
   const ejecta = (blackHole ? BLACK_HOLE_EJECTA : 1 + 3 * (1 - q)) * ejectaMultiplier;
   const reach = REACH.find((r) => ye <= r.maxYe + 1e-9)?.z ?? FIRST_PEAK_END;
   return { q, ye, ejecta, reach, blackHole };
@@ -106,13 +116,25 @@ export function formBinary(state: GameState, a: number, b: number): GameState {
   };
 }
 
+/** 連星の自動化：枠が空いていれば、在庫の一番軽い星と一番重い星を組む */
+export function autoBinary(state: GameState): GameState {
+  if (!state.meta.shop.rAuto) return state;
+  let next = state;
+  for (;;) {
+    const held = next.meta.rProcess.pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
+    if (held.length === 0) return next;
+    const formed = formBinary(next, held[0]!, held.at(-1)!);
+    if (formed === next) return next;
+    next = formed;
+  }
+}
+
 export type MergerEvent =
   ({ type: "merger" } & Omit<MergerPreview, "q">) | { type: "rDiscover"; z: number };
 
 /** その元素を発見する量 */
 export function rThreshold(z: number): number {
-  if (ACTINIDES.includes(z)) return ACTINIDE_THRESHOLD;
-  return z === GOLD ? GOLD_THRESHOLD : R_DISCOVERY_THRESHOLD;
+  return R_THRESHOLDS[z] ?? ACTINIDE_THRESHOLD;
 }
 
 /** 合体させ、届くところまでの元素に 放出物 × 重み を配る */

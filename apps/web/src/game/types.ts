@@ -34,6 +34,11 @@ export const SHOP_IDS = [
   "pocket",
   "flash",
   "binary",
+  "envelope",
+  "slots",
+  "tail",
+  "shield",
+  "rAuto",
 ] as const;
 export type ShopId = (typeof SHOP_IDS)[number];
 
