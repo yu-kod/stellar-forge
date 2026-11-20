@@ -96,3 +96,21 @@ describe("gameReducer", () => {
     expect(gameReducer(modelWith(), { type: "setSpeed", speed: 3 }).speed).toBe(3);
   });
 });
+
+describe("createModel", () => {
+  it("始めるときの知らせを持たせられる", () => {
+    const model = createModel(createGame(), [{ type: "away", seconds: 120 }]);
+    expect(model.notices).toEqual([{ id: 1, event: { type: "away", seconds: 120 } }]);
+    expect(model.nextNoticeId).toBe(2);
+  });
+});
+
+describe("gameReducer：reset", () => {
+  it("最初の星からやり直し、知らせを消す", () => {
+    const start = createModel(collapsed(), [{ type: "away", seconds: 120 }]);
+    start.game.meta.dust.C = 50;
+    const model = gameReducer(start, { type: "reset" });
+    expect(model.game).toEqual(createGame());
+    expect(model.notices).toEqual([]);
+  });
+});

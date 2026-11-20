@@ -59,5 +59,12 @@ function NoticeText({ event }: { event: NoticeEvent }) {
     }
     case "born":
       return <>第{event.generation}世代の星が生まれた。星屑で恒久強化を買おう</>;
+    case "away":
+      return (
+        <>
+          留守のあいだに <b className="text-ignite">{Math.round(event.seconds / 60)}分</b>{" "}
+          ぶん星が燃えた
+        </>
+      );
   }
 }

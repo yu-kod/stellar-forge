@@ -1,5 +1,6 @@
 import { buyShopItem, buyStage, buyStageMax, rebirth, setAuto } from "@/game/actions";
 import { advance } from "@/game/advance";
+import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { GameState, ShopId, StageId } from "@/game/types";
 
@@ -7,7 +8,9 @@ export type Speed = 1 | 3;
 
 /** 画面の上に少しのあいだ出す知らせ */
 export type NoticeEvent =
-  Extract<GameEvent, { type: "ignite" | "discover" }> | { type: "born"; generation: number };
+  | Extract<GameEvent, { type: "ignite" | "discover" }>
+  | { type: "born"; generation: number }
+  | { type: "away"; seconds: number };
 export type Notice = { id: number; event: NoticeEvent };
 
 export type Model = {
@@ -25,12 +28,13 @@ export type Action =
   | { type: "buyShopItem"; item: ShopId }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
-  | { type: "setSpeed"; speed: Speed };
+  | { type: "setSpeed"; speed: Speed }
+  | { type: "reset" };
 
 const NOTICE_LIMIT = 4;
 
-export function createModel(game: GameState): Model {
-  return { game, speed: 1, notices: [], nextNoticeId: 1 };
+export function createModel(game: GameState, events: NoticeEvent[] = []): Model {
+  return notify({ game, speed: 1, notices: [], nextNoticeId: 1 }, events);
 }
 
 function notify(model: Model, events: NoticeEvent[]): Model {
@@ -71,5 +75,7 @@ export function gameReducer(model: Model, action: Action): Model {
       return { ...model, notices: model.notices.filter((n) => n.id !== action.id) };
     case "setSpeed":
       return { ...model, speed: action.speed };
+    case "reset":
+      return { ...createModel(createGame()), speed: model.speed };
   }
 }

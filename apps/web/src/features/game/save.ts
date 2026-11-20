@@ -1,0 +1,142 @@
+import { advance } from "@/game/advance";
+import { createMeta } from "@/game/star";
+import {
+  ELEMENT_IDS,
+  STAGE_IDS,
+  type GameState,
+  type Meta,
+  type Star,
+  type StarEnd,
+  type SupernovaRecord,
+} from "@/game/types";
+
+export const SAVE_KEY = "stellar-forge/save";
+export const SAVE_VERSION = 1;
+/** 閉じていた間に進める時間の上限 [秒] */
+export const OFFLINE_LIMIT_SECONDS = 30 * 60;
+/** 留守中の進行は粗い刻みで速く進める */
+const OFFLINE_STEP_SECONDS = 0.25;
+
+export type SaveData = { version: typeof SAVE_VERSION; savedAt: number; game: GameState };
+export type Restored = { game: GameState; awaySeconds: number };
+
+export function toSave(game: GameState, now: number): SaveData {
+  return { version: SAVE_VERSION, savedAt: now, game };
+}
+
+/**
+ * 保存したものを読み、閉じていた時間（30分まで）だけ星を進める。
+ * 形が合わないものは null（新しく始める）。バージョンを上げたら、ここで古い形から移す
+ */
+export function restoreSave(raw: unknown, now: number): Restored | null {
+  try {
+    if (!isObject(raw) || raw.version !== SAVE_VERSION) return null;
+    const savedAt = requireNumber(raw.savedAt);
+    const game = parseGame(raw.game);
+    if (game.star.end) return { game, awaySeconds: 0 };
+    const awaySeconds = Math.min(OFFLINE_LIMIT_SECONDS, Math.max(0, (now - savedAt) / 1000));
+    if (awaySeconds === 0) return { game, awaySeconds };
+    return { game: advance(game, awaySeconds, OFFLINE_STEP_SECONDS).state, awaySeconds };
+  } catch {
+    return null;
+  }
+}
+
+type Raw = Record<string, unknown>;
+
+class InvalidSave extends Error {}
+
+function isObject(value: unknown): value is Raw {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function requireObject(value: unknown): Raw {
+  if (!isObject(value)) throw new InvalidSave();
+  return value;
+}
+
+function requireNumber(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new InvalidSave();
+  return value;
+}
+
+/** 既定値の各項目を、保存された値があれば置き換える。無い項目は既定値のまま（後から足した項目） */
+function withDefaults<T extends Record<string, number | boolean>>(value: unknown, defaults: T): T {
+  if (value === undefined) return { ...defaults };
+  const raw = requireObject(value);
+  const result: Record<string, number | boolean> = { ...defaults };
+  for (const [key, fallback] of Object.entries(defaults)) {
+    const saved = raw[key];
+    if (saved === undefined) continue;
+    if (typeof saved !== typeof fallback) throw new InvalidSave();
+    result[key] = typeof saved === "number" ? requireNumber(saved) : saved === true;
+  }
+  return result as T;
+}
+
+function parseEnd(value: unknown): StarEnd {
+  if (value === null || value === "collapse" || value === "fizzle") return value;
+  throw new InvalidSave();
+}
+
+function parseStar(value: unknown): Star {
+  const raw = requireObject(value);
+  const zeros = Object.fromEntries(ELEMENT_IDS.map((id) => [id, 0])) as Star["mass"];
+  const noLevels = Object.fromEntries(STAGE_IDS.map((id) => [id, 0])) as Star["levels"];
+  const ignitedAt = requireObject(raw.ignitedAt);
+  return {
+    generation: requireNumber(raw.generation),
+    initialMass: requireNumber(raw.initialMass),
+    mass: withDefaults(raw.mass, zeros),
+    energy: requireNumber(raw.energy),
+    time: requireNumber(raw.time),
+    temperature: requireNumber(raw.temperature),
+    levels: withDefaults(raw.levels, noLevels),
+    ignitedAt: Object.fromEntries(
+      STAGE_IDS.filter((id) => ignitedAt[id] !== undefined).map((id) => [
+        id,
+        requireNumber(ignitedAt[id]),
+      ])
+    ),
+    end: parseEnd(raw.end),
+  };
+}
+
+function parseRecord(value: unknown): SupernovaRecord {
+  const raw = requireObject(value);
+  const end = parseEnd(raw.end);
+  if (end === null) throw new InvalidSave();
+  return {
+    generation: requireNumber(raw.generation),
+    time: requireNumber(raw.time),
+    ejected: requireNumber(raw.ejected),
+    gain: withDefaults(raw.gain, createMeta().dust),
+    end,
+  };
+}
+
+function parseMeta(value: unknown): Meta {
+  const raw = requireObject(value);
+  const defaults = createMeta();
+  const discovered = withDefaults(
+    raw.discovered,
+    Object.fromEntries(ELEMENT_IDS.map((id) => [id, false])) as Record<string, boolean>
+  );
+  if (raw.log !== undefined && !Array.isArray(raw.log)) throw new InvalidSave();
+  return {
+    dust: withDefaults(raw.dust, defaults.dust),
+    supernovae: raw.supernovae === undefined ? 0 : requireNumber(raw.supernovae),
+    neutronStars: raw.neutronStars === undefined ? 0 : requireNumber(raw.neutronStars),
+    discovered: Object.fromEntries(
+      ELEMENT_IDS.filter((id) => discovered[id]).map((id) => [id, true])
+    ),
+    shop: withDefaults(raw.shop, defaults.shop),
+    autoOn: withDefaults(raw.autoOn, defaults.autoOn),
+    log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
+  };
+}
+
+function parseGame(value: unknown): GameState {
+  const raw = requireObject(value);
+  return { meta: parseMeta(raw.meta), star: parseStar(raw.star) };
+}
