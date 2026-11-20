@@ -1,4 +1,11 @@
-import { LOG_LIMIT, MAX_BUY_PER_ACTION, SHOP, STAGES, TARGET_STAGES } from "./balance";
+import {
+  AUTO_REBIRTH_AFTER,
+  LOG_LIMIT,
+  MAX_BUY_PER_ACTION,
+  SHOP,
+  STAGES,
+  TARGET_STAGES,
+} from "./balance";
 import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
 import { createStar } from "./star";
@@ -56,6 +63,16 @@ export function setTarget(state: GameState, target: Target): GameState {
     STAGE_IDS.map((id) => [id, stages.includes(id)])
   ) as Meta["autoOn"];
   return { ...state, meta: { ...state.meta, autoOn, target } };
+}
+
+/** 超新星のあと自動で次の星を生むかを切り替える */
+export function setAutoRebirth(state: GameState, on: boolean): GameState {
+  return { ...state, meta: { ...state.meta, autoRebirth: on } };
+}
+
+/** 自動で次の星を生めるか（設定が ON で、超新星の回数が足りている） */
+export function canAutoRebirth(meta: Meta): boolean {
+  return meta.autoRebirth && meta.supernovae >= AUTO_REBIRTH_AFTER;
 }
 
 /** 終わった星から星屑と中性子星を受け取り、次の世代の星を生む */

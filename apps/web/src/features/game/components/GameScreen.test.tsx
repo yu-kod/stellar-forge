@@ -278,6 +278,54 @@ describe("GameScreen：超新星", () => {
   });
 });
 
+describe("GameScreen：自動で次の星を生む", () => {
+  function veteran() {
+    const game = aboutToCollapse();
+    game.meta.supernovae = 10;
+    game.star.generation = 11;
+    return game;
+  }
+
+  it("超新星10回を超えたら、超新星の画面を出さずに次の星を生み、知らせる", () => {
+    const { tick } = renderGame(veteran());
+
+    tick(0.25);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText(/第12世代の星/)).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/第11世代 超新星 星屑 \+\d+/);
+  });
+
+  it("切り替えを外すと、超新星の画面で止まる", async () => {
+    const { tick, user } = renderGame(veteran());
+
+    await user.click(screen.getByRole("checkbox", { name: "超新星のあと自動で次の星を生む" }));
+    tick(0.25);
+
+    expect(screen.getByRole("dialog", { name: "第11世代　超新星" })).toBeInTheDocument();
+  });
+
+  it("超新星10回までは切り替えを出さない", () => {
+    renderGame();
+    expect(
+      screen.queryByRole("checkbox", { name: "超新星のあと自動で次の星を生む" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("10回目の超新星で、自動で次の星を生めるようになったと知らせる", async () => {
+    const game = collapsed();
+    game.meta.supernovae = 9;
+    game.star.generation = 10;
+    const { user } = renderGame(game);
+
+    await user.click(screen.getByRole("button", { name: "放出された元素から次の星を生む" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "これからは超新星のあと自動で次の星が生まれる"
+    );
+  });
+});
+
 describe("GameScreen：星屑の交換", () => {
   it("星屑が足りれば恒久強化と交換でき、手持ちが減る", async () => {
     const game = createGame();

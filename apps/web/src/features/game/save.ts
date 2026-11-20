@@ -1,4 +1,5 @@
-import { advance } from "@/game/advance";
+import { advanceRuns } from "@/game/advance";
+import { canAutoRebirth } from "@/game/actions";
 import { createMeta } from "@/game/star";
 import {
   ELEMENT_IDS,
@@ -35,10 +36,10 @@ export function restoreSave(raw: unknown, now: number): Restored | null {
     if (!isObject(raw) || raw.version !== SAVE_VERSION) return null;
     const savedAt = requireNumber(raw.savedAt);
     const game = parseGame(raw.game);
-    if (game.star.end) return { game, awaySeconds: 0 };
+    if (game.star.end && !canAutoRebirth(game.meta)) return { game, awaySeconds: 0 };
     const awaySeconds = Math.min(OFFLINE_LIMIT_SECONDS, Math.max(0, (now - savedAt) / 1000));
     if (awaySeconds === 0) return { game, awaySeconds };
-    return { game: advance(game, awaySeconds, OFFLINE_STEP_SECONDS).state, awaySeconds };
+    return { game: advanceRuns(game, awaySeconds, OFFLINE_STEP_SECONDS).state, awaySeconds };
   } catch {
     return null;
   }
@@ -142,6 +143,7 @@ function parseMeta(value: unknown): Meta {
     shop: withDefaults(raw.shop, defaults.shop),
     autoOn: withDefaults(raw.autoOn, defaults.autoOn),
     target: parseTarget(raw.target),
+    autoRebirth: withDefaults({ on: raw.autoRebirth }, { on: defaults.autoRebirth }).on,
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
   };
 }
