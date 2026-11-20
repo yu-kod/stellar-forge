@@ -1,0 +1,132 @@
+import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { createJsonStorage } from "@app/web-core";
+import { describe, expect, it } from "vitest";
+import { createGame } from "@/game/star";
+import type { GameState } from "@/game/types";
+import { manualTicker } from "@/test-utils/game";
+import { SAVE_KEY, toSave, type SaveData } from "../save";
+import { GameScreen } from "./GameScreen";
+
+const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
+
+function setup({ saved, now = NOW }: { saved?: unknown; now?: number } = {}) {
+  const storage = createJsonStorage();
+  if (saved !== undefined) storage.set(SAVE_KEY, saved);
+  const clock = { now };
+  const ticker = manualTicker();
+  render(<GameScreen storage={storage} now={() => clock.now} ticker={ticker.ticker} />);
+  return {
+    ...ticker,
+    clock,
+    user: userEvent.setup(),
+    saved: () => storage.get<SaveData>(SAVE_KEY),
+  };
+}
+
+function thirdGeneration(): GameState {
+  const game = createGame();
+  game.meta.supernovae = 2;
+  game.star.generation = 3;
+  game.meta.dust.C = 7;
+  return game;
+}
+
+describe("GameScreen：保存と再開", () => {
+  it("保存した進行から再開する", () => {
+    setup({ saved: toSave(thirdGeneration(), NOW) });
+    expect(screen.getByText("第3世代の星・0秒")).toBeInTheDocument();
+  });
+
+  it("閉じていた間も星が燃え、そのことを知らせる", () => {
+    setup({ saved: toSave(createGame(), NOW - 125_000) });
+    expect(screen.getByText("第1世代の星・125秒")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("留守のあいだに 2分 ぶん星が燃えた");
+  });
+
+  it("少しの留守では知らせない", () => {
+    setup({ saved: toSave(createGame(), NOW - 10_000) });
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("壊れたセーブなら最初から始める", () => {
+    setup({ saved: { version: 1, game: "broken" } });
+    expect(screen.getByText("第1世代の星・0秒")).toBeInTheDocument();
+  });
+
+  it("5秒ごとに保存する", () => {
+    const { tick, clock, saved } = setup();
+    tick(0.1);
+    expect(saved()?.savedAt).toBe(NOW);
+
+    clock.now = NOW + 4_000;
+    tick(0.1);
+    expect(saved()?.savedAt).toBe(NOW);
+
+    clock.now = NOW + 5_000;
+    tick(0.1);
+    expect(saved()?.savedAt).toBe(NOW + 5_000);
+    expect(saved()?.game.star.time).toBeCloseTo(0.3);
+  });
+
+  it("ページを離れるときに保存する", () => {
+    const { tick, clock, saved } = setup();
+    tick(0.1);
+    clock.now = NOW + 1_000;
+    tick(0.1);
+
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    expect(saved()?.savedAt).toBe(NOW + 1_000);
+    expect(saved()?.game.star.time).toBeCloseTo(0.2);
+  });
+
+  it("タブが裏に回ったときに保存する", () => {
+    const { tick, clock, saved } = setup();
+    tick(0.1);
+    clock.now = NOW + 1_000;
+    tick(0.1);
+    Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(saved()?.savedAt).toBe(NOW + 1_000);
+    Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+  });
+
+  it("表に戻ったときは保存しない", () => {
+    const { tick, clock, saved } = setup();
+    tick(0.1);
+    clock.now = NOW + 1_000;
+
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(saved()?.savedAt).toBe(NOW);
+  });
+
+  it("確かめてから最初からやり直し、保存も消す", async () => {
+    const { user, saved } = setup({ saved: toSave(thirdGeneration(), NOW) });
+
+    await user.click(screen.getByRole("button", { name: "最初からやり直す" }));
+    const dialog = screen.getByRole("dialog", { name: "最初からやり直しますか？" });
+    expect(dialog).toHaveTextContent("星屑・発見した元素・記録がすべて消えます");
+    await user.click(screen.getByRole("button", { name: "消してやり直す" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("第1世代の星・0秒")).toBeInTheDocument();
+    expect(saved()?.game.meta.dust.C).toBe(0);
+  });
+
+  it("やめればそのまま続ける", async () => {
+    const { user } = setup({ saved: toSave(thirdGeneration(), NOW) });
+    await user.click(screen.getByRole("button", { name: "最初からやり直す" }));
+    await user.click(screen.getByRole("button", { name: "やめる" }));
+    expect(screen.getByText("第3世代の星・0秒")).toBeInTheDocument();
+  });
+});
