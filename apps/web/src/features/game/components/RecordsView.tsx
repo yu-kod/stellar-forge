@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
 import { DUST_IDS, type Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
@@ -8,7 +9,9 @@ type Layer = { title: string; status?: string; body: string; current?: boolean }
 
 function layers(meta: Meta): Layer[] {
   const layer2 = meta.supernovae >= LAYER2_AFTER;
-  const layer3Preview = meta.whiteDwarfs >= LAYER3_AFTER;
+  const layer3 = meta.sProcess.unlocked;
+  const layer4 = meta.rProcess.unlocked;
+  const layer3Preview = layer3 || meta.whiteDwarfs >= LAYER3_AFTER;
   const hidden = "？？？";
   return [
     {
@@ -18,7 +21,7 @@ function layers(meta: Meta): Layer[] {
     },
     {
       title: "第2層　星の質量を選ぶ",
-      current: layer2,
+      current: layer2 && !layer3,
       status: layer2 ? undefined : `（超新星 ${meta.supernovae}/${LAYER2_AFTER} 回で解放）`,
       body: layer2
         ? "8 M☉未満の星は超新星にならず、赤色巨星を経て白色矮星になり、窒素をくれる。窒素で星団を作り、軽い星と重い星を並べて燃やす。"
@@ -26,26 +29,31 @@ function layers(meta: Meta): Layer[] {
     },
     {
       title: "第3層　漸近巨星分枝星とs過程",
-      status: layer3Preview
-        ? "（準備中）"
-        : `（白色矮星 ${meta.whiteDwarfs}/${LAYER3_AFTER} 個で予告を解放）`,
+      current: layer3 && !layer4,
+      status: layer3 ? undefined : `（白色矮星 ${meta.whiteDwarfs}/${LAYER3_AFTER} 個で解放）`,
       body: layer3Preview
         ? "軽い星の中で中性子をゆっくり捕まえ、鉄を種に一歩ずつ重い元素へ。ビスマス209で行き止まりになる。"
         : hidden,
     },
     {
       title: "第4層　中性子星合体",
-      status: layer3Preview ? "（準備中）" : "（ロック中）",
+      current: layer4,
+      status: layer4 ? undefined : "（s過程の循環で解放）",
       body: layer3Preview
-        ? `これまでの超新星が残した中性子星（いま ${meta.neutronStars} 個）を合体させ、速い中性子捕獲で金やウランを作る。`
+        ? `これまでの超新星が残した中性子星（いま ${meta.neutronStars} 個）を2つずつ合体させ、速い中性子捕獲（r過程）で金やウランを作る。`
         : hidden,
     },
   ];
 }
 
-export function RecordsView({ meta }: { meta: Meta }) {
+export function RecordsView({ meta, onEnding }: { meta: Meta; onEnding?: () => void }) {
   return (
     <div className="grid gap-4">
+      {meta.completedAt !== null && (
+        <Button variant="outline" className="h-11 justify-self-start" onClick={onEnding}>
+          エンディングを見る
+        </Button>
+      )}
       <ul aria-label="これまでに残したもの" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
         <li>
           超新星<b className="ml-1 font-mono">{meta.supernovae}</b>

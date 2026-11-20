@@ -67,6 +67,8 @@ export function createMeta(): Meta {
     sProcess: createSProcess(),
     rProcess: createRProcess(),
     iaSupernovae: 0,
+    elapsed: 0,
+    completedAt: null,
     bestRate: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
     lightFound: [],
   };

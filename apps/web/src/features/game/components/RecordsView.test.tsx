@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createMeta } from "@/game/star";
 import type { SupernovaRecord } from "@/game/types";
 import { RecordsView } from "./RecordsView";
@@ -51,6 +51,29 @@ describe("RecordsView", () => {
     render(<RecordsView meta={meta} />);
     expect(screen.queryByText("？？？")).not.toBeInTheDocument();
     expect(screen.getByText(/いま 4 個/)).toBeInTheDocument();
+  });
+
+  it("第3層・第4層が始まったら、それぞれがいまの層になる（準備中とは書かない）", () => {
+    const meta = createMeta();
+    meta.supernovae = LAYER2_AFTER;
+    meta.sProcess.unlocked = true;
+    const { unmount } = render(<RecordsView meta={meta} />);
+    expect(screen.getByRole("listitem", { name: /第3層/ })).toHaveTextContent("いまの層");
+    expect(screen.queryByText(/準備中/)).not.toBeInTheDocument();
+    unmount();
+    meta.rProcess.unlocked = true;
+    render(<RecordsView meta={meta} />);
+    expect(screen.getByRole("listitem", { name: /第4層/ })).toHaveTextContent("いまの層");
+    expect(screen.getByRole("listitem", { name: /第3層/ })).not.toHaveTextContent("いまの層");
+  });
+
+  it("83マスが埋まったら、エンディングを見返せる", async () => {
+    const meta = createMeta();
+    meta.completedAt = 3600;
+    const onEnding = vi.fn();
+    render(<RecordsView meta={meta} onEnding={onEnding} />);
+    screen.getByRole("button", { name: "エンディングを見る" }).click();
+    expect(onEnding).toHaveBeenCalled();
   });
 
   it("これまでの超新星・白色矮星・中性子星の数を見せる", () => {

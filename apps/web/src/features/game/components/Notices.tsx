@@ -79,7 +79,7 @@ function NoticeText({ event }: { event: NoticeEvent }) {
           <b className="text-ignite">
             第{event.generation}世代 {event.end === "whiteDwarf" ? "白色矮星" : "超新星"}
           </b>{" "}
-          星屑 +{total}
+          星屑 +{formatNumber(total)}
         </>
       );
     }
