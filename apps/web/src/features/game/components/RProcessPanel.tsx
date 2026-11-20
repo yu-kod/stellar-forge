@@ -1,7 +1,9 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  ACTINIDES,
   R_ELEMENTS,
+  usefulPair,
   R_PATH_START,
   bestPair,
   rGoal,
@@ -49,6 +51,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
   const ids = useId();
   const preview = predictMerger(meta, a, b);
   const enough = a === b ? pool[a]! >= 2 : pool[a]! >= 1 && pool[b]! >= 1;
+  const useful = usefulPair(meta, a, b);
   const free = binaries.length < binarySlots(meta);
   const total = NEUTRON_STAR_MASSES[a]! + NEUTRON_STAR_MASSES[b]!;
   return (
@@ -117,10 +120,16 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         <br />
         合体まで {countdown(mergerSeconds(meta, a, b))}・1回で{goalElement.name}（
         {goalElement.symbol}）+{yieldOf(meta, a, b, goal).toFixed(2)}
+        {!useful && (
+          <>
+            <br />
+            この組では、まだの元素に届かない
+          </>
+        )}
       </p>
       <Button
         className="h-11 w-fit active:scale-[0.97]"
-        disabled={!enough || !free}
+        disabled={!enough || !free || !useful}
         onClick={() => dispatch({ type: "formBinary", a, b })}
       >
         連星にする
@@ -147,7 +156,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回
       </p>
       <ul aria-label="r過程で作る元素" className="grid gap-1 text-sm sm:grid-cols-2">
-        {R_ELEMENTS.map((z) => {
+        {[...R_ELEMENTS, ...ACTINIDES].map((z) => {
           const element = elementOf(z);
           const amount = amounts[z - R_PATH_START]!;
           return (

@@ -21,6 +21,7 @@ import {
   bandOf,
   pairHint,
   pairAdvice,
+  usefulPair,
   DISK_YE,
   DYNAMICAL_BASE,
   DYNAMICAL_ASYMMETRY,
@@ -395,6 +396,21 @@ describe("周期表の先（トリウム・ウラン）", () => {
     meta.rProcess.amounts[75 - R_PATH_START] = rThreshold(75) * 0.1;
     expect(rGoal(meta)).toBe(75);
     expect(rGoal(layer4({}))).toBe(52); // どれにも届かなければ一番近いもの
+  });
+
+  it("ウランを見つけたら、作りたい元素はトリウム", () => {
+    const meta = layer4();
+    meta.rProcess.discovered = [...R_ELEMENTS, 92];
+    expect(rGoal(meta)).toBe(90);
+  });
+
+  it("まだの元素のどれかに届く組か", () => {
+    const meta = layer4();
+    expect(usefulPair(meta, LIGHT, LIGHT)).toBe(true);
+    meta.rProcess.discovered = [...R_ELEMENTS];
+    expect(usefulPair(meta, LIGHT, LIGHT)).toBe(false); // 第2ピークまで：もう作るものがない
+    meta.shop.shield = 4;
+    expect(usefulPair(meta, LIGHT, HEAVY)).toBe(true); // ウランに届く
   });
 
   it("r過程の元素をそろえたら、作りたい元素はウラン", () => {
