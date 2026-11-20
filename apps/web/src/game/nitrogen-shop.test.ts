@@ -3,7 +3,7 @@ import { buyShopItem, canBuyShopItem } from "./actions";
 import { LAYER2_AFTER } from "./balance";
 import { dustPreview } from "./dust";
 import { isShopItemOpen } from "./shop";
-import { rateConstant } from "./rates";
+import { baseRateConstant } from "./rates";
 import { createGame, createMeta, createStar } from "./star";
 import type { GameState, Meta } from "./types";
 
@@ -55,8 +55,8 @@ describe("窒素で買う第2層の強化", () => {
     light.star.levels.He = 1;
     const base = layer2({ nextMass: 3 });
     base.star.levels.He = 1;
-    const k = rateConstant(base.meta, base.star, "He");
-    expect(rateConstant(light.meta, light.star, "He") / k).toBeCloseTo(2);
-    expect(rateConstant(heavy.meta, heavy.star, "He") / k).toBeCloseTo(1);
+    const k = baseRateConstant(base.meta, base.star, "He");
+    expect(baseRateConstant(light.meta, light.star, "He") / k).toBeCloseTo(2);
+    expect(baseRateConstant(heavy.meta, heavy.star, "He") / k).toBeCloseTo(1);
   });
 });

@@ -1,31 +1,44 @@
 import { describe, expect, it } from "vitest";
-import { burnRate, energyMultiplier, isIgnited, rateConstant, stageCost } from "./rates";
+import {
+  baseRateConstant,
+  burnRate,
+  effectiveRate,
+  energyMultiplier,
+  isIgnited,
+  rateConstant,
+  stageCost,
+} from "./rates";
+import { RATE_CAP } from "./balance";
 import { createGame } from "./star";
 
-describe("rateConstant", () => {
+function expectRelative(actual: number, expected: number) {
+  expect(actual / expected).toBeCloseTo(1, 6);
+}
+
+describe("baseRateConstant（上限を掛ける前）", () => {
   it("k = 0.4 × 基本速度 × Lv。Lv0 なら燃えない", () => {
     const { meta, star } = createGame();
-    expect(rateConstant(meta, star, "H")).toBeCloseTo(0.4 * 0.004 * 1);
+    expectRelative(baseRateConstant(meta, star, "H"), 0.4 * 0.004 * 1);
     star.levels.H = 7;
-    expect(rateConstant(meta, star, "H")).toBeCloseTo(0.4 * 0.004 * 7);
-    expect(rateConstant(meta, star, "He")).toBe(0);
+    expectRelative(baseRateConstant(meta, star, "H"), 0.4 * 0.004 * 7);
+    expect(baseRateConstant(meta, star, "He")).toBe(0);
   });
 
   it("Lv10 ごとに2倍になる", () => {
     const { meta, star } = createGame();
     star.levels.C = 10;
-    expect(rateConstant(meta, star, "C")).toBeCloseTo(0.4 * 0.004 * 10 * 2);
+    expectRelative(baseRateConstant(meta, star, "C"), 0.4 * 0.004 * 10 * 2);
     star.levels.C = 25;
-    expect(rateConstant(meta, star, "C")).toBeCloseTo(0.4 * 0.004 * 25 * 4);
+    expectRelative(baseRateConstant(meta, star, "C"), 0.4 * 0.004 * 25 * 4);
   });
 
-  it("反応断面積は全段階、金属量は水素燃焼だけに効く", () => {
+  it("反応断面積（Lv ごとに +25%）は全段階、金属量は水素燃焼だけに効く", () => {
     const { meta, star } = createGame();
     meta.shop.xs = 2;
     meta.shop.cno = 2;
     star.levels.He = 1;
-    expect(rateConstant(meta, star, "H")).toBeCloseTo(0.4 * 0.004 * 1.25 ** 2 * 1.5);
-    expect(rateConstant(meta, star, "He")).toBeCloseTo(0.4 * 0.004 * 1.25 ** 2);
+    expectRelative(baseRateConstant(meta, star, "H"), 0.4 * 0.004 * 1.5 * 1.5);
+    expectRelative(baseRateConstant(meta, star, "He"), 0.4 * 0.004 * 1.5);
   });
 
   it("炭素・ネオン・硫黄の発見で、それぞれヘリウム・炭素・酸素燃焼が2倍になる", () => {
@@ -33,10 +46,32 @@ describe("rateConstant", () => {
     star.levels = { H: 1, He: 1, C: 1, Ne: 1, O: 1, Si: 0 };
     meta.discovered = { C: true, Ne: true, S: true };
     const k = 0.4 * 0.004;
-    expect(rateConstant(meta, star, "He")).toBeCloseTo(k * 2);
-    expect(rateConstant(meta, star, "C")).toBeCloseTo(k * 2);
-    expect(rateConstant(meta, star, "O")).toBeCloseTo(k * 2);
-    expect(rateConstant(meta, star, "Ne")).toBeCloseTo(k);
+    expectRelative(baseRateConstant(meta, star, "He"), k * 2);
+    expectRelative(baseRateConstant(meta, star, "C"), k * 2);
+    expectRelative(baseRateConstant(meta, star, "O"), k * 2);
+    expectRelative(baseRateConstant(meta, star, "Ne"), k);
+  });
+});
+describe("燃える速さの上限", () => {
+  it("実効の速度定数は k / (1 + k / 上限)。小さい k はほぼそのまま、大きい k は上限に近づく", () => {
+    expectRelative(effectiveRate(0.0016, 0.04), 0.0016 / (1 + 0.0016 / 0.04));
+    expect(effectiveRate(1e6, 0.04)).toBeLessThan(0.04);
+    expect(effectiveRate(1e6, 0.04)).toBeGreaterThan(0.0399);
+    expect(effectiveRate(0, 0.04)).toBe(0);
+  });
+
+  it("上限は水素燃焼がいちばん低く（主系列が長い）、後の段階ほど高い", () => {
+    expect(RATE_CAP.H).toBeLessThan(RATE_CAP.He);
+    expect(RATE_CAP.He).toBeLessThan(RATE_CAP.C);
+  });
+
+  it("rateConstant は上限を掛けた値", () => {
+    const { meta, star } = createGame();
+    star.levels.H = 500;
+    expectRelative(
+      rateConstant(meta, star, "H"),
+      effectiveRate(baseRateConstant(meta, star, "H"), RATE_CAP.H)
+    );
   });
 });
 

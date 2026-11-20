@@ -172,6 +172,13 @@ describe("GameScreen：燃焼の強化", () => {
     expect(within(card).getByRole("button", { name: /^強化/ })).toBeDisabled();
   });
 
+  it("点火したが強化していない段階は、強化すると燃え始めると書く", () => {
+    const game = createGame();
+    game.star.temperature = 2e8;
+    renderGame(game);
+    expect(stageCard("ヘリウム燃焼")).toHaveTextContent("点火済み。強化すると燃え始める");
+  });
+
   it("燃えている段階は燃料と燃焼の速さを見せる", () => {
     renderGame();
     const card = stageCard("水素燃焼");

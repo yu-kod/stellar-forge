@@ -7,6 +7,7 @@ import {
   MAGNESIUM_DISCOUNT,
   MILESTONE_EVERY,
   PACE,
+  RATE_CAP,
   STAGES,
 } from "./balance";
 import type { Meta, StageId, Star } from "./types";
@@ -14,10 +15,21 @@ import type { Meta, StageId, Star } from "./types";
 /** 発見済みの元素で2倍になる段階 */
 const DISCOVERY_BOOST: Partial<Record<StageId, "C" | "Ne" | "S">> = { He: "C", C: "Ne", O: "S" };
 
+/** 速度定数の上限（1秒に燃料のこの割合まで）。強化をいくら重ねても、点火から次の点火まで数秒はかかる */
+export function effectiveRate(k: number, cap: number): number {
+  return k / (1 + k / cap);
+}
+
+/** 上限を掛けた速度定数 */
 export function rateConstant(meta: Meta, star: Star, stage: StageId): number {
+  return effectiveRate(baseRateConstant(meta, star, stage), RATE_CAP[stage]);
+}
+
+/** 上限を掛ける前の速度定数 */
+export function baseRateConstant(meta: Meta, star: Star, stage: StageId): number {
   const level = star.levels[stage];
   let k = PACE * STAGES[stage].baseRate * level * 2 ** Math.floor(level / MILESTONE_EVERY);
-  k *= CROSS_SECTION_PER_LEVEL ** meta.shop.xs;
+  k *= 1 + CROSS_SECTION_PER_LEVEL * meta.shop.xs;
   if (stage === "H") k *= 1 + CNO_BONUS_PER_LEVEL * meta.shop.cno;
   const boost = DISCOVERY_BOOST[stage];
   if (boost && meta.discovered[boost]) k *= 2;

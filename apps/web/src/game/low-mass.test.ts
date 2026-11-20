@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import { rebirth, setNextMass } from "./actions";
 import { LAYER2_AFTER } from "./balance";
 import { dustPreview } from "./dust";
-import { isIgnited } from "./rates";
 import { createGame, createMeta, createStar, maxMass } from "./star";
 import { step } from "./step";
 import type { GameState, Meta } from "./types";
+import { RATE_CAP } from "./balance";
+import { effectiveRate, isIgnited } from "./rates";
+
+/** Lv1 の段階の速度定数（上限を掛けたもの） */
+const K1 = effectiveRate(0.4 * 0.004, RATE_CAP.H);
 
 function layer2Meta(overrides: Partial<Meta> = {}): Meta {
   return { ...createMeta(), supernovae: LAYER2_AFTER, ...overrides };
@@ -116,7 +120,7 @@ describe("CNO サイクル", () => {
     const game = createGame();
     game.star.mass.H = 24;
     game.star.mass.C = 1;
-    const burned = 0.4 * 0.004 * 24 * 1;
+    const burned = K1 * 24 * 1;
     const { state } = step(game, 1);
     expect(state.star.mass.N / (burned * 0.01)).toBeCloseTo(1);
     expect((1 - state.star.mass.C) / (burned * 0.01)).toBeCloseTo(1);
@@ -126,7 +130,7 @@ describe("CNO サイクル", () => {
     const game = lowMassGame(5);
     game.star.mass.H = 4;
     game.star.mass.C = 1;
-    const burned = 0.4 * 0.004 * 4 * 1;
+    const burned = K1 * 4 * 1;
     const { state } = step(game, 1);
     expect(state.star.mass.N / (burned * 0.2)).toBeCloseTo(1);
   });
