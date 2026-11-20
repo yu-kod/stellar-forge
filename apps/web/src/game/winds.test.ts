@@ -51,7 +51,6 @@ describe("s過程の原子核は恒星風で星の外へ出て、重元素の星
     const game = createGame();
     game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, seedTarget: 3 };
     game.meta.sProcess.amounts[index(26)] = 3;
-    game.meta.shop.autoIa = 1;
     game.meta.whiteDwarfs = 10;
     const after = advanceAll(game, 30).state.meta;
     expect(after.whiteDwarfs).toBeLessThan(10);

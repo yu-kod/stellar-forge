@@ -34,7 +34,6 @@ export const SHOP_IDS = [
   "pocket",
   "flash",
   "binary",
-  "autoIa",
 ] as const;
 export type ShopId = (typeof SHOP_IDS)[number];
 
@@ -90,6 +89,8 @@ export type Meta = {
   sProcess: SProcess;
   /** 第4層 中性子星と r過程 */
   rProcess: RProcess;
+  /** これまでの一番よい1周の稼ぎ（星屑ごとの毎秒）。次の目標の推定時間に使う */
+  bestRate: Record<DustId, number>;
   /** 起こした Ia型超新星の数 */
   iaSupernovae: number;
   /** 見つけた軽い元素（リチウム〜マンガン）の原子番号 */

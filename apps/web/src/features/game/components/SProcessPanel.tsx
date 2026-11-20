@@ -67,7 +67,7 @@ export function SProcessPanel({ meta, dispatch }: Props) {
           10回起こす
         </Button>
       </div>
-      {meta.shop.autoIa > 0 && <SeedTargetPicker meta={meta} dispatch={dispatch} />}
+      <SeedTargetPicker meta={meta} dispatch={dispatch} />
       <p className="text-muted-foreground text-sm">
         白色矮星1つで鉄の種 +{seedsPerIa(meta)}。s過程で発見した元素{" "}
         <b className="text-foreground font-mono">{discovered.length}</b> / {S_DISCOVERABLE}

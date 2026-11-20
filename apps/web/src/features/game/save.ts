@@ -211,6 +211,7 @@ function parseMeta(value: unknown): Meta {
     cluster: ((raw.cluster as unknown[] | undefined) ?? []).map(parseSlot),
     sProcess: parseSProcess(raw.sProcess),
     rProcess: parseRProcess(raw.rProcess),
+    bestRate: withDefaults(raw.bestRate, defaults.bestRate),
     iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
     lightFound: parseNumbers(raw.lightFound),
   };

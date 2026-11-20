@@ -5,7 +5,7 @@ import { advanceAll } from "./cluster";
 import { isShopItemOpen } from "./shop";
 import { heavyMultiplier, neutronMultiplier, seedsPerIa } from "./sprocess";
 import { createMeta, createStar } from "./star";
-import type { GameState } from "./types";
+import { SHOP_IDS, type GameState } from "./types";
 
 function layer3(): GameState {
   const meta = { ...createMeta(), supernovae: LAYER2_AFTER, whiteDwarfs: 10 };
@@ -53,25 +53,28 @@ describe("第3層の強化", () => {
 });
 
 describe("自動の Ia型超新星", () => {
-  it("持っていれば、道の上の原子核が目標の量になるまで白色矮星を使って補う", () => {
-    let game = layer3();
-    game.meta.dust.S = 1e9;
-    game = setSeedTarget(buyShopItem(game, "autoIa"), 3);
+  it("第3層が解放されたら最初から、道の上の原子核が目標の量になるまで白色矮星を使って補う", () => {
+    const game = setSeedTarget(layer3(), 3);
     const { state } = advanceAll(game, 0.1, 0.05);
     expect(state.meta.sProcess.amounts[0]).toBe(3);
     expect(state.meta.whiteDwarfs).toBe(7);
   });
 
-  it("持っていなければ補わない", () => {
-    const { state } = advanceAll(setSeedTarget(layer3(), 3), 0.1, 0.05);
+  it("第3層の前は補わない", () => {
+    const game = setSeedTarget(layer3(), 3);
+    game.meta.sProcess.unlocked = false;
+    const { state } = advanceAll(game, 0.1, 0.05);
     expect(state.meta.whiteDwarfs).toBe(10);
+  });
+
+  it("買う強化ではない（星屑タブに出ない）", () => {
+    expect(SHOP_IDS).not.toContain("autoIa");
   });
 
   it("白色矮星が足りなければ、ある分だけ使う", () => {
     let game = layer3();
-    game.meta.dust.S = 1e9;
     game.meta.whiteDwarfs = 2;
-    game = setSeedTarget(buyShopItem(game, "autoIa"), 5);
+    game = setSeedTarget(game, 5);
     const { state } = advanceAll(game, 0.1, 0.05);
     expect(state.meta.whiteDwarfs).toBe(0);
     expect(state.meta.sProcess.amounts[0]).toBe(2);

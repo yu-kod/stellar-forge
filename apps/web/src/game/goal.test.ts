@@ -40,3 +40,30 @@ describe("nextShopGoal と自動制御", () => {
     expect(nextShopGoal(meta).item).toBe("auto");
   });
 });
+
+describe("nextShopGoal：次に買えるまでの推定時間", () => {
+  function autoOwned() {
+    const meta = createMeta();
+    meta.shop.auto = 1;
+    meta.dust = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
+    return meta;
+  }
+
+  it("不足 ÷ これまでの一番よい1周の稼ぎ が一番短い強化を選ぶ（手持ちが 0 でも選ぶ）", () => {
+    const meta = autoOwned();
+    meta.bestRate = { C: 0.01, N: 0, O: 0.01, Ne: 0.01, Mg: 0.01, Si: 10, S: 0.01 };
+    expect(SHOP[nextShopGoal(meta).item].currency).toBe("Si");
+  });
+
+  it("稼いだことのない星屑は、稼げる星屑があれば選ばない", () => {
+    const meta = autoOwned();
+    meta.bestRate = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0.001 };
+    expect(SHOP[nextShopGoal(meta).item].currency).toBe("S");
+  });
+
+  it("どれも稼いだことがなければ、足りない割合で選ぶ", () => {
+    const meta = autoOwned();
+    meta.dust.C = 2;
+    expect(nextShopGoal(meta).item).toBe("cno");
+  });
+});
