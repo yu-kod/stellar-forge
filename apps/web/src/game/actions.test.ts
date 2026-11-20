@@ -66,7 +66,7 @@ describe("rebirth（超新星から次の星へ）", () => {
       generation: 1,
       time: 120,
       ejected: 7,
-      gain: { C: Math.floor(3 ** 1.1), O: Math.floor(4 ** 1.1), Ne: 0, Mg: 0, Si: 0, S: 0 },
+      gain: { C: Math.floor(3 ** 1.1), N: 0, O: Math.floor(4 ** 1.1), Ne: 0, Mg: 0, Si: 0, S: 0 },
       end: "collapse",
     });
     expect(next.star.generation).toBe(2);

@@ -1,9 +1,15 @@
 import { useId } from "react";
 import { Button } from "@/components/ui/button";
 import { canBuyStage } from "@/game/actions";
-import { CHANDRASEKHAR_MASS, MILESTONE_EVERY, STAGES, TARGET_STAGES } from "@/game/balance";
+import {
+  CHANDRASEKHAR_MASS,
+  LOW_MASS_MAX_TEMPERATURE,
+  MILESTONE_EVERY,
+  STAGES,
+  TARGET_STAGES,
+} from "@/game/balance";
 import { burnRate, fuelOf, isIgnited, stageCost } from "@/game/rates";
-import { secondsToCollapse } from "@/game/step";
+import { isLowMass, secondsToCollapse } from "@/game/step";
 import type { GameState, StageId } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { ELEMENTS } from "../elements";
@@ -130,6 +136,9 @@ function StageDetail({ game, stage }: Omit<Props, "dispatch">) {
   const { meta, star } = game;
   const spec = STAGES[stage];
   const value = "text-foreground font-mono tabular-nums";
+  if (isLowMass(star) && STAGES[stage].ignition > LOW_MASS_MAX_TEMPERATURE) {
+    return <p className="text-muted-foreground text-sm">軽い星（8 M☉ 未満）では点火しない</p>;
+  }
   if (!isIgnited(star, stage)) {
     return (
       <p className="text-muted-foreground text-sm">

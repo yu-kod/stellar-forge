@@ -78,7 +78,9 @@ function withDefaults<T extends Record<string, number | boolean>>(value: unknown
 }
 
 function parseEnd(value: unknown): StarEnd {
-  if (value === null || value === "collapse" || value === "fizzle") return value;
+  if (value === null || value === "collapse" || value === "fizzle" || value === "whiteDwarf") {
+    return value;
+  }
   throw new InvalidSave();
 }
 
@@ -137,6 +139,9 @@ function parseMeta(value: unknown): Meta {
     dust: withDefaults(raw.dust, defaults.dust),
     supernovae: raw.supernovae === undefined ? 0 : requireNumber(raw.supernovae),
     neutronStars: raw.neutronStars === undefined ? 0 : requireNumber(raw.neutronStars),
+    whiteDwarfs: raw.whiteDwarfs === undefined ? 0 : requireNumber(raw.whiteDwarfs),
+    nextMass:
+      raw.nextMass === undefined || raw.nextMass === null ? null : requireNumber(raw.nextMass),
     discovered: Object.fromEntries(
       ELEMENT_IDS.filter((id) => discovered[id]).map((id) => [id, true])
     ),

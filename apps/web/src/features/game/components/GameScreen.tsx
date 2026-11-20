@@ -1,15 +1,21 @@
 import { createJsonStorage, type JsonStorage } from "@app/web-core";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AUTO_REBIRTH_AFTER, SHOP, STAGES } from "@/game/balance";
+import {
+  AUTO_REBIRTH_AFTER,
+  LAYER2_AFTER,
+  SHOP,
+  STAGES,
+  WHITE_DWARF_HYDROGEN,
+} from "@/game/balance";
 import { canAutoRebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
 import { isIgnited } from "@/game/rates";
-import { finalStageSeconds } from "@/game/step";
+import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame } from "@/game/star";
 import { STAGE_IDS, type DustId, type GameState, type Target } from "@/game/types";
 import { ELEMENTS, TARGET_NAMES } from "../elements";
-import { formatNumber } from "../format";
+import { formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
 import { animationFrameTicker, type Ticker } from "../ticker";
@@ -18,6 +24,7 @@ import { PeriodicTableView } from "./PeriodicTableView";
 import { RecordsView } from "./RecordsView";
 import { ResetDialog } from "./ResetDialog";
 import { ShopView } from "./ShopView";
+import { MassPicker } from "./MassPicker";
 import { StageCard } from "./StageCard";
 import { TargetPicker } from "./TargetPicker";
 import { StarPanel } from "./StarPanel";
@@ -146,6 +153,9 @@ export function GameScreen({
           <h2 id="stages-label" className="sr-only">
             燃焼段階
           </h2>
+          {game.meta.supernovae >= LAYER2_AFTER && (
+            <MassPicker meta={game.meta} dispatch={dispatch} />
+          )}
           <TargetPicker target={game.meta.target} dispatch={dispatch} />
           {game.meta.supernovae >= AUTO_REBIRTH_AFTER && (
             <label className="text-muted-foreground flex h-11 items-center gap-2 px-1 text-sm">
@@ -188,7 +198,7 @@ export function GameScreen({
         <p>進行はこのブラウザに保存されます。×3 は確認用の早送りです。</p>
         <ResetDialog onReset={reset} />
       </footer>
-      <SupernovaDialog game={game} onRebirth={startNextStar} />
+      <SupernovaDialog game={game} onRebirth={startNextStar} dispatch={dispatch} />
     </main>
   );
 }
@@ -196,6 +206,7 @@ export function GameScreen({
 /** その星屑を一番多く残す狙い */
 const TARGET_FOR_DUST: Record<DustId, Target> = {
   C: "C",
+  N: "C",
   O: "O",
   Ne: "Ne",
   Mg: "O",
@@ -205,6 +216,15 @@ const TARGET_FOR_DUST: Record<DustId, Target> = {
 
 function GoalText({ game }: { game: GameState }) {
   const { meta, star } = game;
+  if (isLowMass(star)) {
+    return (
+      <>
+        外層の水素が{" "}
+        <b className="text-ignite">{formatMass(WHITE_DWARF_HYDROGEN * star.initialMass)}</b>{" "}
+        を下回ると白色矮星になる。それまでにヘリウムを炭素・酸素に変えよう
+      </>
+    );
+  }
   const next = STAGE_IDS.find((stage) => !isIgnited(star, stage));
   if (meta.supernovae === 0 || (next === undefined && !canAutoRebirth(meta))) {
     return <RunGoal game={game} />;

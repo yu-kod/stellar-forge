@@ -29,10 +29,10 @@ describe("バランス", () => {
     expect(ne).toBeGreaterThan(c);
   });
 
-  it("15分以内に元素8種をすべて発見し、燃焼の自動制御を手に入れる", () => {
+  it("15分以内に元素9種をすべて発見し、燃焼の自動制御を手に入れる", () => {
     const { state } = playCampaign(15 * 60);
     expect(Object.keys(state.meta.discovered).sort()).toEqual(
-      ["C", "Fe", "He", "Mg", "Ne", "O", "S", "Si"].sort()
+      ["C", "Fe", "He", "Mg", "N", "Ne", "O", "S", "Si"].sort()
     );
     expect(state.meta.shop.auto).toBe(1);
   });

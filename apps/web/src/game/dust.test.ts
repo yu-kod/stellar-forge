@@ -29,6 +29,7 @@ describe("dustPreview", () => {
     const { meta, star } = withOnion();
     expect(dustPreview(meta, star)).toEqual({
       C: Math.floor(2 ** 1.1),
+      N: 0,
       O: Math.floor(5 ** 1.1),
       Ne: 1,
       Mg: 0,

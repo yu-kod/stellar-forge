@@ -69,8 +69,11 @@ describe("restoreSave", () => {
     delete save.game.meta.neutronStars;
     delete save.game.meta.log;
     delete save.game.meta.target;
+    delete save.game.meta.whiteDwarfs;
+    delete save.game.meta.nextMass;
     const restored = restoreSave(save, NOW);
     expect(restored?.game.meta.target).toBeNull();
+    expect(restored?.game.meta).toMatchObject({ whiteDwarfs: 0, nextMass: null });
     expect(restored?.game.meta).toMatchObject({ supernovae: 0, neutronStars: 0, log: [] });
     expect(restored?.game.meta.shop.pre).toBe(0);
     expect(restored?.game.meta.autoOn.H).toBe(true);
@@ -81,12 +84,14 @@ describe("restoreSave", () => {
     game.meta.discovered = { He: true, C: true };
     game.meta.target = null;
     game.meta.autoRebirth = false;
+    game.meta.whiteDwarfs = 2;
+    game.meta.nextMass = 3;
     game.meta.log = [
       {
         generation: 1,
         time: 120,
         ejected: 10,
-        gain: { C: 1, O: 2, Ne: 0, Mg: 0, Si: 0, S: 0 },
+        gain: { C: 1, N: 0, O: 2, Ne: 0, Mg: 0, Si: 0, S: 0 },
         end: "collapse",
       },
     ];
