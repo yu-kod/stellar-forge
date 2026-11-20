@@ -8,7 +8,7 @@ describe("第4層とエンディングのペーシング（画面を開いたま
   let handsOff: IdleReport;
   beforeAll(() => {
     report = playIdle(270 * MINUTE);
-    handsOff = playIdle(240 * MINUTE, { steer: false });
+    handsOff = playIdle(300 * MINUTE, { steer: false });
   }, 900_000);
 
   it("s過程の循環を見て元素がそろったら、第4層が始まる", () => {

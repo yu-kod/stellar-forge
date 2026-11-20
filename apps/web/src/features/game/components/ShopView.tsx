@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { Button } from "@/components/ui/button";
 import { canBuyShopItem, shopCost } from "@/game/actions";
-import { isShopItemOpen } from "@/game/shop";
+import { isShopItemOpen, isShopItemUseful } from "@/game/shop";
 import { SHOP } from "@/game/balance";
 import { DUST_IDS, SHOP_IDS, type Meta, type ShopId } from "@/game/types";
 import { currencyName } from "../elements";
@@ -53,14 +53,22 @@ export function ShopView({ meta, dispatch }: Props) {
       {isShopItemOpen(meta, "pocket") && (
         <>
           <h3 className="mt-2 text-base font-semibold">第3層（s過程）</h3>
-          <p className="text-muted-foreground text-sm">
-            溜まった星屑で中性子を増やし、白色矮星を鉄の種に変える。
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {SHOP_IDS.filter((item) => SHOP[item].layer === 3).map((item) => (
-              <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
-            ))}
-          </div>
+          {isShopItemUseful(meta, "pocket") ? (
+            <>
+              <p className="text-muted-foreground text-sm">
+                恒星風で得た重元素の星屑で、中性子と s元素の価値を増やす。
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {SHOP_IDS.filter((item) => SHOP[item].layer === 3).map((item) => (
+                  <ShopItem key={item} meta={meta} item={item} dispatch={dispatch} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              s過程は終えた。ここの強化はもう効かないので畳んだ。重元素の星屑は第4層の強化に使う。
+            </p>
+          )}
         </>
       )}
       {isShopItemOpen(meta, "envelope") && (

@@ -181,6 +181,13 @@ describe("第4層の周期表と知らせ", () => {
 });
 
 describe("第4層の強化", () => {
+  it("s過程を終えたら、星屑タブの第3層の強化は畳んでそう書く", async () => {
+    const { user } = renderGame(layer4());
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByText(/s過程は終えた/)).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "¹³C ポケット" })).not.toBeInTheDocument();
+  });
+
   it("星屑タブに第4層の強化を出す", async () => {
     const { user } = renderGame(layer4());
     await user.click(screen.getByRole("tab", { name: "星屑" }));

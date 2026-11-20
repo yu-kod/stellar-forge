@@ -1,4 +1,5 @@
 import { LAYER2_AFTER, SHOP } from "./balance";
+import { S_DISCOVERABLE } from "./sprocess";
 import type { Currency, Meta, ShopId } from "./types";
 
 /** 恒久強化に払える手持ち */
@@ -20,4 +21,10 @@ export function isShopItemOpen(meta: Meta, item: ShopId): boolean {
   if (layer === 3) return meta.sProcess.unlocked;
   if (layer === 4) return meta.rProcess.unlocked;
   return true;
+}
+
+/** その強化に、まだ効き目があるか。s過程を終えたら（循環を見て元素がそろったら）s過程の強化は効かない */
+export function isShopItemUseful(meta: Meta, item: ShopId): boolean {
+  const sDone = meta.sProcess.looped && meta.sProcess.discovered.length === S_DISCOVERABLE;
+  return !(SHOP[item].layer === 3 && sDone);
 }

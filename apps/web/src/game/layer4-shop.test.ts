@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buyShopItem, canBuyShopItem } from "./actions";
+import { buyAllShopItems, buyShopItem, canBuyShopItem } from "./actions";
 import { SHOP } from "./balance";
 import { advanceAll } from "./cluster";
 import {
@@ -10,7 +10,9 @@ import {
   mergerSeconds,
   predictMerger,
 } from "./merger";
+import { nextShopGoal } from "./goal";
 import { isShopItemOpen } from "./shop";
+import { S_DISCOVERABLE_ELEMENTS } from "./sprocess";
 import { createGame } from "./star";
 import type { GameState } from "./types";
 
@@ -92,5 +94,31 @@ describe("第4層の強化", () => {
     const game = buy(layer4(), "rAuto");
     expect(advanceAll(game, 0.1).state.meta.rProcess.binaries).toHaveLength(1);
     expect(formBinary(game, LIGHT, HEAVY).meta.rProcess.binaries).toHaveLength(1);
+  });
+});
+
+describe("重元素の星屑の第4層での使い道", () => {
+  it("s過程を終えたら、まとめて交換でも s過程の強化は買わない", () => {
+    const game = layer4();
+    game.meta.sProcess.discovered = [...S_DISCOVERABLE_ELEMENTS];
+    const bought = buyAllShopItems(game).meta.shop;
+    expect(bought.pocket + bought.flash + bought.binary).toBe(0);
+    expect(bought.envelope).toBeGreaterThan(0);
+  });
+
+  it("共通外層と潮汐の尾は重元素の星屑で買う", () => {
+    expect(SHOP.envelope.currency).toBe("heavy");
+    expect(SHOP.tail.currency).toBe("heavy");
+  });
+
+  it("s過程を終えたら（循環を見て元素がそろったら）、s過程の強化は次の目標に勧めない", () => {
+    const game = layer4();
+    game.meta.sProcess.discovered = [...S_DISCOVERABLE_ELEMENTS];
+    game.meta.dust = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
+    game.meta.sProcess.heavy = 0;
+    game.meta.sProcess.amounts[0] = 30;
+    game.meta.shop.auto = 1;
+    const goal = nextShopGoal(game.meta).item;
+    expect(["pocket", "flash", "binary"]).not.toContain(goal);
   });
 });
