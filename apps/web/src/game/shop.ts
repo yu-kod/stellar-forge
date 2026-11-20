@@ -24,7 +24,14 @@ export function isShopItemOpen(meta: Meta, item: ShopId): boolean {
 }
 
 /** その強化に、まだ効き目があるか。s過程を終えたら（循環を見て元素がそろったら）s過程の強化は効かない */
+/** r過程で作るランタノイド */
+const LANTHANIDES = [63, 64, 65, 66, 67, 68, 69];
+
 export function isShopItemUseful(meta: Meta, item: ShopId): boolean {
   const sDone = meta.sProcess.looped && meta.sProcess.discovered.length === S_DISCOVERABLE;
+  // 遮蔽で Ye が下がると、はじめの組（1.4 + 2.0 M☉）がランタノイドに届かなくなる
+  if (item === "shield" && !LANTHANIDES.every((z) => meta.rProcess.discovered.includes(z))) {
+    return false;
+  }
   return !(SHOP[item].layer === 3 && sDone);
 }

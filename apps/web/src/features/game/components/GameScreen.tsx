@@ -11,7 +11,16 @@ import {
 } from "@/game/balance";
 import { canAutoRebirth, canBuyShopItem, rebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
-import { nextRDiscovery } from "@/game/merger";
+import {
+  R_ELEMENTS,
+  R_PATH_START,
+  nextRDiscovery,
+  pairAdvice,
+  rGoal,
+  rThreshold,
+  type PairAdvice,
+} from "@/game/merger";
+import { NEUTRON_STAR_MASSES } from "@/game/rprocess";
 import { nextMissing } from "@/game/progress";
 import { nextSDiscovery } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
@@ -314,18 +323,51 @@ function LayerGoal({ game }: { game: GameState }) {
   );
 }
 
-/** 第4層の目標：r過程で次に作る元素 */
+/** 届く組がないとき、どうすれば届くか */
+function PairHint({ z, advice }: { z: number; advice: PairAdvice }) {
+  const target = elementOf(z);
+  const mass = (bin: number) => NEUTRON_STAR_MASSES[bin]!.toFixed(1);
+  return (
+    <>
+      <b className="text-ignite">
+        {target.name}（{target.symbol}）
+      </b>
+      に届く組がない：
+      {advice.type === "masses"
+        ? `星団の星を ${advice.masses[0]} M☉ と ${advice.masses[1]} M☉ にすると、${mass(advice.bins[0])} + ${mass(advice.bins[1])} M☉ の組で届く`
+        : "星屑タブでニュートリノの遮蔽を強化して Ye を下げる"}
+    </>
+  );
+}
+
+const blocks = (advice: PairAdvice) => advice.type === "masses" || advice.type === "shield";
+
+/** 第4層の目標：r過程で次に作る元素。届かない元素があれば、どうすれば届くか */
 function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
-  const next = nextRDiscovery(meta.rProcess);
-  if (!next) return <MissingGoal meta={meta} />;
-  const element = elementOf(next.z);
+  const { rProcess } = meta;
+  if (!nextRDiscovery(rProcess) && nextMissing(meta)) return <MissingGoal meta={meta} />;
+  const goal = rGoal(meta);
+  const advice = pairAdvice(meta, goal);
+  if (blocks(advice)) return <PairHint z={goal} advice={advice} />;
+  if (!R_ELEMENTS.includes(goal)) return <MissingGoal meta={meta} />;
+  const element = elementOf(goal);
+  const progress = Math.min(1, rProcess.amounts[goal - R_PATH_START]! / rThreshold(goal));
+  const blocked = R_ELEMENTS.filter((z) => !rProcess.discovered.includes(z))
+    .map((z) => ({ z, advice: pairAdvice(meta, z) }))
+    .find((item) => blocks(item.advice));
   return (
     <>
       r過程：次は{" "}
       <b className="text-ignite">
         {element.name}（{element.symbol}）
       </b>
-      を作る（{Math.floor(next.progress * 100)}%）
+      を作る（{Math.floor(progress * 100)}%）
+      {advice.type === "wait" && "。届く中性子星が星団の超新星から来るのを待つ"}
+      {blocked && (
+        <>
+          。<PairHint z={blocked.z} advice={blocked.advice} />
+        </>
+      )}
     </>
   );
 }

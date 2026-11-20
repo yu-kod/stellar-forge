@@ -85,7 +85,7 @@ describe("第4層の解放（s過程の循環を見たら）", () => {
     expect(unlockLayer4(game)).toBe(game);
   });
 
-  it("循環を見たら解放し、星団の星を中性子星を残す質量（10 M☉ と 32 M☉）にする", () => {
+  it("循環を見たら解放し、星団の星を中性子星を残す質量（18 M☉ と 40 M☉）にする", () => {
     const game = createGame();
     game.meta.sProcess = {
       ...game.meta.sProcess,
@@ -96,7 +96,7 @@ describe("第4層の解放（s過程の循環を見たら）", () => {
     game.meta.cluster = [createSlot(game.meta), createSlot(game.meta)];
     const next = unlockLayer4(game);
     expect(next.meta.rProcess.unlocked).toBe(true);
-    expect(next.meta.cluster.map((slot) => slot.nextMass)).toEqual([10, 32]);
+    expect(next.meta.cluster.map((slot) => slot.nextMass)).toEqual([18, 40]);
     expect(unlockLayer4(next)).toBe(next);
   });
 

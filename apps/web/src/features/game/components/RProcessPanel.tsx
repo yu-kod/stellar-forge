@@ -28,7 +28,7 @@ function countdown(seconds: number): string {
   return `${Math.floor(total / 60)}分${total % 60}秒`;
 }
 
-/** はじめに選んでおく組：いま作りたい元素を一番多く作る組。なければ在庫の一番軽いものと一番重いもの */
+/** はじめに選んでおく組：いま作りたい元素を一番速く作る組。なければ在庫の一番軽いものと一番重いもの */
 function defaultPair(meta: Meta): [number, number] {
   const best = bestPair(meta, rGoal(meta));
   if (best) return best;
@@ -39,11 +39,13 @@ function defaultPair(meta: Meta): [number, number] {
 /** 第4層：中性子星を2つずつ連星にし、合体させて r過程で重い元素を作る */
 export function RProcessPanel({ meta, dispatch }: Props) {
   const { pool, binaries, amounts, discovered, mergers } = meta.rProcess;
-  const [initialA, initialB] = defaultPair(meta);
   const goal = rGoal(meta);
   const goalElement = elementOf(goal);
-  const [a, setA] = useState(initialA);
-  const [b, setB] = useState(initialB);
+  // 自分で選ぶまでは、在庫に合わせてはじめの組を選び直す
+  const [choice, setChoice] = useState<[number, number] | null>(null);
+  const [a, b] = choice ?? defaultPair(meta);
+  const setA = (value: number) => setChoice([value, b]);
+  const setB = (value: number) => setChoice([a, value]);
   const ids = useId();
   const preview = predictMerger(meta, a, b);
   const enough = a === b ? pool[a]! >= 2 : pool[a]! >= 1 && pool[b]! >= 1;
@@ -56,8 +58,9 @@ export function RProcessPanel({ meta, dispatch }: Props) {
       </h2>
       <p className="text-muted-foreground text-sm">
         超新星の後に残った中性子星を2つずつ連星にする。重力波を出して近づき、合体すると中性子の多い物質が飛び散って、
-        原子核が中性子を一気に捕まえる（r過程）。質量の差が大きい組ほど中性子が多く（Ye
-        が低く）、重い元素まで届く。 金は中性子星合体で作る。
+        原子核が中性子を一気に捕まえる（r過程）。放出物は2つ：潮汐で飛ぶもの（質量の差が大きい組ほど多く、中性子が多い＝Ye
+        が低いので重い元素まで届く。赤いキロノバ）と、合体後に残る星の円盤風（合計が軽い組ほど多く、Ye
+        が高く第2ピークまで。青いキロノバ）。重い組ほど重力波で早く合体する。金は中性子星合体で作る。
       </p>
       <ul aria-label="中性子星の在庫" className="grid grid-cols-3 gap-1.5 font-mono text-sm">
         {pool.map((n, bin) => (
@@ -97,11 +100,23 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         ))}
       </div>
       <p role="status" aria-label="合体の見込み" className="bg-muted rounded-lg px-3 py-2 text-sm">
-        {preview.blackHole
-          ? `合計 ${total.toFixed(1)} M☉：すぐブラックホールになり、放出物は 4分の1`
-          : `質量比 ${preview.q.toFixed(2)}・Ye ${preview.ye.toFixed(2)} → ${reachName(preview.reach)}・放出物 ${preview.ejecta.toFixed(2)}`}
+        {preview.blackHole ? (
+          <>
+            合計 {total.toFixed(1)} M☉：すぐブラックホールになり、円盤風は吹かない。潮汐の放出物{" "}
+            {preview.dynamical.amount.toFixed(2)}
+          </>
+        ) : (
+          <>
+            潮汐（赤）{preview.dynamical.amount.toFixed(2)}：Ye {preview.dynamical.ye.toFixed(2)} →{" "}
+            {reachName(preview.dynamical.to)}
+            <br />
+            円盤風（青）{preview.disk.amount.toFixed(2)}：Ye {preview.disk.ye.toFixed(2)} →{" "}
+            {reachName(preview.disk.to)}
+          </>
+        )}
         <br />
-        1回で{goalElement.name}（{goalElement.symbol}）+{yieldOf(meta, a, b, goal).toFixed(2)}
+        合体まで {countdown(mergerSeconds(meta, a, b))}・1回で{goalElement.name}（
+        {goalElement.symbol}）+{yieldOf(meta, a, b, goal).toFixed(2)}
       </p>
       <Button
         className="h-11 w-fit active:scale-[0.97]"
@@ -120,7 +135,9 @@ export function RProcessPanel({ meta, dispatch }: Props) {
             <span aria-hidden className="bg-muted h-1.5 overflow-hidden rounded-full">
               <span
                 className="bg-ignite block h-full"
-                style={{ width: `${(1 - binary.remaining / mergerSeconds(meta)) * 100}%` }}
+                style={{
+                  width: `${Math.max(0, 1 - binary.remaining / mergerSeconds(meta, binary.a, binary.b)) * 100}%`,
+                }}
               />
             </span>
           </li>

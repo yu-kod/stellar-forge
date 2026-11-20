@@ -52,8 +52,13 @@ export function neutronStarBin(initialMass: number): number | null {
   return Math.min(NEUTRON_STAR_MASSES.length - 1, Math.max(0, bin));
 }
 
-/** 第4層の解放時に星団の星に設定する質量：1.2 M☉ と 1.8 M☉ の中性子星を残す */
-export const LAYER4_SLOT_MASSES = [10, 32] as const;
+/** その段の中性子星を残す親の星の質量（段の真ん中。2.0 M☉ は 40 M☉） [M☉] */
+export function progenitorMass(bin: number): number {
+  return Math.min(HEAVIEST_PROGENITOR, LIGHTEST_PROGENITOR + MASS_PER_BIN * bin + MASS_PER_BIN / 2);
+}
+
+/** 第4層の解放時に星団の星に設定する質量：1.4 M☉ と 2.0 M☉ の中性子星を残す（同士で第2ピーク、組んでランタノイド） */
+export const LAYER4_SLOT_MASSES = [18, 40] as const;
 
 /** 中性子星を在庫に足す */
 export function addNeutronStars(rProcess: RProcess, bin: number, count: number): RProcess {
