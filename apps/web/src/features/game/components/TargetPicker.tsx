@@ -2,7 +2,7 @@ import { useId, useMemo } from "react";
 import { previewRun, type RunPreview } from "@/game/preview";
 import { DUST_IDS, TARGET_IDS, type Meta, type Target } from "@/game/types";
 import { cn } from "@/lib/utils";
-import { ELEMENTS, TARGET_NAMES } from "../elements";
+import { TARGET_NAMES } from "../elements";
 import { formatNumber } from "../format";
 import type { Action } from "../model";
 
@@ -15,8 +15,8 @@ function describePreview({ seconds, dust }: RunPreview): string {
   const top = [...DUST_IDS]
     .sort((a, b) => dust[b] - dust[a])
     .slice(0, PREVIEW_TOP)
-    .map((id) => `${ELEMENTS[id].name} ${formatNumber(dust[id])}`);
-  return [`約${Math.round(seconds)}秒`, ...top].join("・");
+    .map((id) => `${id} ${formatNumber(dust[id])}`);
+  return [`約${Math.round(seconds)}秒`, ...top].join(" ");
 }
 
 /** 狙いごとの次の1周の見込み。星屑が変わるたびには計算しない（強化や設定が変わったときだけ） */

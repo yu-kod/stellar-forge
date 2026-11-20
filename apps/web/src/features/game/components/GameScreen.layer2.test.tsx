@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { LAYER2_AFTER } from "@/game/balance";
 import { createGame, createStar } from "@/game/star";
 import type { GameState } from "@/game/types";
-import { collapsed, manualTicker } from "@/test-utils/game";
+import { collapsed, manualTicker, openTab } from "@/test-utils/game";
 import { GameScreen } from "./GameScreen";
 
 function renderGame(initial: GameState) {
@@ -130,6 +130,7 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
       within(dialog).getByRole("button", { name: "放出された元素から次の星を生む" })
     );
 
+    openTab("星");
     expect(screen.getByRole("region", { name: "星の状態" })).toHaveTextContent("3.00 M☉");
   });
 

@@ -9,13 +9,13 @@ import {
   STAGES,
   WHITE_DWARF_HYDROGEN,
 } from "@/game/balance";
-import { canAutoRebirth } from "@/game/actions";
+import { canAutoRebirth, canBuyShopItem, rebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
 import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame } from "@/game/star";
-import { STAGE_IDS, type GameState } from "@/game/types";
+import { SHOP_IDS, STAGE_IDS, type GameState } from "@/game/types";
 import { currencyName, targetHint } from "../elements";
 import { formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
@@ -48,7 +48,7 @@ type Props = {
   showSpeed?: boolean;
 };
 
-type Tab = "table" | "shop" | "records";
+type Tab = "star" | "cluster" | "sprocess" | "shop" | "table" | "records";
 const SPEEDS: Speed[] = [1, 3];
 const SAVE_EVERY_MS = 5000;
 /** これより短い留守は知らせない [秒] */
@@ -75,7 +75,7 @@ export function GameScreen({
   const [model, dispatch] = useReducer(gameReducer, null, () =>
     initialModel(initial, storage, now)
   );
-  const [tab, setTab] = useState<Tab>("table");
+  const [tab, setTab] = useState<Tab>("star");
   const { game } = model;
   const latest = useRef(game);
   const lastSaved = useRef(-Infinity);
@@ -121,14 +121,15 @@ export function GameScreen({
     dispatch(action);
   }
 
+  // 次の星を生んだら、交換できる強化があるときだけ星屑のタブを開く
   function startNextStar() {
     dispatchAndSave({ type: "rebirth" });
-    setTab("shop");
+    if (SHOP_IDS.some((item) => canBuyShopItem(rebirth(game).meta, item))) setTab("shop");
   }
 
   function reset() {
     dispatchAndSave({ type: "reset" });
-    setTab("table");
+    setTab("star");
   }
 
   return (
@@ -169,55 +170,62 @@ export function GameScreen({
       <p role="note" className="bg-muted rounded-lg border px-3 py-2 text-sm">
         <GoalText game={game} />
       </p>
-      <div className="grid items-start gap-4 md:grid-cols-[minmax(17.5rem,23.75rem)_1fr]">
-        <StarPanel game={game} />
-        <section aria-labelledby="stages-label" className="order-first grid gap-2 md:order-none">
-          <h2 id="stages-label" className="sr-only">
-            燃焼段階
-          </h2>
-          {game.meta.supernovae >= LAYER2_AFTER && (
-            <MassPicker meta={game.meta} dispatch={dispatch} />
-          )}
-          <TargetPicker meta={game.meta} dispatch={dispatch} />
-          {game.meta.supernovae >= AUTO_REBIRTH_AFTER && (
-            <label className="text-muted-foreground flex h-11 items-center gap-2 px-1 text-sm">
-              <input
-                type="checkbox"
-                className="accent-ignite size-4"
-                checked={game.meta.autoRebirth}
-                onChange={(e) => dispatch({ type: "setAutoRebirth", on: e.target.checked })}
-              />
-              超新星のあと自動で次の星を生む
-            </label>
-          )}
-          {STAGE_IDS.map((stage) => (
-            <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
-          ))}
-        </section>
-      </div>
-      <ClusterPanel meta={game.meta} dispatch={dispatch} />
-      <SProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
-      <section aria-labelledby="book-label" className="bg-card rounded-xl border p-4">
-        <h2 id="book-label" className="sr-only">
-          周期表・星屑・記録
-        </h2>
-        <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
-          <TabsList className="w-full sm:w-fit">
-            <TabsTrigger value="table">周期表</TabsTrigger>
-            <TabsTrigger value="shop">星屑</TabsTrigger>
-            <TabsTrigger value="records">記録と次の層</TabsTrigger>
-          </TabsList>
-          <TabsContent value="table" className="pt-2">
-            <PeriodicTableView meta={game.meta} />
-          </TabsContent>
-          <TabsContent value="shop" className="pt-2">
-            <ShopView meta={game.meta} dispatch={dispatchAndSave} />
-          </TabsContent>
-          <TabsContent value="records" className="pt-2">
-            <RecordsView meta={game.meta} />
-          </TabsContent>
-        </Tabs>
-      </section>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)} className="gap-3">
+        <TabsList aria-label="画面" className="w-full overflow-x-auto sm:w-fit">
+          <TabsTrigger value="star">星</TabsTrigger>
+          {game.meta.cluster.length > 0 && <TabsTrigger value="cluster">星団</TabsTrigger>}
+          {game.meta.sProcess.unlocked && <TabsTrigger value="sprocess">s過程</TabsTrigger>}
+          <TabsTrigger value="shop">星屑</TabsTrigger>
+          <TabsTrigger value="table">周期表</TabsTrigger>
+          <TabsTrigger value="records">記録</TabsTrigger>
+        </TabsList>
+        <TabsContent value="star">
+          <div className="grid items-start gap-4 md:grid-cols-[minmax(17.5rem,23.75rem)_1fr]">
+            <StarPanel game={game} />
+            <section
+              aria-labelledby="stages-label"
+              className="order-first grid gap-2 md:order-none"
+            >
+              <h2 id="stages-label" className="sr-only">
+                燃焼段階
+              </h2>
+              {game.meta.supernovae >= LAYER2_AFTER && (
+                <MassPicker meta={game.meta} dispatch={dispatch} />
+              )}
+              <TargetPicker meta={game.meta} dispatch={dispatch} />
+              {game.meta.supernovae >= AUTO_REBIRTH_AFTER && (
+                <label className="text-muted-foreground flex h-11 items-center gap-2 px-1 text-sm">
+                  <input
+                    type="checkbox"
+                    className="accent-ignite size-4"
+                    checked={game.meta.autoRebirth}
+                    onChange={(e) => dispatch({ type: "setAutoRebirth", on: e.target.checked })}
+                  />
+                  超新星のあと自動で次の星を生む
+                </label>
+              )}
+              {STAGE_IDS.map((stage) => (
+                <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
+              ))}
+            </section>
+          </div>
+        </TabsContent>
+        <TabsContent value="cluster">
+          <ClusterPanel meta={game.meta} dispatch={dispatch} />
+        </TabsContent>
+        <TabsContent value="sprocess">
+          <SProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
+        </TabsContent>
+        <TabsContent value="shop" className="bg-card rounded-xl border p-4">
+          <ShopView meta={game.meta} dispatch={dispatchAndSave} />
+        </TabsContent>
+        <TabsContent value="table" className="bg-card rounded-xl border p-4">
+          <PeriodicTableView meta={game.meta} />
+        </TabsContent>
+        <TabsContent value="records" className="bg-card rounded-xl border p-4">
+          <RecordsView meta={game.meta} />
+        </TabsContent>
+      </Tabs>
       <footer className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-3 pb-6 text-sm">
         <p>進行はこのブラウザに保存されます。</p>
         <ResetDialog onReset={reset} />

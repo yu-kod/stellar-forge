@@ -1,4 +1,4 @@
-import { act } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import type { Ticker } from "@/features/game/ticker";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
@@ -45,4 +45,13 @@ export function manualTicker() {
     });
   }
   return { ticker, tick };
+}
+
+/** 画面のタブを開く（Radix のタブは mousedown で切り替わる） */
+export function openTab(name: string) {
+  const tab = screen.queryByRole("tab", { name, hidden: true });
+  if (!tab) return;
+  act(() => {
+    fireEvent.mouseDown(tab, { button: 0 });
+  });
 }
