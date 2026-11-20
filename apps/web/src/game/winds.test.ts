@@ -14,9 +14,9 @@ describe("s過程の原子核は恒星風で星の外へ出て、重元素の星
     expect(next.amounts[index(26)]).toBeCloseTo(10 * Math.exp(-S_WIND_RATE * 10), 10);
   });
 
-  it("重い原子核ほど価値が高い（鉄 1、ビスマス 2）", () => {
-    expect(heavyValue(S_PATH_START)).toBe(1);
-    expect(heavyValue(S_PATH_END)).toBe(2);
+  it("重い原子核ほど価値が高い（鉄 6、ビスマス 12）", () => {
+    expect(heavyValue(S_PATH_START)).toBe(6);
+    expect(heavyValue(S_PATH_END)).toBe(12);
   });
 
   it("出ていった量 × 価値 を重元素の星屑として受け取る", () => {
@@ -25,7 +25,7 @@ describe("s過程の原子核は恒星風で星の外へ出て、重元素の星
     sp.amounts[index(83)] = 2;
     const next = blowWinds(sp, 5);
     const out = 1 - Math.exp(-S_WIND_RATE * 5);
-    expect(next.heavy / (out * (4 * 1 + 2 * 2))).toBeCloseTo(1, 10);
+    expect(next.heavy / (out * (4 * 6 + 2 * 12))).toBeCloseTo(1, 10);
   });
 
   it("時間を分けて進めても、まとめて進めても同じ", () => {

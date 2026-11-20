@@ -230,7 +230,7 @@ export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 /** 第3層（s過程）を解放する白色矮星の数 */
 export const LAYER3_AFTER = 40;
 /** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
-export const NEUTRONS_PER_HELIUM = 2.8;
+export const NEUTRONS_PER_HELIUM = 3.9;
 
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
@@ -359,7 +359,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "heavy",
     description: "中性子 ×1.5",
     baseCost: 10,
-    costGrowth: 1.6,
+    costGrowth: 2,
     layer: 3,
   },
   flash: {
@@ -367,7 +367,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     currency: "heavy",
     description: "恒星風で外へ出る s元素の価値 +50%",
     baseCost: 15,
-    costGrowth: 1.6,
+    costGrowth: 2,
     layer: 3,
   },
   binary: {
@@ -383,7 +383,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     name: "共通外層",
     currency: "heavy",
     description: "連星が近い状態で生まれる。合体までの時間 ×0.6",
-    baseCost: 10,
+    baseCost: 200,
     costGrowth: 3,
     maxLevel: 3,
     layer: 4,
@@ -392,7 +392,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     name: "連星の枠",
     currency: "Mg",
     description: "同時に持てる連星 +1",
-    baseCost: 1e7,
+    baseCost: 2e6,
     costGrowth: 5,
     maxLevel: 3,
     layer: 4,
@@ -401,7 +401,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     name: "潮汐の尾",
     currency: "heavy",
     description: "合体の放出物 +50%",
-    baseCost: 8,
+    baseCost: 160,
     costGrowth: 2,
     maxLevel: 5,
     layer: 4,
@@ -452,7 +452,7 @@ export const NEUTRONS_PER_POCKET = 1.5;
 /** 第3ドレッジアップ1つあたりの、恒星風で出る s元素の価値の上乗せ（足し算） */
 export const HEAVY_PER_DREDGE_UP = 0.5;
 /** 鉄の種の目標の量（自動の Ia型超新星）の初期値 */
-export const DEFAULT_SEED_TARGET = 3;
+export const DEFAULT_SEED_TARGET = 10;
 
 /** 星団の星の初期設定（窒素を作る軽い星） */
 export const CLUSTER_DEFAULT_MASS = 7;
