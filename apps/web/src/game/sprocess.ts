@@ -89,6 +89,11 @@ export function crossSection(z: number): number {
   return (z / 40) * (MAGIC.has(z) ? MAGIC_CROSS_SECTION : 1);
 }
 
+/** 中性子の魔法数にあたる元素か（ピークになる） */
+export function isMagic(z: number): boolean {
+  return MAGIC.has(z);
+}
+
 export function isRProcessOnly(z: number): boolean {
   return R_PROCESS_ONLY.has(z);
 }

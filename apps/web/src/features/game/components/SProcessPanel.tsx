@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   S_DISCOVERABLE,
   S_PATH_START,
-  crossSection,
+  isMagic,
   heavyRate,
   neutronMultiplier,
   seedsPerIa,
@@ -105,7 +105,7 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
               height={h}
               className={cn(
                 found ? "fill-el-heavy" : "fill-muted-foreground",
-                crossSection(z) < 0.2 && "fill-el-s"
+                isMagic(z) && "fill-el-s"
               )}
             />
             {LABELED.has(z) && (

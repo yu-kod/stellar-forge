@@ -1,0 +1,142 @@
+import { useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  R_ONLY_ELEMENTS,
+  R_PATH_START,
+  binarySlots,
+  mergerSeconds,
+  predictMerger,
+  rThreshold,
+  reachName,
+} from "@/game/merger";
+import { NEUTRON_STAR_MASSES } from "@/game/rprocess";
+import type { Meta } from "@/game/types";
+import { formatNumber } from "../format";
+import type { Action } from "../model";
+import { elementOf } from "../periodicTable";
+
+type Props = { meta: Meta; dispatch: (action: Action) => void };
+
+const massOf = (bin: number) => `${NEUTRON_STAR_MASSES[bin]!.toFixed(1)} M☉`;
+
+/** 「9分59秒」の形（切り上げ） */
+function countdown(seconds: number): string {
+  const total = Math.ceil(seconds);
+  return `${Math.floor(total / 60)}分${total % 60}秒`;
+}
+
+/** 在庫のある段のうち、一番軽いものと一番重いもの */
+function defaultPair(pool: number[]): [number, number] {
+  const held = pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
+  return [held[0] ?? 0, held.at(-1) ?? 0];
+}
+
+/** 第4層：中性子星を2つずつ連星にし、合体させて r過程で重い元素を作る */
+export function RProcessPanel({ meta, dispatch }: Props) {
+  const { pool, binaries, amounts, discovered, mergers } = meta.rProcess;
+  const [initialA, initialB] = defaultPair(pool);
+  const [a, setA] = useState(initialA);
+  const [b, setB] = useState(initialB);
+  const ids = useId();
+  const preview = predictMerger(meta, a, b);
+  const enough = a === b ? pool[a]! >= 2 : pool[a]! >= 1 && pool[b]! >= 1;
+  const free = binaries.length < binarySlots(meta);
+  const total = NEUTRON_STAR_MASSES[a]! + NEUTRON_STAR_MASSES[b]!;
+  return (
+    <section aria-labelledby={`${ids}-label`} className="bg-card grid gap-3 rounded-xl border p-4">
+      <h2 id={`${ids}-label`} className="text-base font-semibold">
+        中性子星合体
+      </h2>
+      <p className="text-muted-foreground text-sm">
+        超新星の後に残った中性子星を2つずつ連星にする。重力波を出して近づき、合体すると中性子の多い物質が飛び散って、
+        原子核が中性子を一気に捕まえる（r過程）。質量の差が大きい組ほど中性子が多く（Ye
+        が低く）、重い元素まで届く。 金は中性子星合体で作る。
+      </p>
+      <ul aria-label="中性子星の在庫" className="grid grid-cols-3 gap-1.5 font-mono text-sm">
+        {pool.map((n, bin) => (
+          <li
+            key={bin}
+            className={n > 0 ? "rounded-md border px-2 py-1" : "text-muted-foreground px-2 py-1"}
+          >
+            {massOf(bin)}×{formatNumber(n)}
+          </li>
+        ))}
+      </ul>
+      <p className="text-muted-foreground text-sm">
+        中性子星の質量は親の星で決まる：8〜11 M☉ の星から 1.2 M☉、40 M☉ 以上の星から 2.0 M☉。
+        主星と星団の星の「次に生む質量」を分けると両方を貯められる。
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {(
+          [
+            ["1つ目", a, setA],
+            ["2つ目", b, setB],
+          ] as const
+        ).map(([label, value, set]) => (
+          <label key={label} className="grid gap-1 text-sm">
+            {label}
+            <select
+              value={value}
+              onChange={(e) => set(Number(e.target.value))}
+              className="bg-background h-11 rounded-md border px-2 text-base"
+            >
+              {pool.map((n, bin) => (
+                <option key={bin} value={bin}>
+                  {massOf(bin)}（{formatNumber(n)}個）
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+      <p role="status" aria-label="合体の見込み" className="bg-muted rounded-lg px-3 py-2 text-sm">
+        {preview.blackHole
+          ? `合計 ${total.toFixed(1)} M☉：すぐブラックホールになり、放出物は 4分の1`
+          : `質量比 ${preview.q.toFixed(2)}・Ye ${preview.ye.toFixed(2)} → ${reachName(preview.reach)}・放出物 ${preview.ejecta.toFixed(2)}`}
+      </p>
+      <Button
+        className="h-11 w-fit active:scale-[0.97]"
+        disabled={!enough || !free}
+        onClick={() => dispatch({ type: "formBinary", a, b })}
+      >
+        連星にする
+      </Button>
+      <ul aria-label="合体を待つ連星" className="grid gap-1.5 text-sm">
+        {binaries.map((binary, i) => (
+          <li key={i} className="grid gap-1 rounded-md border px-3 py-2">
+            <span className="font-mono">
+              {NEUTRON_STAR_MASSES[binary.a]!.toFixed(1)} + {massOf(binary.b)} 合体まで{" "}
+              {countdown(binary.remaining)}
+            </span>
+            <span aria-hidden className="bg-muted h-1.5 overflow-hidden rounded-full">
+              <span
+                className="bg-ignite block h-full"
+                style={{ width: `${(1 - binary.remaining / mergerSeconds(meta)) * 100}%` }}
+              />
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-muted-foreground text-sm">
+        連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回
+      </p>
+      <ul aria-label="r過程で作る元素" className="grid gap-1 text-sm sm:grid-cols-2">
+        {R_ONLY_ELEMENTS.map((z) => {
+          const element = elementOf(z);
+          const amount = amounts[z - R_PATH_START]!;
+          return (
+            <li
+              key={z}
+              className={discovered.includes(z) ? "text-foreground" : "text-muted-foreground"}
+            >
+              {element.name}（{element.symbol}）
+              <span className="font-mono">
+                {amount.toFixed(2)} / {rThreshold(z)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}

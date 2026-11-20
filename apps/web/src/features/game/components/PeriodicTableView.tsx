@@ -19,6 +19,9 @@ function isSProcessFound(meta: Meta, cell: PeriodicCell): boolean {
 
 function describe(meta: Meta, cell: PeriodicCell): string {
   if (isSProcessFound(meta, cell)) return `${cell.name}：s過程で作った`;
+  if (meta.rProcess.discovered.includes(cell.number)) {
+    return `${cell.name}：中性子星合体の r過程で作った`;
+  }
   const site = LIGHT_SITES[cell.number];
   if (site !== undefined) {
     return meta.lightFound.includes(cell.number)
@@ -39,7 +42,8 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
   const found =
     ELEMENT_IDS.filter((id) => isDiscovered(meta, id)).length +
     meta.sProcess.discovered.length +
-    meta.lightFound.length;
+    meta.lightFound.length +
+    meta.rProcess.discovered.filter((z) => z <= BISMUTH).length;
   return (
     <div className="grid gap-3">
       <p className="text-muted-foreground text-sm">
@@ -55,6 +59,7 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
             const got = isDiscovered(meta, cell.symbol);
             const sFound = isSProcessFound(meta, cell);
             const lightFound = meta.lightFound.includes(cell.number);
+            const rFound = meta.rProcess.discovered.includes(cell.number);
             const goal = cell.number === BISMUTH || cell.number === GOLD;
             const label = describe(meta, cell);
             return (
@@ -71,8 +76,10 @@ export function PeriodicTableView({ meta }: { meta: Meta }) {
                       ? "bg-el-heavy text-background border-transparent font-bold"
                       : lightFound
                         ? "bg-el-light text-background border-transparent font-bold"
-                        : "bg-background text-muted-foreground",
-                  goal && !sFound && "text-ignite border-ignite border-dashed",
+                        : rFound
+                          ? "bg-el-r text-background border-transparent font-bold"
+                          : "bg-background text-muted-foreground",
+                  goal && !sFound && !rFound && "text-ignite border-ignite border-dashed",
                   cell.row === 7 && "mt-1"
                 )}
               >

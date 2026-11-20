@@ -109,7 +109,8 @@ export function formBinary(state: GameState, a: number, b: number): GameState {
 export type MergerEvent =
   ({ type: "merger" } & Omit<MergerPreview, "q">) | { type: "rDiscover"; z: number };
 
-function threshold(z: number): number {
+/** その元素を発見する量 */
+export function rThreshold(z: number): number {
   if (ACTINIDES.includes(z)) return ACTINIDE_THRESHOLD;
   return z === GOLD ? GOLD_THRESHOLD : R_DISCOVERY_THRESHOLD;
 }
@@ -122,7 +123,7 @@ function merge(meta: Meta, binary: Binary): { meta: Meta; events: MergerEvent[] 
     return z <= reach ? amount + ejecta * rWeight(z) : amount;
   });
   const found = [...R_ONLY_ELEMENTS, ...ACTINIDES].filter(
-    (z) => !has(meta.rProcess, z) && amounts[z - R_PATH_START]! >= threshold(z)
+    (z) => !has(meta.rProcess, z) && amounts[z - R_PATH_START]! >= rThreshold(z)
   );
   const rProcess: RProcess = {
     ...meta.rProcess,
@@ -159,6 +160,24 @@ export function advanceBinaries(
     events.push(...result.events);
   }
   return { meta: { ...current, rProcess: { ...current.rProcess, binaries: waiting } }, events };
+}
+
+/** まだ見つけていない r過程の元素のうち、発見の量に一番近いもの（割合は 0〜1）。すべて見つけていれば null */
+export function nextRDiscovery(rProcess: RProcess): { z: number; progress: number } | null {
+  const candidates = R_ONLY_ELEMENTS.filter((z) => !has(rProcess, z)).map((z) => ({
+    z,
+    progress: Math.min(1, rProcess.amounts[z - R_PATH_START]! / rThreshold(z)),
+  }));
+  if (candidates.length === 0) return null;
+  return candidates.reduce((a, b) => (b.progress > a.progress ? b : a));
+}
+
+/** 届くところの名前 */
+export function reachName(reach: number): string {
+  if (reach === URANIUM) return "アクチノイド（ウランまで）";
+  if (reach === 83) return "第3ピーク（金まで）";
+  if (reach === 72) return "第2ピーク（ユウロピウムまで）";
+  return "第1ピーク（スズまで）";
 }
 
 /** r過程の道の長さ（テスト・画面用） */

@@ -10,6 +10,7 @@ import {
   captures,
   createSProcess,
   crossSection,
+  isMagic,
   isRProcessOnly,
   neutronMultiplier,
   sDustMultiplier,
@@ -266,5 +267,12 @@ describe("第3層の解放と中性子", () => {
     game.star.temperature = 2e8;
     game.star.levels.He = 10;
     expect(step(game, 1).state.meta.sProcess.amounts[0]).toBe(1);
+  });
+});
+
+describe("魔法数の元素", () => {
+  it("Sr・Y・Zr、Ba・La・Ce、Pb・Bi", () => {
+    expect([38, 39, 40, 56, 57, 58, 82, 83].every(isMagic)).toBe(true);
+    expect(isMagic(41)).toBe(false);
   });
 });

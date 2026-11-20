@@ -10,6 +10,8 @@ import {
   createRProcess,
   formBinary,
   mergerSeconds,
+  nextRDiscovery,
+  reachName,
   predictMerger,
   rWeight,
 } from "./merger";
@@ -180,5 +182,24 @@ describe("r過程の発見の効果", () => {
     const before = predictMerger(meta, LIGHT, HEAVY).ye;
     meta.rProcess.discovered = [78];
     expect(predictMerger(meta, LIGHT, HEAVY).ye).toBeCloseTo(before - 0.025);
+  });
+});
+
+describe("届くところの名前と、次に作る元素", () => {
+  it.each([
+    [92, "アクチノイド（ウランまで）"],
+    [83, "第3ピーク（金まで）"],
+    [72, "第2ピーク（ユウロピウムまで）"],
+    [50, "第1ピーク（スズまで）"],
+  ])("Z %d まで：%s", (z, name) => {
+    expect(reachName(z)).toBe(name);
+  });
+
+  it("まだの r過程の元素のうち一番近いもの。全部見つけていれば null", () => {
+    const meta = layer4();
+    meta.rProcess.amounts[78 - R_PATH_START] = 1.5;
+    expect(nextRDiscovery(meta.rProcess)).toEqual({ z: 78, progress: 0.5 });
+    meta.rProcess.discovered = [63, 76, 77, 78, 79];
+    expect(nextRDiscovery(meta.rProcess)).toBeNull();
   });
 });
