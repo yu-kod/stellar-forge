@@ -214,7 +214,7 @@ export const CARBON_STAR_CNO_NITROGEN_PER_HYDROGEN = 0.03;
 /** 第3層（s過程）を解放する白色矮星の数 */
 export const LAYER3_AFTER = 30;
 /** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
-export const NEUTRONS_PER_HELIUM = 1;
+export const NEUTRONS_PER_HELIUM = 0.7;
 
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
@@ -243,7 +243,7 @@ export type ShopSpec = {
   /** 1回だけ買える強化は 1 */
   maxLevel?: number;
   /** 解放される層。省略すると第1層 */
-  layer?: 2;
+  layer?: 2 | 3;
 };
 
 export const SHOP: Record<ShopId, ShopSpec> = {
@@ -338,6 +338,39 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     maxLevel: 2,
     layer: 2,
   },
+  pocket: {
+    name: "¹³C ポケット",
+    currency: "C",
+    description: "中性子 +25%",
+    baseCost: 2000,
+    costGrowth: 4,
+    layer: 3,
+  },
+  flash: {
+    name: "熱パルスの強さ",
+    currency: "N",
+    description: "中性子 +25%",
+    baseCost: 1000,
+    costGrowth: 4,
+    layer: 3,
+  },
+  binary: {
+    name: "連星の質量移動",
+    currency: "O",
+    description: "Ia型超新星1回の鉄の種 +1",
+    baseCost: 3000,
+    costGrowth: 4,
+    layer: 3,
+  },
+  autoIa: {
+    name: "Ia型超新星の自動化",
+    currency: "S",
+    description: "道の上の原子核が目標の量になるまで、白色矮星で自動で補う",
+    baseCost: 200,
+    costGrowth: 1,
+    maxLevel: 1,
+    layer: 3,
+  },
 };
 
 /** 超新星の記録を残す件数 */
@@ -345,6 +378,11 @@ export const SHOP: Record<ShopId, ShopSpec> = {
 export const RECYCLE_PER_LEVEL = 0.25;
 export const NEBULA_PER_LEVEL = 0.5;
 export const PULSE_PER_LEVEL = 2;
+
+/** 第3層の強化の効果 */
+export const NEUTRONS_PER_UPGRADE = 0.25;
+/** 鉄の種の目標の量（自動の Ia型超新星）の初期値 */
+export const DEFAULT_SEED_TARGET = 3;
 
 /** 星団の星の初期設定（窒素を作る軽い星） */
 export const CLUSTER_DEFAULT_MASS = 7;

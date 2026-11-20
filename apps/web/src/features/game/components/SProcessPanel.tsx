@@ -60,6 +60,7 @@ export function SProcessPanel({ meta, dispatch }: Props) {
           10回起こす
         </Button>
       </div>
+      {meta.shop.autoIa > 0 && <SeedTargetPicker meta={meta} dispatch={dispatch} />}
       <p className="text-muted-foreground text-sm">
         白色矮星1つで鉄の種 +{seedsPerIa(meta)}。s過程で発見した元素{" "}
         <b className="text-foreground font-mono">{discovered.length}</b> / {S_DISCOVERABLE}
@@ -115,5 +116,43 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
         );
       })}
     </svg>
+  );
+}
+
+const SEED_TARGETS = [1, 3, 10, 30];
+
+/** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど手前の元素がたくさん */
+function SeedTargetPicker({ meta, dispatch }: Props) {
+  return (
+    <fieldset className="grid gap-2">
+      <legend id="seed-target-label" className="mb-1 text-sm font-medium">
+        道の上の原子核を保つ量
+      </legend>
+      <div role="radiogroup" aria-labelledby="seed-target-label" className="flex flex-wrap gap-1.5">
+        {SEED_TARGETS.map((target) => (
+          <label
+            key={target}
+            className={cn(
+              "has-focus-visible:ring-ring/50 flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-md border px-3 font-mono text-sm has-focus-visible:ring-[3px]",
+              meta.sProcess.seedTarget === target
+                ? "bg-accent text-foreground border-foreground/40"
+                : "text-muted-foreground"
+            )}
+          >
+            <input
+              type="radio"
+              name="seed-target"
+              className="sr-only"
+              checked={meta.sProcess.seedTarget === target}
+              onChange={() => dispatch({ type: "setSeedTarget", target })}
+            />
+            {target}
+          </label>
+        ))}
+      </div>
+      <p className="text-muted-foreground text-sm">
+        少ないほど1つの種が多くの中性子を捕まえて遠く（鉛・ビスマス）まで進む。多いほど手前の元素がたくさんできる。
+      </p>
+    </fieldset>
   );
 }

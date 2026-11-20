@@ -99,6 +99,23 @@ export function triggerIa(state: GameState): GameState {
   };
 }
 
+/** 自動の Ia型超新星が保つ、道の上の原子核の量を決める（1以上の整数） */
+export function setSeedTarget(state: GameState, target: number): GameState {
+  const seedTarget = Math.max(1, Math.floor(target));
+  return { ...state, meta: { ...state.meta, sProcess: { ...state.meta.sProcess, seedTarget } } };
+}
+
+/** 自動の Ia型超新星：道の上の原子核が目標の量になるまで、白色矮星を使って補う */
+export function autoIa(state: GameState): GameState {
+  if (!state.meta.shop.autoIa) return state;
+  let next = state;
+  const total = () => next.meta.sProcess.amounts.reduce((sum, a) => sum + a, 0);
+  while (next.meta.whiteDwarfs >= 1 && total() < next.meta.sProcess.seedTarget) {
+    next = triggerIa(next);
+  }
+  return next;
+}
+
 /** 終わった星から星屑と中性子星を受け取り、次の世代の星を生む */
 export function rebirth(state: GameState): GameState {
   const { meta, star } = state;

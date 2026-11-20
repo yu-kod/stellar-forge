@@ -27,6 +27,10 @@ export const SHOP_IDS = [
   "nebula",
   "pulse",
   "cluster",
+  "pocket",
+  "flash",
+  "binary",
+  "autoIa",
 ] as const;
 export type ShopId = (typeof SHOP_IDS)[number];
 

@@ -105,6 +105,12 @@ describe("captureNeutrons", () => {
     expect(captureNeutrons(sp, 0.3).discovered).toEqual([]);
   });
 
+  it("ビスマスがごくわずか（発見の量に満たない）なら、循環を見たことにはしない", () => {
+    const { sProcess, looped } = captureNeutrons(withAmounts({ 83: 1e-9, 26: 1 }), 100);
+    expect(looped).toBe(false);
+    expect(sProcess.looped).toBe(false);
+  });
+
   it("ビスマスが中性子を捕まえると鉛に戻り、初めて戻ったら循環を見たことになる", () => {
     const { sProcess, looped } = captureNeutrons(withAmounts({ 83: 1 }), 100);
     expect(sProcess.amounts[index(83)]).toBe(0);

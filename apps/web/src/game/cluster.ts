@@ -1,4 +1,4 @@
-import { rebirth, setNextMass, setTarget } from "./actions";
+import { autoIa, rebirth, setNextMass, setTarget } from "./actions";
 export { createSlot } from "./actions";
 import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
@@ -61,7 +61,11 @@ export function advanceAll(
     clusterEvents.push(...result.events);
     meta = mergeSlot(meta, index, result.state, slot);
   });
-  return { state: { meta, star: main.state.star }, events: main.events, clusterEvents };
+  return {
+    state: autoIa({ meta, star: main.state.star }),
+    events: main.events,
+    clusterEvents,
+  };
 }
 
 function updateSlot(

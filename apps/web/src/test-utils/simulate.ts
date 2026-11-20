@@ -9,6 +9,7 @@ import {
   setNextMass,
   setTarget,
   shopCost,
+  triggerIa,
 } from "@/game/actions";
 import { isShopItemOpen } from "@/game/shop";
 import { LAYER2_AFTER, SHOP, TARGET_STAGES } from "@/game/balance";
@@ -142,7 +143,20 @@ export function playCampaign(
 export type IdleReport = {
   state: GameState;
   /** 解放などが起きた時刻 [秒] */
-  marks: Partial<Record<"auto" | "layer2" | "autoRebirth" | "cluster" | "layer3", number>>;
+  marks: Partial<
+    Record<
+      | "auto"
+      | "layer2"
+      | "autoRebirth"
+      | "cluster"
+      | "layer3"
+      | "strontium"
+      | "barium"
+      | "lead"
+      | "loop",
+      number
+    >
+  >;
   /** 期間中の星屑の最大値 */
   maxDust: number;
   /** 10分ごとの恒久強化の購入数 */
@@ -169,6 +183,11 @@ export function playIdle(seconds: number): IdleReport {
     state.meta.cluster.forEach((_, i) => {
       state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
     });
+    // 第3層：自動化がなければ、道の上の原子核が目標の量になるまで手で Ia型超新星を起こす
+    const onPath = state.meta.sProcess.amounts.reduce((sum, a) => sum + a, 0);
+    if (state.meta.sProcess.unlocked && !state.meta.shop.autoIa && onPath < 3) {
+      state = triggerIa(state);
+    }
     for (let half = 0; half < 2; half++) {
       state = advanceAll(state, 0.5, 0.1).state;
       if (!state.meta.shop.auto) state = buyCheapest(state, TARGET_STAGES[TARGET_FOR[currency]]);
@@ -187,6 +206,10 @@ export function playIdle(seconds: number): IdleReport {
       ["autoRebirth", canAutoRebirth(state.meta)],
       ["cluster", state.meta.shop.cluster > 0],
       ["layer3", state.meta.sProcess.unlocked],
+      ["strontium", state.meta.sProcess.discovered.includes(38)],
+      ["barium", state.meta.sProcess.discovered.includes(56)],
+      ["lead", state.meta.sProcess.discovered.includes(82)],
+      ["loop", state.meta.sProcess.looped],
     ];
     for (const [mark, done] of reached) if (done && marks[mark] === undefined) marks[mark] = t;
   }
