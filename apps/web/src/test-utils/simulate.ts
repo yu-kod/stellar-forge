@@ -7,12 +7,13 @@ import {
   canBuyShopItem,
   rebirth,
   setNextMass,
+  setSeedTarget,
   setTarget,
   shopCost,
   triggerIa,
 } from "@/game/actions";
-import { isShopItemOpen } from "@/game/shop";
-import { LAYER2_AFTER, SHOP, TARGET_STAGES } from "@/game/balance";
+import { funds, isShopItemOpen } from "@/game/shop";
+import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
 import { stageCost } from "@/game/rates";
@@ -21,6 +22,7 @@ import { createGame } from "@/game/star";
 import {
   SHOP_IDS,
   STAGE_IDS,
+  type Currency,
   type DustId,
   type GameState,
   type StageId,
@@ -76,16 +78,8 @@ export function playStar(start: GameState, strategy: Strategy, dt = 0.1): GameSt
   return state;
 }
 
-/** その星屑を一番多く残す狙い */
-const TARGET_FOR: Record<DustId, Target> = {
-  C: "C",
-  N: "C",
-  O: "O",
-  Ne: "Ne",
-  Mg: "O",
-  Si: "Si",
-  S: "Si",
-};
+/** その通貨を一番多く残す狙い。重元素の星屑は狙いでは増えないので、今の狙いのまま */
+const targetOr = (currency: Currency, current: Target): Target => bestTarget(currency) ?? current;
 
 /**
  * 一番近く買える恒久強化を狙い、その通貨の元素を残すように遊び続ける。
@@ -116,14 +110,14 @@ export function playCampaign(
         (SHOP[id].maxLevel === undefined || state.meta.shop[id] < SHOP[id].maxLevel)
     ).reduce((a, b) => {
       const shortfall = (id: typeof a) =>
-        shopCost(state.meta, id) - state.meta.dust[SHOP[id].currency];
+        shopCost(state.meta, id) - funds(state.meta, SHOP[id].currency);
       return shortfall(b) < shortfall(a) ? b : a;
     });
-    const target = TARGET_FOR[SHOP[wanted].currency];
+    const target = targetOr(SHOP[wanted].currency, state.meta.target ?? "C");
     state = setTarget(state, target);
     const forNitrogen = SHOP[wanted].currency === "N" ? lightMassForNitrogen : null;
     state = setNextMass(state, forNitrogen);
-    const ended = playStar(state, state.meta.shop.auto ? autoOnly : aimFor(SHOP[wanted].currency));
+    const ended = playStar(state, state.meta.shop.auto ? autoOnly : () => TARGET_STAGES[target]);
     elapsed += ended.star.time;
     state = rebirth(ended);
     for (let bought = true; bought;) {
@@ -142,6 +136,8 @@ export function playCampaign(
 
 export type IdleReport = {
   state: GameState;
+  /** 恒星風で得た重元素の星屑の合計 */
+  heavyEarned: number;
   /** 軽い元素を見つけた時刻 [秒]（原子番号ごと） */
   lightAt: Record<number, number>;
   /** 解放などが起きた時刻 [秒] */
@@ -169,31 +165,41 @@ export type IdleReport = {
  * 画面を開いたまま遊ぶ人をまねる。1秒ごとに、次の目標に合わせて狙いと質量を決め、
  * 自動制御がなければ狙いの段階を手で買い、恒久強化は買えるだけ買う。星団の星は窒素・炭素狙いの軽い星にする
  */
-export function playIdle(seconds: number): IdleReport {
+/** 第3層で保つ鉄の種の量。数か、その時の状態で決める関数 */
+export type SeedPlan = number | ((state: GameState) => number);
+
+export function playIdle(seconds: number, options: { seedTarget?: SeedPlan } = {}): IdleReport {
   let state = createGame();
+  const plan = options.seedTarget ?? DEFAULT_SEED_TARGET;
   const marks: IdleReport["marks"] = {};
   const purchasesPer10Min: number[] = [];
   let maxDust = 0;
   let purchases = 0;
   const lightAt: Record<number, number> = {};
+  let heavyEarned = 0;
   const levels = (s: GameState) => SHOP_IDS.reduce((sum, id) => sum + s.meta.shop[id], 0);
   for (let t = 1; t <= seconds; t++) {
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
     const currency = SHOP[nextShopGoal(state.meta).item].currency;
-    state = setTarget(state, TARGET_FOR[currency]);
+    const target = targetOr(currency, state.meta.target ?? "C");
+    state = setTarget(state, target);
     const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
     state = setNextMass(state, light ? 6 : null);
     state.meta.cluster.forEach((_, i) => {
       state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
     });
     // 第3層：自動化がなければ、道の上の原子核が目標の量になるまで手で Ia型超新星を起こす
+    const seedTarget = typeof plan === "number" ? plan : plan(state);
+    state = setSeedTarget(state, seedTarget);
     const onPath = state.meta.sProcess.amounts.reduce((sum, a) => sum + a, 0);
-    if (state.meta.sProcess.unlocked && !state.meta.shop.autoIa && onPath < 3) {
+    if (state.meta.sProcess.unlocked && !state.meta.shop.autoIa && onPath < seedTarget) {
       state = triggerIa(state);
     }
     for (let half = 0; half < 2; half++) {
+      const heavyBefore = state.meta.sProcess.heavy;
       state = advanceAll(state, 0.5, 0.1).state;
-      if (!state.meta.shop.auto) state = buyCheapest(state, TARGET_STAGES[TARGET_FOR[currency]]);
+      heavyEarned += state.meta.sProcess.heavy - heavyBefore;
+      if (!state.meta.shop.auto) state = buyCheapest(state, TARGET_STAGES[target]);
     }
     const before = levels(state);
     state = buyAllShopItems(state);
@@ -217,5 +223,5 @@ export function playIdle(seconds: number): IdleReport {
     ];
     for (const [mark, done] of reached) if (done && marks[mark] === undefined) marks[mark] = t;
   }
-  return { state, marks, maxDust, purchasesPer10Min, lightAt };
+  return { state, marks, maxDust, purchasesPer10Min, lightAt, heavyEarned };
 }

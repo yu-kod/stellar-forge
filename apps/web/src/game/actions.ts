@@ -12,7 +12,7 @@ import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
 import { findLightElements } from "./light";
 import { addNeutronStars, neutronStarBin } from "./rprocess";
-import { isShopItemOpen } from "./shop";
+import { funds, isShopItemOpen, spend } from "./shop";
 import { seedsPerIa } from "./sprocess";
 import { createStar } from "./star";
 import {
@@ -164,18 +164,15 @@ export function canBuyShopItem(meta: Meta, item: ShopId): boolean {
   const spec = SHOP[item];
   if (!isShopItemOpen(meta, item)) return false;
   if (spec.maxLevel !== undefined && meta.shop[item] >= spec.maxLevel) return false;
-  return meta.dust[spec.currency] >= shopCost(meta, item);
+  return funds(meta, spec.currency) >= shopCost(meta, item);
 }
 
 export function buyShopItem(state: GameState, item: ShopId): GameState {
   const { meta } = state;
   if (!canBuyShopItem(meta, item)) return state;
   const currency = SHOP[item].currency;
-  const bought: Meta = {
-    ...meta,
-    dust: { ...meta.dust, [currency]: meta.dust[currency] - shopCost(meta, item) },
-    shop: { ...meta.shop, [item]: meta.shop[item] + 1 },
-  };
+  const paid = spend(meta, currency, shopCost(meta, item));
+  const bought: Meta = { ...paid, shop: { ...meta.shop, [item]: meta.shop[item] + 1 } };
   if (item === "cluster") bought.cluster = [...meta.cluster, createSlot(bought)];
   return { star: state.star, meta: bought };
 }
@@ -186,7 +183,8 @@ export function buyAllShopItems(state: GameState): GameState {
   for (;;) {
     const affordable = SHOP_IDS.filter((item) => canBuyShopItem(next.meta, item));
     if (affordable.length === 0) return next;
-    const share = (item: ShopId) => shopCost(next.meta, item) / next.meta.dust[SHOP[item].currency];
+    const share = (item: ShopId) =>
+      shopCost(next.meta, item) / funds(next.meta, SHOP[item].currency);
     next = buyShopItem(
       next,
       affordable.reduce((a, b) => (share(b) < share(a) ? b : a))

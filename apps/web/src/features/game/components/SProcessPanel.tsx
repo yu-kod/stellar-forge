@@ -3,6 +3,7 @@ import {
   S_DISCOVERABLE,
   S_PATH_START,
   crossSection,
+  heavyRate,
   neutronMultiplier,
   seedsPerIa,
 } from "@/game/sprocess";
@@ -33,13 +34,19 @@ export function SProcessPanel({ meta, dispatch }: Props) {
       </h2>
       <p className="text-muted-foreground text-sm">
         漸近巨星分枝星になった軽い星の熱パルスが中性子を出し、鉄の種がそれをゆっくり捕まえて重い元素になる。
-        種に対して中性子が多いほど遠くまで進む。
+        種に対して中性子が多いほど遠くまで進む。原子核は恒星風で少しずつ星の外へ出て重元素の星屑になり、
+        出た分は Ia型超新星の種で補う。種を多く保つほど稼げるが、遠くまでは進まない。
       </p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-muted-foreground">白色矮星</dt>
         <dd className="text-right font-mono tabular-nums">{formatNumber(meta.whiteDwarfs)}</dd>
         <dt className="text-muted-foreground">道の上の原子核</dt>
         <dd className="text-right font-mono tabular-nums">{total.toFixed(2)}</dd>
+        <dt className="text-muted-foreground">重元素の星屑</dt>
+        <dd className="text-right font-mono tabular-nums">
+          {formatNumber(meta.sProcess.heavy)}
+          <small className="text-muted-foreground ml-2">毎秒 +{heavyRate(meta).toFixed(2)}</small>
+        </dd>
         <dt className="text-muted-foreground">中性子の倍率</dt>
         <dd className="text-right font-mono tabular-nums">×{neutronMultiplier(meta).toFixed(2)}</dd>
       </dl>

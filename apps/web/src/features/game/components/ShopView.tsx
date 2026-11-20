@@ -4,7 +4,7 @@ import { canBuyShopItem, shopCost } from "@/game/actions";
 import { isShopItemOpen } from "@/game/shop";
 import { SHOP } from "@/game/balance";
 import { DUST_IDS, SHOP_IDS, type Meta, type ShopId } from "@/game/types";
-import { ELEMENTS } from "../elements";
+import { currencyName } from "../elements";
 import { formatNumber } from "../format";
 import type { Action } from "../model";
 import { ElementChip } from "./ElementChip";
@@ -93,7 +93,7 @@ function ShopItem({ meta, item, dispatch }: Omit<Props, "meta"> & { meta: Meta; 
           <>
             交換
             <small className="text-muted-foreground font-mono text-xs">
-              {ELEMENTS[spec.currency].name}の星屑 {formatNumber(shopCost(meta, item))}
+              {currencyName(spec.currency)} {formatNumber(shopCost(meta, item))}
             </small>
           </>
         )}

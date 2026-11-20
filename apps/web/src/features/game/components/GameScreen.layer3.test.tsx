@@ -43,6 +43,16 @@ describe("GameScreen：第3層 s過程", () => {
     ).toBeInTheDocument();
   });
 
+  it("恒星風で得た重元素の星屑と、毎秒の稼ぎを見せる", () => {
+    const game = layer3(5);
+    game.meta.sProcess.heavy = 12.3;
+    game.meta.sProcess.amounts[index(S_PATH_END)] = 1000;
+    renderGame(game);
+    const panel = screen.getByRole("region", { name: "s過程" });
+    expect(panel).toHaveTextContent("重元素の星屑12.3");
+    expect(panel).toHaveTextContent("毎秒 +2.20");
+  });
+
   it("Ia型超新星を起こすと、白色矮星を1つ使って鉄の種を道に入れる", async () => {
     const { user } = renderGame(layer3(5));
     const panel = screen.getByRole("region", { name: "s過程" });

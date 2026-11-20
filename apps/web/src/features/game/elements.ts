@@ -1,4 +1,5 @@
-import type { ElementId, Target } from "@/game/types";
+import { bestTarget } from "@/game/balance";
+import type { Currency, ElementId, Target } from "@/game/types";
 
 export type ElementInfo = {
   name: string;
@@ -43,3 +44,14 @@ export const TARGET_NAMES: Record<Target, string> = {
   O: "酸素・マグネシウム",
   Si: "ケイ素・硫黄",
 };
+
+/** 恒久強化の通貨の名前 */
+export function currencyName(currency: Currency): string {
+  return currency === "heavy" ? "重元素の星屑" : `${ELEMENTS[currency].name}の星屑`;
+}
+
+/** 次の目標の通貨を貯めるための手がかり */
+export function targetHint(currency: Currency): string {
+  const target = bestTarget(currency);
+  return target ? `（狙い：${TARGET_NAMES[target]}）` : "（s過程の種を増やすと速く貯まる）";
+}

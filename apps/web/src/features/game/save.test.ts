@@ -148,6 +148,7 @@ describe("restoreSave", () => {
       discovered: [27, 38],
       looped: true,
       seedTarget: 7,
+      heavy: 12.5,
     };
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
     expect(restoreSave(raw, NOW)?.game.meta.sProcess).toEqual(game.meta.sProcess);
@@ -156,7 +157,8 @@ describe("restoreSave", () => {
   it("鉄の種の目標の量が古いセーブに無ければ初期値", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     delete save.game.meta.sProcess.seedTarget;
-    expect(restoreSave(save, NOW)?.game.meta.sProcess.seedTarget).toBe(3);
+    delete save.game.meta.sProcess.heavy;
+    expect(restoreSave(save, NOW)?.game.meta.sProcess).toMatchObject({ seedTarget: 3, heavy: 0 });
   });
 
   it("s過程の道がなければ、空の道で始める", () => {
