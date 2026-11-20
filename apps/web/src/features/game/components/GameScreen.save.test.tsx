@@ -4,7 +4,7 @@ import { createJsonStorage } from "@app/web-core";
 import { describe, expect, it } from "vitest";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
-import { manualTicker } from "@/test-utils/game";
+import { aboutToCollapse, manualTicker } from "@/test-utils/game";
 import { SAVE_KEY, toSave, type SaveData } from "../save";
 import { GameScreen } from "./GameScreen";
 
@@ -22,6 +22,13 @@ function setup({ saved, now = NOW }: { saved?: unknown; now?: number } = {}) {
     user: userEvent.setup(),
     saved: () => storage.get<SaveData>(SAVE_KEY),
   };
+}
+
+function setVisibility(state: "hidden" | "visible") {
+  Object.defineProperty(document, "visibilityState", { configurable: true, value: state });
+  act(() => {
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
 }
 
 function thirdGeneration(): GameState {
@@ -42,6 +49,28 @@ describe("GameScreen：保存と再開", () => {
     setup({ saved: toSave(createGame(), NOW - 125_000) });
     expect(screen.getByText("第1世代の星・125秒")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("留守のあいだに 2分 ぶん星が燃えた");
+  });
+
+  it("長い留守は少しずつ進め、その間は進み具合を見せる", () => {
+    const game = aboutToCollapse();
+    game.meta.supernovae = 10;
+    const { tick } = setup({ saved: toSave(game, NOW - 2 * 3600_000) });
+    expect(screen.getByRole("status", { name: "留守の間の進み具合" })).toHaveTextContent(
+      "留守の間を進めています（あと 1時間45分）"
+    );
+    for (let i = 0; i < 7; i++) tick(0.016);
+    expect(screen.queryByRole("status", { name: "留守の間の進み具合" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "知らせ" })).toHaveTextContent(
+      "留守のあいだに 2時間0分 ぶん星が燃えた"
+    );
+  });
+
+  it("タブが裏に回っていた間も進める", () => {
+    const { clock } = setup({ saved: toSave(createGame(), NOW) });
+    setVisibility("hidden");
+    clock.now = NOW + 90_000;
+    setVisibility("visible");
+    expect(screen.getByText("第1世代の星・90秒")).toBeInTheDocument();
   });
 
   it("少しの留守では知らせない", () => {

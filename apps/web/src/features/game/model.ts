@@ -15,6 +15,7 @@ import type { SupernovaEvent } from "@/game/advance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { canAutoRebirth } from "@/game/actions";
 import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
+import { AWAY_CHUNK_SECONDS, AWAY_LIMIT_SECONDS, advanceAway, isStopped } from "@/game/away";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { GameState, ShopId, StageId, Target } from "@/game/types";
@@ -25,7 +26,7 @@ export type Speed = 1 | 3;
 export type NoticeEvent =
   | Extract<GameEvent, { type: "ignite" | "discover" }>
   | { type: "born"; generation: number }
-  | { type: "away"; seconds: number }
+  | { type: "away"; seconds: number; supernovae: number; whiteDwarfs: number }
   | SupernovaEvent
   | { type: "autoRebirthUnlocked" }
   | { type: "layer3Unlocked" }
@@ -35,8 +36,18 @@ export type NoticeEvent =
   | { type: "layer2Unlocked" };
 export type Notice = { id: number; event: NoticeEvent };
 
+/** 留守の間の進行（長い留守はフレームごとに少しずつ進める） */
+export type Away = {
+  total: number;
+  remaining: number;
+  /** 留守の始めの超新星と白色矮星の数（知らせに差を出す） */
+  supernovae: number;
+  whiteDwarfs: number;
+};
+
 export type Model = {
   game: GameState;
+  away: Away | null;
   speed: Speed;
   notices: Notice[];
   nextNoticeId: number;
@@ -44,6 +55,7 @@ export type Model = {
 
 export type Action =
   | { type: "tick"; seconds: number }
+  | { type: "away"; seconds: number }
   | { type: "buy"; stage: StageId }
   | { type: "buyMax"; stage: StageId }
   | { type: "setAuto"; stage: StageId; on: boolean }
@@ -64,7 +76,7 @@ export type Action =
 const NOTICE_LIMIT = 4;
 
 export function createModel(game: GameState, events: NoticeEvent[] = []): Model {
-  return notify({ game, speed: 1, notices: [], nextNoticeId: 1 }, events);
+  return notify({ game, away: null, speed: 1, notices: [], nextNoticeId: 1 }, events);
 }
 
 function notify(model: Model, events: NoticeEvent[]): Model {
@@ -97,9 +109,49 @@ function lightNotice(before: GameState, after: GameState): NoticeEvent[] {
     .map((z) => ({ type: "light", z }));
 }
 
+const AWAY_NOTICE_SECONDS = 30;
+
+/** 留守の間を1かたまり進める。終わったら知らせる */
+function catchUp(model: Model, away: Away): Model {
+  const seconds = Math.min(away.remaining, AWAY_CHUNK_SECONDS);
+  const game = advanceAway(model.game, seconds);
+  // 途中で星が止まったら（超新星の画面）、それ以上は何も進まないので残りは捨てる
+  const remaining = isStopped(game) ? 0 : away.remaining - seconds;
+  const next = { ...model, game, away: remaining > 0 ? { ...away, remaining } : null };
+  const done: NoticeEvent[] =
+    remaining === 0 && away.total >= AWAY_NOTICE_SECONDS
+      ? [
+          {
+            type: "away",
+            seconds: away.total,
+            supernovae: game.meta.supernovae - away.supernovae,
+            whiteDwarfs: game.meta.whiteDwarfs - away.whiteDwarfs,
+          },
+        ]
+      : [];
+  return notify(next, [
+    ...lightNotice(model.game, game),
+    ...layer3Notice(model.game, game),
+    ...done,
+  ]);
+}
+
 export function gameReducer(model: Model, action: Action): Model {
   switch (action.type) {
+    case "away": {
+      if (action.seconds <= 0 || isStopped(model.game)) return model;
+      const { meta } = model.game;
+      const away = model.away ?? {
+        total: 0,
+        remaining: 0,
+        supernovae: meta.supernovae,
+        whiteDwarfs: meta.whiteDwarfs,
+      };
+      const total = Math.min(AWAY_LIMIT_SECONDS, away.total + action.seconds);
+      return catchUp(model, { ...away, total, remaining: away.remaining + total - away.total });
+    }
     case "tick": {
+      if (model.away) return catchUp(model, model.away);
       if (model.game.star.end && model.game.meta.cluster.length === 0) return model;
       const { state, events, clusterEvents } = advanceAll(model.game, action.seconds * model.speed);
       const discoveries = clusterEvents.filter(

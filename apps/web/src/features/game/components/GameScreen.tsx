@@ -17,7 +17,7 @@ import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame } from "@/game/star";
 import { STAGE_IDS, type GameState } from "@/game/types";
 import { currencyName, targetHint } from "../elements";
-import { formatMass, formatNumber } from "../format";
+import { formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
 import { animationFrameTicker, type Ticker } from "../ticker";
@@ -52,7 +52,6 @@ type Tab = "table" | "shop" | "records";
 const SPEEDS: Speed[] = [1, 3];
 const SAVE_EVERY_MS = 5000;
 /** これより短い留守は知らせない [秒] */
-const AWAY_NOTICE_SECONDS = 30;
 const browserStorage = createJsonStorage();
 
 function initialModel(
@@ -63,11 +62,7 @@ function initialModel(
   if (initial) return createModel(initial);
   const restored = restoreSave(storage.get(SAVE_KEY), now());
   if (!restored) return createModel(createGame());
-  const { game, awaySeconds } = restored;
-  return createModel(
-    game,
-    awaySeconds >= AWAY_NOTICE_SECONDS ? [{ type: "away", seconds: awaySeconds }] : []
-  );
+  return gameReducer(createModel(restored.game), { type: "away", seconds: restored.awaySeconds });
 }
 
 export function GameScreen({
@@ -102,8 +97,16 @@ export function GameScreen({
       lastSaved.current = now();
       storage.set(SAVE_KEY, toSave(latest.current, lastSaved.current));
     }
+    // タブが裏に回っている間は画面が止まるので、表に戻ったら離れていた時間をまとめて進める
+    let hiddenAt: number | null = null;
     function onVisibilityChange() {
-      if (document.visibilityState === "hidden") saveNow();
+      if (document.visibilityState === "hidden") {
+        saveNow();
+        hiddenAt = now();
+      } else if (hiddenAt !== null) {
+        dispatch({ type: "away", seconds: (now() - hiddenAt) / 1000 });
+        hiddenAt = null;
+      }
     }
     window.addEventListener("pagehide", saveNow);
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -131,6 +134,15 @@ export function GameScreen({
   return (
     <main className="mx-auto grid max-w-5xl gap-4 px-3 py-4 sm:px-4">
       <Notices notices={model.notices} onDismiss={dismiss} />
+      {model.away && (
+        <p
+          role="status"
+          aria-label="留守の間の進み具合"
+          className="bg-card text-muted-foreground rounded-xl border px-4 py-2 text-sm"
+        >
+          留守の間を進めています（あと {formatDuration(model.away.remaining)}）
+        </p>
+      )}
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="font-display text-2xl tracking-wider sm:text-3xl">星の炉</h1>
         <div className="text-muted-foreground flex items-center gap-2 text-sm">

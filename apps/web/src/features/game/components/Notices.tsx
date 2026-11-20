@@ -2,7 +2,7 @@ import { LIGHT_SITES } from "@/game/light";
 import { useEffect } from "react";
 import { STAGES } from "@/game/balance";
 import { ELEMENTS } from "../elements";
-import { formatNumber } from "../format";
+import { formatDuration, formatNumber } from "../format";
 import type { Notice, NoticeEvent } from "../model";
 import { elementOf } from "../periodicTable";
 
@@ -15,6 +15,7 @@ export function Notices({ notices, onDismiss }: Props) {
   return (
     <div
       role="status"
+      aria-label="知らせ"
       className="pointer-events-none fixed bottom-3 left-1/2 z-30 grid w-[min(92vw,26rem)] -translate-x-1/2 gap-1.5 sm:top-3 sm:bottom-auto"
     >
       {notices.map((notice) => (
@@ -120,8 +121,10 @@ function NoticeText({ event }: { event: NoticeEvent }) {
     case "away":
       return (
         <>
-          留守のあいだに <b className="text-ignite">{Math.round(event.seconds / 60)}分</b>{" "}
+          留守のあいだに <b className="text-ignite">{formatDuration(event.seconds)}</b>{" "}
           ぶん星が燃えた
+          {event.supernovae > 0 && `。超新星 ${formatNumber(event.supernovae)} 回`}
+          {event.whiteDwarfs > 0 && `・白色矮星 ${formatNumber(event.whiteDwarfs)} 個`}
         </>
       );
   }
