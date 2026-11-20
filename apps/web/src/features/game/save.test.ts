@@ -125,6 +125,7 @@ describe("restoreSave", () => {
     game.meta.sProcess = {
       unlocked: true,
       amounts: game.meta.sProcess.amounts.map((_, i) => i / 100),
+      produced: game.meta.sProcess.amounts.map((_, i) => i / 50),
       discovered: [27, 38],
       looped: true,
       seedTarget: 7,
@@ -139,6 +140,14 @@ describe("restoreSave", () => {
     delete save.game.meta.sProcess.seedTarget;
     delete save.game.meta.sProcess.heavy;
     expect(restoreSave(save, NOW)?.game.meta.sProcess).toMatchObject({ seedTarget: 3, heavy: 0 });
+  });
+
+  it("作った量が古いセーブに無ければ、今道の上にある量とみなす", () => {
+    const game = createGame();
+    game.meta.sProcess.amounts[3] = 0.5;
+    const save = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    delete save.game.meta.sProcess.produced;
+    expect(restoreSave(save, NOW)?.game.meta.sProcess.produced[3]).toBe(0.5);
   });
 
   it("s過程の道がなければ、空の道で始める", () => {

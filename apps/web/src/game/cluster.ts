@@ -4,7 +4,7 @@ import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
 import { dustPreview } from "./dust";
 import { unlockLayer4 } from "./rprocess";
-import { blowWinds, heavyMultiplier } from "./sprocess";
+import { blowWinds, heavyMultiplier, windKept } from "./sprocess";
 import type { ClusterSlot, GameState, Meta, Target } from "./types";
 
 /** 星団の星を、主星と同じ形（meta と star）で見る。狙いと次の質量はその星のもの */
@@ -52,7 +52,10 @@ function advanceSlot(view: GameState, seconds: number, maxStep: number): RunsRes
 /** 第3層の解放後、s過程の原子核を恒星風で外へ出す */
 function winds(meta: Meta, seconds: number): Meta {
   return meta.sProcess.unlocked
-    ? { ...meta, sProcess: blowWinds(meta.sProcess, seconds, heavyMultiplier(meta)) }
+    ? {
+        ...meta,
+        sProcess: blowWinds(meta.sProcess, seconds, heavyMultiplier(meta), windKept(meta)),
+      }
     : meta;
 }
 

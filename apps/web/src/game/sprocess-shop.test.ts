@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buyShopItem, canBuyShopItem, setSeedTarget, triggerIa } from "./actions";
-import { LAYER2_AFTER } from "./balance";
+import { LAYER2_AFTER, SHOP } from "./balance";
 import { advanceAll } from "./cluster";
 import { isShopItemOpen } from "./shop";
-import { heavyMultiplier, neutronMultiplier, seedsPerIa } from "./sprocess";
+import { S_PATH_START, heavyMultiplier, neutronMultiplier, seedsPerIa } from "./sprocess";
 import { createMeta, createStar } from "./star";
 import { SHOP_IDS, type GameState } from "./types";
+
+const index = (z: number) => z - S_PATH_START;
 
 function layer3(): GameState {
   const meta = { ...createMeta(), supernovae: LAYER2_AFTER, whiteDwarfs: 10 };
@@ -43,12 +45,25 @@ describe("第3層の強化", () => {
     expect(earned(bought) / earned(plain)).toBeCloseTo(2, 5);
   });
 
-  it("連星の質量移動（酸素）で、Ia型超新星1回の鉄の種が Lv ごとに +1", () => {
+  it("バリウム星（重元素の星屑）：恒星風で出た原子核の一部を連星の相手が受け取り、道に戻す（Lv ごとに 10%、5回まで）", () => {
     const game = layer3();
-    game.meta.dust.O = 1e9;
-    const bought = buyShopItem(game, "binary");
-    expect(seedsPerIa(bought.meta)).toBe(2);
-    expect(triggerIa(bought).meta.sProcess.amounts[0]).toBe(2);
+    game.meta.sProcess.heavy = 1e9;
+    game.meta.whiteDwarfs = 0;
+    game.meta.sProcess.amounts[index(40)] = 10;
+    const bought = buyShopItem(buyShopItem(game, "binary"), "binary");
+    expect(SHOP.binary.maxLevel).toBe(5);
+    const kept = (g: GameState) => advanceAll(g, 100).state.meta.sProcess.amounts[index(40)]!;
+    const lost = (g: GameState) => 10 - kept(g);
+    expect(lost(bought) / lost(game)).toBeCloseTo(0.8, 2);
+    const heavy = (g: GameState) =>
+      advanceAll(g, 100).state.meta.sProcess.heavy - g.meta.sProcess.heavy;
+    expect(heavy(bought) / heavy(game)).toBeCloseTo(1, 5);
+  });
+
+  it("Ia型超新星1回の鉄の種は 1（ストロンチウムで 2）。目標の量を大きく超えない", () => {
+    const game = layer3();
+    expect(seedsPerIa(game.meta)).toBe(1);
+    expect(triggerIa(game).meta.sProcess.amounts[0]).toBe(1);
   });
 });
 

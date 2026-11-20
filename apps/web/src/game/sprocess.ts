@@ -1,5 +1,6 @@
 import {
   DEFAULT_SEED_TARGET,
+  BARIUM_STAR_KEPT,
   HEAVY_PER_DREDGE_UP,
   NEUTRONS_PER_POCKET,
   S_WIND_RATE,
@@ -37,9 +38,8 @@ export const S_DISCOVERABLE_ELEMENTS: readonly number[] = Array.from(
 ).filter((z) => !R_PROCESS_ONLY.has(z));
 export const S_DISCOVERABLE = S_DISCOVERABLE_ELEMENTS.length;
 
-/** 元素を発見する量 */
+/** 元素を発見する、作った量（その元素に進んできた原子核の合計） */
 export const S_DISCOVERY_THRESHOLD = 0.05;
-const CAPTURES_FOR_FULL_THRESHOLD = 4;
 
 /** 発見の効果 */
 export const NEUTRONS_PER_DISCOVERY = 0.05;
@@ -58,6 +58,8 @@ export type SProcess = {
   discovered: number[];
   /** ビスマスから鉛に戻る循環を見たか */
   looped: boolean;
+  /** これまでに作った量（その元素に進んできた原子核の合計）。添字は Z − 26 */
+  produced: number[];
   /** 自動の Ia型超新星が保つ、道の上の原子核の量 */
   seedTarget: number;
   /** 恒星風で星の外へ出た s元素から得た、重元素の星屑 */
@@ -68,22 +70,12 @@ export function createSProcess(): SProcess {
   return {
     unlocked: false,
     amounts: Array.from({ length: S_PATH_END - S_PATH_START + 1 }, () => 0),
+    produced: Array.from({ length: S_PATH_END - S_PATH_START + 1 }, () => 0),
     discovered: [],
     looped: false,
     seedTarget: DEFAULT_SEED_TARGET,
     heavy: 0,
   };
-}
-
-/**
- * その元素を発見する量。すぐ通り抜ける元素（次へ進む中性子が少ない）は溜まりにくいので、
- * 中性子4個を基準に比例して下げる
- */
-export function discoveryThreshold(z: number): number {
-  return z === S_PATH_END
-    ? S_DISCOVERY_THRESHOLD
-    : (S_DISCOVERY_THRESHOLD * Math.min(captures(z), CAPTURES_FOR_FULL_THRESHOLD)) /
-        CAPTURES_FOR_FULL_THRESHOLD;
 }
 
 /** 元素 Z から Z+1 に進むのに捕まえる中性子の数 */
@@ -113,6 +105,7 @@ export function captureNeutrons(
   const weight = amounts.reduce((sum, a, i) => sum + a * crossSection(i + S_PATH_START), 0);
   if (weight === 0 || neutrons <= 0) return { sProcess, discovered: [], looped: false };
   const next = [...amounts];
+  const produced = [...sProcess.produced];
   let loopedNow = false;
   amounts.forEach((amount, i) => {
     if (amount === 0) return;
@@ -124,15 +117,16 @@ export function captureNeutrons(
     next[i]! -= moved;
     const to = isLast ? LEAD - S_PATH_START : i + 1;
     next[to]! += moved;
+    produced[to]! += moved;
     // ごくわずかな量（数値の端数）がビスマスに届いただけでは、循環を見たことにしない
-    if (isLast && amount >= S_DISCOVERY_THRESHOLD) loopedNow = true;
+    if (isLast && produced[i]! >= S_DISCOVERY_THRESHOLD) loopedNow = true;
   });
-  const found = next
+  const found = produced
     .map((a, i) => ({ a, z: i + S_PATH_START }))
     .filter(
       ({ a, z }) =>
         z !== S_PATH_START &&
-        a >= discoveryThreshold(z) &&
+        a >= S_DISCOVERY_THRESHOLD &&
         !isRProcessOnly(z) &&
         !sProcess.discovered.includes(z)
     )
@@ -142,6 +136,7 @@ export function captureNeutrons(
     sProcess: {
       ...sProcess,
       amounts: next,
+      produced,
       discovered: [...sProcess.discovered, ...found],
       looped: sProcess.looped || loopedNow,
     },
@@ -157,14 +152,19 @@ export function heavyValue(z: number): number {
 
 /**
  * 漸近巨星分枝星の恒星風（惑星状星雲）で、道の上の原子核が毎秒一定の割合で星の外へ出る。
- * 出た分は 量 × 価値 の重元素の星屑になる
+ * 出た分は 量 × 価値 の重元素の星屑になる。kept の割合は連星の相手が受け取り、道に戻る（バリウム星）
  */
-export function blowWinds(sProcess: SProcess, seconds: number, valueMultiplier = 1): SProcess {
+export function blowWinds(
+  sProcess: SProcess,
+  seconds: number,
+  valueMultiplier = 1,
+  kept = 0
+): SProcess {
   const out = 1 - Math.exp(-S_WIND_RATE * seconds);
   let heavy = sProcess.heavy;
   const amounts = sProcess.amounts.map((amount, i) => {
     heavy += amount * out * heavyValue(i + S_PATH_START) * valueMultiplier;
-    return amount * (1 - out);
+    return amount * (1 - out * (1 - kept));
   });
   return { ...sProcess, amounts, heavy };
 }
@@ -178,6 +178,11 @@ export function heavyRate(meta: Meta): number {
   return value * S_WIND_RATE * heavyMultiplier(meta);
 }
 
+/** 恒星風で出た原子核のうち、連星の相手が受け取って道に戻る割合（バリウム星） */
+export function windKept(meta: Meta): number {
+  return BARIUM_STAR_KEPT * meta.shop.binary;
+}
+
 /** 恒星風で出る s元素の価値の倍率（第3ドレッジアップ） */
 export function heavyMultiplier(meta: Meta): number {
   return 1 + HEAVY_PER_DREDGE_UP * meta.shop.flash;
@@ -188,7 +193,7 @@ export function nextSDiscovery(sProcess: SProcess): { z: number; progress: numbe
   const candidates = S_DISCOVERABLE_ELEMENTS.filter((z) => !sProcess.discovered.includes(z)).map(
     (z) => ({
       z,
-      progress: Math.min(1, sProcess.amounts[z - S_PATH_START]! / discoveryThreshold(z)),
+      progress: Math.min(1, sProcess.produced[z - S_PATH_START]! / S_DISCOVERY_THRESHOLD),
     })
   );
   if (candidates.length === 0) return null;
@@ -208,7 +213,7 @@ export function neutronMultiplier(meta: Meta): number {
 
 /** Ia型超新星1回で道に入る鉄の種（ストロンチウムで ×2） */
 export function seedsPerIa(meta: Meta): number {
-  return (1 + meta.shop.binary) * (meta.sProcess.discovered.includes(STRONTIUM) ? 2 : 1);
+  return meta.sProcess.discovered.includes(STRONTIUM) ? 2 : 1;
 }
 
 /** すべての星屑の倍率（バリウムで ×2） */
