@@ -28,7 +28,9 @@ triggers:
 - **モバイルファースト**：幅 390px で横スクロールを出さない。広い画面では「星と計器」と「燃焼カード」の2列
 - **色**：背景は紫がかった黒。強調色は点火の琥珀色1色だけで、点火・崩壊・次の目標にだけ使う。
   元素ごとの色（H, He, C, O, Ne, Mg, Si, S, Fe）はトークン `--el-h` などで定義し、玉ねぎ構造・チップ・周期表で同じ色を使う
-- **フォント**：見出しは Dela Gothic One、本文は Zen Kaku Gothic New、数値は IBM Plex Mono（`tabular-nums`）
+- **フォント**：見出しは Dela Gothic One、本文は Zen Kaku Gothic New、数値は IBM Plex Mono（`tabular-nums`）。
+  日本語フォントは画面に出す文字だけに絞って同梱している（`apps/web/scripts/build-fonts.mjs`）。
+  文字を足して `src/fonts.test.ts` が落ちたら `npm run fonts -w @app/web` で作り直し、できたファイルもコミットする
 - **数の書き方**：大きな数は `1.23×10⁴⁵ J` のように仮数2桁＋上付きの指数。単位は J、K、M☉ を必ず付ける
 - **動き**：点火と超新星だけを演出する（`prefers-reduced-motion` では止める）。それ以外は静かに保つ
 

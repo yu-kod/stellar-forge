@@ -32,6 +32,13 @@ export default tseslint.config(
     },
   },
   {
+    // Node で動かすスクリプト（ビルド用の道具など）
+    files: ["**/scripts/**/*.mjs"],
+    languageOptions: {
+      globals: { console: "readonly", fetch: "readonly", Buffer: "readonly", process: "readonly" },
+    },
+  },
+  {
     // shadcn/ui の生成物は variants を同じファイルから export する
     files: ["apps/web/src/components/ui/**"],
     rules: {
