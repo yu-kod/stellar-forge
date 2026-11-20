@@ -17,7 +17,7 @@ const collapsed = (star: Star | null): star is Star => star?.end === "collapse";
 
 /** 爆発的元素合成：外層にその元素を残し、爆発エネルギーが足りる崩壊 */
 const explosive =
-  (element: "O" | "Si" | "S", mass: number, boom: number) => (meta: Meta, star: Star | null) =>
+  (element: "O" | "Si", mass: number, boom: number) => (meta: Meta, star: Star | null) =>
     collapsed(star) && star.mass[element] >= mass && meta.shop.boom >= boom;
 
 export const LIGHT_ELEMENTS: readonly LightElement[] = [
@@ -57,11 +57,15 @@ export const LIGHT_ELEMENTS: readonly LightElement[] = [
     site: "爆発的ケイ素燃焼（ケイ素 3 M☉・爆発エネルギー Lv5）",
     found: explosive("Si", 3, 5),
   },
-  { z: 21, site: "爆発的ケイ素燃焼（硫黄 1 M☉・爆発エネルギー Lv6）", found: explosive("S", 1, 6) },
+  {
+    z: 21,
+    site: "α過程の凍結（爆発エネルギー Lv6 で崩壊）",
+    found: (meta, star) => collapsed(star) && meta.shop.boom >= 6,
+  },
   {
     z: 22,
-    site: "爆発的ケイ素燃焼の ⁴⁴Ti（硫黄 2 M☉・爆発エネルギー Lv8）",
-    found: explosive("S", 2, 8),
+    site: "α過程の凍結の ⁴⁴Ti（爆発エネルギー Lv7 で崩壊）",
+    found: (meta, star) => collapsed(star) && meta.shop.boom >= 7,
   },
   { z: 23, site: "Ia型超新星（5回）", found: (meta) => meta.iaSupernovae >= 5 },
   { z: 24, site: "Ia型超新星（20回）", found: (meta) => meta.iaSupernovae >= 20 },

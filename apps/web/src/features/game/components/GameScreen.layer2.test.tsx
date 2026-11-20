@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { LAYER2_AFTER } from "@/game/balance";
+import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
 import { createGame, createStar } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { collapsed, manualTicker, openTab } from "@/test-utils/game";
@@ -25,6 +25,15 @@ function lowMassStar(): GameState {
   game.meta.nextMass = 3;
   return { ...game, star: createStar(game.meta) };
 }
+
+describe("GameScreen：第2層の目標", () => {
+  it("第3層までの白色矮星の進み具合を、目標に添える", () => {
+    const game = layer2();
+    game.meta.whiteDwarfs = 24;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(`第3層まで白色矮星 24 / ${LAYER3_AFTER}`);
+  });
+});
 
 describe("GameScreen：第2層 星の質量を選ぶ", () => {
   it("40 M☉ を超えるとブラックホール。130 M☉ を超える星には対不安定型超新星の一言を添える", () => {
