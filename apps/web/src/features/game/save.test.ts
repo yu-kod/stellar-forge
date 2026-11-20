@@ -165,6 +165,20 @@ describe("restoreSave", () => {
     expect(restoreSave(save, NOW)?.game.meta.sProcess).toEqual(createGame().meta.sProcess);
   });
 
+  it("軽い元素と Ia型超新星の数も戻し、古いセーブに無ければ空で始める", () => {
+    const game = createGame();
+    game.meta.lightFound = [3, 11];
+    game.meta.iaSupernovae = 12;
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({
+      lightFound: [3, 11],
+      iaSupernovae: 12,
+    });
+    delete raw.game.meta.lightFound;
+    delete raw.game.meta.iaSupernovae;
+    expect(restoreSave(raw, NOW)?.game.meta).toMatchObject({ lightFound: [], iaSupernovae: 0 });
+  });
+
   it("星団を持っているのに星が保存されていなければ、作り直す", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     save.game.meta.shop.cluster = 1;
@@ -192,6 +206,8 @@ describe("restoreSave", () => {
     ["s過程の発見が数でない", saveWith((g) => (g.meta.sProcess.discovered = ["Sr"]))],
     ["s過程の発見が配列でない", saveWith((g) => (g.meta.sProcess.discovered = 38))],
     ["s過程の解放が真偽値でない", saveWith((g) => (g.meta.sProcess.unlocked = "yes"))],
+    ["軽い元素が配列でない", saveWith((g) => (g.meta.lightFound = 3))],
+    ["軽い元素が数でない", saveWith((g) => (g.meta.lightFound = ["Li"]))],
     [
       "星団の星の狙いがない",
       saveWith((g) => (g.meta.cluster = [{ star: g.star, nextMass: 7, target: null }])),

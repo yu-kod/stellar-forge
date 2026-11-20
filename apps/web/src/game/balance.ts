@@ -379,6 +379,9 @@ export const RECYCLE_PER_LEVEL = 0.25;
 export const NEBULA_PER_LEVEL = 0.5;
 export const PULSE_PER_LEVEL = 2;
 
+/** 軽い元素1つあたりの、すべての星屑の上乗せ（足し算） */
+export const LAYER3_LIGHT_DUST = 0.05;
+
 /** 第3層の強化の効果 */
 export const NEUTRONS_PER_UPGRADE = 0.25;
 /** 鉄の種の目標の量（自動の Ia型超新星）の初期値 */

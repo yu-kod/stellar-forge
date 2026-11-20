@@ -92,7 +92,7 @@ describe("gameReducer", () => {
   it("rebirth は終わった星から次の星を生み、その知らせを積む", () => {
     const model = gameReducer(createModel(collapsed()), { type: "rebirth" });
     expect(model.game.star.generation).toBe(2);
-    expect(model.notices).toEqual([{ id: 1, event: { type: "born", generation: 2 } }]);
+    expect(model.notices[0]).toEqual({ id: 1, event: { type: "born", generation: 2 } });
   });
 
   it("まだ終わっていない星では rebirth しない", () => {

@@ -10,6 +10,7 @@ import {
 } from "./balance";
 import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
+import { findLightElements } from "./light";
 import { isShopItemOpen } from "./shop";
 import { seedsPerIa } from "./sprocess";
 import { createStar } from "./star";
@@ -93,10 +94,14 @@ export function triggerIa(state: GameState): GameState {
   if (!meta.sProcess.unlocked || meta.whiteDwarfs < 1) return state;
   const amounts = [...meta.sProcess.amounts];
   amounts[0]! += seedsPerIa(meta);
-  return {
-    ...state,
-    meta: { ...meta, whiteDwarfs: meta.whiteDwarfs - 1, sProcess: { ...meta.sProcess, amounts } },
+  const next: Meta = {
+    ...meta,
+    whiteDwarfs: meta.whiteDwarfs - 1,
+    iaSupernovae: meta.iaSupernovae + 1,
+    sProcess: { ...meta.sProcess, amounts },
   };
+  next.lightFound = [...next.lightFound, ...findLightElements(next, null)];
+  return { ...state, meta: next };
 }
 
 /** 自動の Ia型超新星が保つ、道の上の原子核の量を決める（1以上の整数） */
@@ -141,6 +146,7 @@ export function rebirth(state: GameState): GameState {
     // 記録は超新星だけ。白色矮星は数だけ数える（星団で何百も生まれるため）
     log: star.end === "whiteDwarf" ? meta.log : [record, ...meta.log].slice(0, LOG_LIMIT),
   };
+  nextMeta.lightFound = [...nextMeta.lightFound, ...findLightElements(nextMeta, star)];
   return { meta: nextMeta, star: createStar(nextMeta) };
 }
 

@@ -166,6 +166,12 @@ function parseSProcess(value: unknown): SProcess {
   };
 }
 
+function parseNumbers(value: unknown): number[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new InvalidSave();
+  return value.map(requireNumber);
+}
+
 function parseMeta(value: unknown): Meta {
   const raw = requireObject(value);
   const defaults = createMeta();
@@ -192,6 +198,8 @@ function parseMeta(value: unknown): Meta {
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
     cluster: ((raw.cluster as unknown[] | undefined) ?? []).map(parseSlot),
     sProcess: parseSProcess(raw.sProcess),
+    iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
+    lightFound: parseNumbers(raw.lightFound),
   };
   // 星団を買ったのに星が無ければ作り直す
   while (meta.cluster.length < meta.shop.cluster) meta.cluster.push(createSlot(meta));

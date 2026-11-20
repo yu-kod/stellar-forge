@@ -142,6 +142,8 @@ export function playCampaign(
 
 export type IdleReport = {
   state: GameState;
+  /** 軽い元素を見つけた時刻 [秒]（原子番号ごと） */
+  lightAt: Record<number, number>;
   /** 解放などが起きた時刻 [秒] */
   marks: Partial<
     Record<
@@ -173,6 +175,7 @@ export function playIdle(seconds: number): IdleReport {
   const purchasesPer10Min: number[] = [];
   let maxDust = 0;
   let purchases = 0;
+  const lightAt: Record<number, number> = {};
   const levels = (s: GameState) => SHOP_IDS.reduce((sum, id) => sum + s.meta.shop[id], 0);
   for (let t = 1; t <= seconds; t++) {
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
@@ -200,6 +203,7 @@ export function playIdle(seconds: number): IdleReport {
       purchases = 0;
     }
     maxDust = Math.max(maxDust, ...Object.values(state.meta.dust));
+    for (const z of state.meta.lightFound) lightAt[z] ??= t;
     const reached: [keyof IdleReport["marks"], boolean][] = [
       ["auto", state.meta.shop.auto > 0],
       ["layer2", state.meta.supernovae >= LAYER2_AFTER],
@@ -213,5 +217,5 @@ export function playIdle(seconds: number): IdleReport {
     ];
     for (const [mark, done] of reached) if (done && marks[mark] === undefined) marks[mark] = t;
   }
-  return { state, marks, maxDust, purchasesPer10Min };
+  return { state, marks, maxDust, purchasesPer10Min, lightAt };
 }

@@ -84,6 +84,10 @@ export type Meta = {
   cluster: ClusterSlot[];
   /** 第3層 s過程の道 */
   sProcess: SProcess;
+  /** 起こした Ia型超新星の数 */
+  iaSupernovae: number;
+  /** 見つけた軽い元素（リチウム〜マンガン）の原子番号 */
+  lightFound: number[];
 };
 
 /** 星団で主星と一緒に燃やす星。いつも自動で強化し、終わったら自動で次の星を生む */
