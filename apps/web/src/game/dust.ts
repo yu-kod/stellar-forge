@@ -8,6 +8,7 @@ import {
   PLANETARY_NEBULA_DUST,
   RECYCLE_PER_LEVEL,
 } from "./balance";
+import { sDustMultiplier } from "./sprocess";
 import { DUST_IDS, type DustId, type Meta, type Star } from "./types";
 
 /** 外層に残っている重元素（炭素〜硫黄）の合計 [M☉] */
@@ -16,7 +17,10 @@ export function ejectedMetals(star: Star): number {
 }
 
 function dustMultiplier(meta: Meta, star: Star): number {
-  let k = BOOM_PER_LEVEL ** meta.shop.boom * RECYCLE_PER_LEVEL ** meta.shop.recycle;
+  let k =
+    BOOM_PER_LEVEL ** meta.shop.boom *
+    RECYCLE_PER_LEVEL ** meta.shop.recycle *
+    sDustMultiplier(meta);
   if (meta.discovered.O) k *= OXYGEN_DUST_BONUS;
   if (star.end === "fizzle") k *= FIZZLE_DUST_FACTOR;
   if (star.end === "whiteDwarf") {

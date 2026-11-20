@@ -8,6 +8,7 @@ import {
   PRE_MAIN_SEQUENCE_TEMPERATURE,
   REFERENCE_MASS,
 } from "./balance";
+import { createSProcess } from "./sprocess";
 import { ELEMENT_IDS, type Composition, type GameState, type Meta, type Star } from "./types";
 
 export const emptyComposition = (): Composition =>
@@ -54,6 +55,7 @@ export function createMeta(): Meta {
     autoRebirth: true,
     log: [],
     cluster: [],
+    sProcess: createSProcess(),
   };
 }
 

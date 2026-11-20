@@ -188,6 +188,11 @@ export const CNO_NITROGEN_PER_HYDROGEN = 0.01;
 /** 軽い星では外層の対流で炭素がよく混ざり、窒素をたくさん作る */
 export const LOW_MASS_CNO_NITROGEN_PER_HYDROGEN = 0.2;
 
+/** 第3層（s過程）を解放する白色矮星の数 */
+export const LAYER3_AFTER = 3;
+/** 軽い星がヘリウム燃焼 1 M☉ あたりに出す中性子（鉄の種 1 が 1 個捕まえる量を 1 とする） */
+export const NEUTRONS_PER_HELIUM = 1;
+
 /** 長い時間を進めるときの1回の更新の最大の長さ [秒] */
 export const MAX_STEP_SECONDS = 0.05;
 

@@ -1,3 +1,5 @@
+import type { SProcess } from "./sprocess";
+
 export const ELEMENT_IDS = ["H", "He", "C", "N", "O", "Ne", "Mg", "Si", "S", "Fe"] as const;
 export type ElementId = (typeof ELEMENT_IDS)[number];
 
@@ -74,6 +76,8 @@ export type Meta = {
   log: SupernovaRecord[];
   /** 星団の星（主星のほかに最大2つ） */
   cluster: ClusterSlot[];
+  /** 第3層 s過程の道 */
+  sProcess: SProcess;
 };
 
 /** 星団で主星と一緒に燃やす星。いつも自動で強化し、終わったら自動で次の星を生む */
