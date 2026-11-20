@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { MERGER_SECONDS, R_ELEMENTS, R_PATH_START, formBinary, rThreshold } from "@/game/merger";
 import { createGame } from "@/game/star";
+import { SHOP } from "@/game/balance";
+import { formatNumber } from "../format";
 import { createSlot } from "@/game/actions";
 import type { GameState } from "@/game/types";
 import { manualTicker, openTab } from "@/test-utils/game";
@@ -155,6 +157,12 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     return screen.getByRole("note");
   };
 
+  it("届かない元素の案内は、まだの元素の先頭2つのときだけ出す（遠い元素で目標を埋めない）", () => {
+    const game = layer4({ [2]: 5, [HEAVY]: 5 }); // 1.4 と 2.0：第3ピークには遮蔽が要る
+    expect(goalOf(game)).toHaveTextContent("r過程：次は");
+    expect(screen.getByRole("note")).not.toHaveTextContent("届く組がない");
+  });
+
   it("在庫でも、星団の星がこれから残す中性子星でも届かなければ、星団の星の質量を目標に出す", () => {
     const game = layer4({ [LIGHT]: 5, [6]: 5 }); // 1.2 と 1.8：ランタノイドに届かない
     game.meta.rProcess.discovered = [52, 53, 54];
@@ -171,6 +179,17 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     );
   });
 
+  it("遮蔽をあと1回強化すれば届くなら遮蔽を、質量を変えても届くならそれも出す", () => {
+    const game = layer4({ [2]: 5, [HEAVY]: 5 });
+    game.meta.rProcess.discovered = [52, 53, 54, 63, 64, 65, 66, 67, 68, 69];
+    expect(goalOf(game)).toHaveTextContent(
+      "レニウム（Re）に届く組がない：ニュートリノの遮蔽（酸素の星屑 あと"
+    );
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "。または星団の星を 10 M☉ と 40 M☉ にすると、1.2 + 2.0 M☉ の組で届く"
+    );
+  });
+
   it("どの組でも届かなければ、ニュートリノの遮蔽を勧める", () => {
     const game = layer4();
     game.meta.rProcess.discovered = [...R_ELEMENTS];
@@ -179,7 +198,7 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     );
     game.meta.lightFound = [3, 4, 5, 9, 11, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25];
     expect(goalOf(game)).toHaveTextContent(
-      "ウラン（U）に届く組がない：星屑タブでニュートリノの遮蔽を強化して Ye を下げる"
+      `ウラン（U）に届く組がない：ニュートリノの遮蔽（酸素の星屑 あと ${formatNumber(SHOP.shield.baseCost)}）で Ye を下げる`
     );
   });
 

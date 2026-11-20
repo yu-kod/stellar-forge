@@ -30,6 +30,9 @@ import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame, maxMass } from "@/game/star";
 import { SHOP_IDS, STAGE_IDS, type GameState } from "@/game/types";
 import { currencyName, targetHint } from "../elements";
+import { shopCost } from "@/game/actions";
+import { funds } from "@/game/shop";
+import type { Meta } from "@/game/types";
 import { formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
@@ -329,10 +332,17 @@ function LayerGoal({ game }: { game: GameState }) {
   );
 }
 
-/** 届く組がないとき、どうすれば届くか */
-function PairHint({ z, advice }: { z: number; advice: PairAdvice }) {
-  const target = elementOf(z);
+/** 星団の星の質量の案内 */
+function massesText(hint: { bins: [number, number]; masses: [number, number] }): string {
   const mass = (bin: number) => NEUTRON_STAR_MASSES[bin]!.toFixed(1);
+  return `星団の星を ${hint.masses[0]} M☉ と ${hint.masses[1]} M☉ にすると、${mass(hint.bins[0])} + ${mass(hint.bins[1])} M☉ の組で届く`;
+}
+
+/** 届く組がないとき、どうすれば届くか */
+function PairHint({ meta, z, advice }: { meta: Meta; z: number; advice: PairAdvice }) {
+  const target = elementOf(z);
+  // 買えるときは、目標が先に「星屑タブで交換できる」になるので、ここでは足りない分を出す
+  const shieldShortfall = shopCost(meta, "shield") - funds(meta, SHOP.shield.currency);
   return (
     <>
       <b className="text-ignite">
@@ -340,8 +350,11 @@ function PairHint({ z, advice }: { z: number; advice: PairAdvice }) {
       </b>
       に届く組がない：
       {advice.type === "masses"
-        ? `星団の星を ${advice.masses[0]} M☉ と ${advice.masses[1]} M☉ にすると、${mass(advice.bins[0])} + ${mass(advice.bins[1])} M☉ の組で届く`
-        : "星屑タブでニュートリノの遮蔽を強化して Ye を下げる"}
+        ? massesText(advice)
+        : `ニュートリノの遮蔽（${currencyName(SHOP.shield.currency)} あと ${formatNumber(shieldShortfall)}）で Ye を下げる`}
+      {advice.type === "shield" &&
+        advice.alternative &&
+        `。または${massesText(advice.alternative)}`}
     </>
   );
 }
@@ -363,7 +376,7 @@ function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
   }
   const goal = rGoal(meta);
   const advice = pairAdvice(meta, goal);
-  if (blocks(advice)) return <PairHint z={goal} advice={advice} />;
+  if (blocks(advice)) return <PairHint meta={meta} z={goal} advice={advice} />;
   const element = elementOf(goal);
   const progress = Math.min(1, rProcess.amounts[goal - R_PATH_START]! / rThreshold(goal));
   if (rDone) {
@@ -374,7 +387,9 @@ function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
       </>
     );
   }
+  // 遠い元素の案内で目標を埋めない：まだの元素の先頭2つだけ
   const blocked = R_ELEMENTS.filter((z) => !rProcess.discovered.includes(z))
+    .slice(0, 2)
     .map((z) => ({ z, advice: pairAdvice(meta, z) }))
     .find((item) => blocks(item.advice));
   return (
@@ -387,7 +402,7 @@ function RProcessGoal({ meta }: { meta: GameState["meta"] }) {
       {advice.type === "wait" && "。届く中性子星が星団の超新星から来るのを待つ"}
       {blocked && (
         <>
-          。<PairHint z={blocked.z} advice={blocked.advice} />
+          。<PairHint meta={meta} z={blocked.z} advice={blocked.advice} />
         </>
       )}
     </>

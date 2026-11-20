@@ -92,13 +92,10 @@ describe("第4層の強化", () => {
     expect(autoBinary(game).meta.rProcess.binaries).toHaveLength(1);
   });
 
-  it("ニュートリノの遮蔽は、ランタノイドがそろうまで、まとめて交換で買わない（はじめの組 1.4 + 2.0 M☉ がランタノイドに届かなくなる）", () => {
+  it("ニュートリノの遮蔽は、まとめて交換でいつでも買う（買えしだい買うほうが速い）", () => {
     const game = layer4();
-    expect(isShopItemUseful(game.meta, "shield")).toBe(false);
-    expect(buyAllShopItems(game).meta.shop.shield).toBe(0);
-    game.meta.rProcess.discovered = [63, 64, 65, 66, 67, 68, 69];
     expect(isShopItemUseful(game.meta, "shield")).toBe(true);
-    expect(buyShopItem(layer4(), "shield").meta.shop.shield).toBe(1); // 手で買うことはできる
+    expect(buyAllShopItems(game).meta.shop.shield).toBeGreaterThan(0);
   });
 
   it("自動化は毎回の更新で働く", () => {
