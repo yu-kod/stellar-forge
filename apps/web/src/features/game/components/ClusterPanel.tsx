@@ -13,7 +13,6 @@ type Props = { meta: Meta; dispatch: (action: Action) => void };
 
 /** 主星と一緒に燃える星団の星。いつも自動で強化し、終わったら自動で次の星を生む */
 export function ClusterPanel({ meta, dispatch }: Props) {
-  if (meta.cluster.length === 0) return null;
   return (
     <section aria-labelledby="cluster-label" className="grid gap-2">
       <h2 id="cluster-label" className="text-base font-semibold">

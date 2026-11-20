@@ -5,13 +5,14 @@ import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
 import { S_PATH_END, S_PATH_START } from "@/game/sprocess";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
-import { manualTicker } from "@/test-utils/game";
+import { manualTicker, openTab } from "@/test-utils/game";
 import { gameReducer, createModel } from "../model";
 import { GameScreen } from "./GameScreen";
 
 function renderGame(initial: GameState) {
   const clock = manualTicker();
   render(<GameScreen initial={initial} ticker={clock.ticker} />);
+  openTab("s過程");
   return { ...clock, user: userEvent.setup() };
 }
 

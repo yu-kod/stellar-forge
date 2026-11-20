@@ -13,8 +13,8 @@ describe("TargetPicker：狙いごとの見込み", () => {
   it("燃焼の自動制御を持っていれば、狙いごとに次の1周の長さと多く取れる星屑を見せる", () => {
     render(<TargetPicker meta={midMeta()} dispatch={() => {}} />);
     const carbon = screen.getByRole("radio", { name: "炭素" });
-    expect(carbon).toHaveAccessibleDescription(/^約\d+秒・炭素 [\d.,×⁰-⁹]+・/);
-    expect(screen.getByRole("radio", { name: "ネオン" })).toHaveAccessibleDescription(/ネオン/);
+    expect(carbon).toHaveAccessibleDescription(/^約\d+秒 C [\d.,×⁰¹²³⁴⁵⁶⁷⁸⁹]+ \w+ /);
+    expect(screen.getByRole("radio", { name: "ネオン" })).toHaveAccessibleDescription(/ Ne /);
   });
 
   it("自動制御がなければ見込みは出さない（手で強化するので当てにならない）", () => {

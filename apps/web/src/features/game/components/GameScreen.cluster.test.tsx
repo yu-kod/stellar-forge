@@ -5,12 +5,13 @@ import { buyShopItem } from "@/game/actions";
 import { LAYER2_AFTER } from "@/game/balance";
 import { createGame, createStar } from "@/game/star";
 import type { GameState } from "@/game/types";
-import { collapsed, manualTicker } from "@/test-utils/game";
+import { collapsed, manualTicker, openTab } from "@/test-utils/game";
 import { GameScreen } from "./GameScreen";
 
 function renderGame(initial: GameState) {
   const clock = manualTicker();
   render(<GameScreen initial={initial} ticker={clock.ticker} />);
+  openTab("星団");
   return { ...clock, user: userEvent.setup() };
 }
 

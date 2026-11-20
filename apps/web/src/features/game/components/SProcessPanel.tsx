@@ -24,7 +24,6 @@ const LABELED = new Map([
 
 /** 第3層：Ia型超新星で鉄の種を入れ、軽い星の中性子で一歩ずつ重くする */
 export function SProcessPanel({ meta, dispatch }: Props) {
-  if (!meta.sProcess.unlocked) return null;
   const { amounts, discovered } = meta.sProcess;
   const total = amounts.reduce((sum, a) => sum + a, 0);
   return (
@@ -128,7 +127,7 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
 
 const SEED_TARGETS = [1, 3, 10, 30];
 
-/** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど手前の元素がたくさん */
+/** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど重元素の星屑を稼ぐ */
 function SeedTargetPicker({ meta, dispatch }: Props) {
   return (
     <fieldset className="grid gap-2">
@@ -158,7 +157,7 @@ function SeedTargetPicker({ meta, dispatch }: Props) {
         ))}
       </div>
       <p className="text-muted-foreground text-sm">
-        少ないほど1つの種が多くの中性子を捕まえて遠く（鉛・ビスマス）まで進む。多いほど手前の元素がたくさんできる。
+        少ないほど1つの種が多くの中性子を捕まえて遠く（鉛・ビスマス）まで進む。多いほど恒星風で重元素の星屑を多く稼ぎ、白色矮星を多く使う。
       </p>
     </fieldset>
   );
