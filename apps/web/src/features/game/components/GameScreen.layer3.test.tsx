@@ -49,6 +49,12 @@ describe("GameScreen：第3層 s過程", () => {
     ).toBeInTheDocument();
   });
 
+  it("組成グラフの目印（Fe・Sr・Ba・Pb）は、グラフの縮みによらない大きさの文字にする", () => {
+    renderGame(layer3());
+    const label = screen.getByText("Sr", { selector: "span" });
+    expect(label).toHaveClass("text-xs");
+  });
+
   it("恒星風で得た重元素の星屑と、毎秒の稼ぎを見せる", () => {
     const game = layer3(5);
     game.meta.sProcess.heavy = 12.3;

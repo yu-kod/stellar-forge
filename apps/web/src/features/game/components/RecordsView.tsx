@@ -110,11 +110,17 @@ export function RecordsView({ meta, onEnding }: { meta: Meta; onEnding?: () => v
                 </td>
               </tr>
             ) : (
-              meta.log.map((record) => (
-                <tr key={record.generation} className="border-b">
-                  <td className="px-2 py-1 font-mono">第{record.generation}世代</td>
-                  <td className="px-2 py-1 font-mono">{Math.round(record.time)}秒</td>
-                  <td className="px-2 py-1 font-mono">{formatMass(record.ejected)}</td>
+              meta.log.map((record, i) => (
+                <tr key={`${record.generation}-${i}`} className="border-b">
+                  <td className="px-2 py-1 font-mono whitespace-nowrap">
+                    第{record.generation}世代
+                  </td>
+                  <td className="px-2 py-1 font-mono whitespace-nowrap">
+                    {Math.round(record.time)}秒
+                  </td>
+                  <td className="px-2 py-1 font-mono whitespace-nowrap">
+                    {formatMass(record.ejected)}
+                  </td>
                   <td className="px-2 py-1">
                     {DUST_IDS.some((id) => record.gain[id] > 0) ? (
                       <ul

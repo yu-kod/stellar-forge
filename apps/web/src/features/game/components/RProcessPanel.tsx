@@ -59,12 +59,15 @@ export function RProcessPanel({ meta, dispatch }: Props) {
       <h2 id={`${ids}-label`} className="text-base font-semibold">
         中性子星合体
       </h2>
-      <p className="text-muted-foreground text-sm">
-        超新星の後に残った中性子星を2つずつ連星にする。重力波を出して近づき、合体すると中性子の多い物質が飛び散って、
-        原子核が中性子を一気に捕まえる（r過程）。放出物は2つ：潮汐で飛ぶもの（質量の差が大きい組ほど多く、中性子が多い＝Ye
-        が低いので重い元素まで届く。赤いキロノバ）と、合体後に残る星の円盤風（合計が軽い組ほど多く、Ye
-        が高く第2ピークまで。青いキロノバ）。重い組ほど重力波で早く合体する。金は中性子星合体で作る。
-      </p>
+      <details className="text-muted-foreground text-sm">
+        <summary className="text-foreground cursor-pointer py-2">しくみ</summary>
+        <p>
+          超新星の後に残った中性子星を2つずつ連星にする。重力波を出して近づき、合体すると中性子の多い物質が飛び散って、
+          原子核が中性子を一気に捕まえる（r過程）。放出物は2つ：潮汐で飛ぶもの（質量の差が大きい組ほど多く、中性子が多い＝Ye
+          が低いので重い元素まで届く。赤いキロノバ）と、合体後に残る星の円盤風（合計が軽い組ほど多く、Ye
+          が高く第2ピークまで。青いキロノバ）。重い組ほど重力波で早く合体する。金は中性子星合体で作る。
+        </p>
+      </details>
       <ul aria-label="中性子星の在庫" className="grid grid-cols-3 gap-1.5 font-mono text-sm">
         {pool.map((n, bin) => (
           <li
