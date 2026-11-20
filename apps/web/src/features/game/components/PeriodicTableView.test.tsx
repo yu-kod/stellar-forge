@@ -37,3 +37,13 @@ describe("PeriodicTableView", () => {
     expect(screen.getByRole("listitem", { name })).toBeInTheDocument();
   });
 });
+
+describe("PeriodicTableView：発見の数", () => {
+  it("s過程と r過程の両方で作った元素は1つと数える", () => {
+    const meta = createMeta();
+    meta.sProcess.discovered = [52, 53];
+    meta.rProcess.discovered = [52, 53, 63];
+    render(<PeriodicTableView meta={meta} />);
+    expect(screen.getByText(/発見した元素/)).toHaveTextContent("発見した元素 4 / 83");
+  });
+});

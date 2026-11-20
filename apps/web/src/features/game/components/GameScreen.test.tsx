@@ -5,7 +5,7 @@ import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { aboutToCollapse, collapsed, manualTicker } from "@/test-utils/game";
 import { GameScreen } from "./GameScreen";
-import { LAYER2_AFTER } from "@/game/balance";
+import { LAYER2_AFTER, SHOP } from "@/game/balance";
 
 function renderGame(initial: GameState = createGame()) {
   const clock = manualTicker();
@@ -472,12 +472,24 @@ describe("GameScreen：星屑の交換", () => {
     expect(screen.getByRole("article", { name: "星間ガスの再利用" })).toBeInTheDocument();
   });
 
-  it("1回きりの強化は、取得したらそう見せる", async () => {
+  it("取り終えた強化は、1行に畳んで取得済みと見せる（交換のボタンは出さない）", async () => {
     const game = createGame();
     game.meta.shop.auto = 1;
     const { user } = renderGame(game);
     await user.click(screen.getByRole("tab", { name: "星屑" }));
     const item = screen.getByRole("article", { name: "燃焼の自動制御" });
-    expect(within(item).getByRole("button", { name: "取得済み" })).toBeDisabled();
+    expect(item).toHaveTextContent("取得済み");
+    expect(within(item).queryByRole("button")).not.toBeInTheDocument();
+    expect(item).not.toHaveTextContent(SHOP.auto.description);
+  });
+});
+
+describe("GameScreen：自動で次の星を生む設定のとき", () => {
+  it("終わった星から始まっても超新星の画面は出さない", () => {
+    const game = collapsed();
+    game.meta.supernovae = 20;
+    game.meta.autoRebirth = true;
+    renderGame(game);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

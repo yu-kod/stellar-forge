@@ -153,3 +153,14 @@ describe("gameReducer：星団", () => {
     expect(targeted.game.meta.cluster[0]).toMatchObject({ nextMass: 3, target: "Si" });
   });
 });
+
+describe("gameReducer：自動で次の星を生む設定で、終わった星から始まったとき", () => {
+  it("次の更新で次の星を生む（超新星の画面で止まらない）", () => {
+    const game = collapsed();
+    game.meta.supernovae = 20;
+    game.meta.autoRebirth = true;
+    const model = gameReducer(createModel(game), { type: "tick", seconds: 0.1 });
+    expect(model.game.star.end).toBeNull();
+    expect(model.game.star.generation).toBeGreaterThan(game.star.generation);
+  });
+});

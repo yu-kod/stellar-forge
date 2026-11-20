@@ -93,6 +93,18 @@ function ShopItem({ meta, item, dispatch }: Omit<Props, "meta"> & { meta: Meta; 
   const spec = SHOP[item];
   const level = meta.shop[item];
   const owned = spec.maxLevel !== undefined && level >= spec.maxLevel;
+  // 取り終えた強化は1行に畳む（スマホで星屑タブが長くならないように）
+  if (owned) {
+    return (
+      <article
+        aria-labelledby={titleId}
+        className="text-muted-foreground flex justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+      >
+        <span id={titleId}>{spec.name}</span>
+        <span>取得済み</span>
+      </article>
+    );
+  }
   return (
     <article aria-labelledby={titleId} className="grid content-start gap-2 rounded-xl border p-3">
       <h4 className="flex justify-between gap-2 text-base font-semibold">
@@ -108,16 +120,10 @@ function ShopItem({ meta, item, dispatch }: Omit<Props, "meta"> & { meta: Meta; 
         disabled={!canBuyShopItem(meta, item)}
         onClick={() => dispatch({ type: "buyShopItem", item })}
       >
-        {owned ? (
-          "取得済み"
-        ) : (
-          <>
-            交換
-            <small className="text-muted-foreground font-mono text-xs">
-              {currencyName(spec.currency)} {formatNumber(shopCost(meta, item))}
-            </small>
-          </>
-        )}
+        交換
+        <small className="text-muted-foreground font-mono text-xs">
+          {currencyName(spec.currency)} {formatNumber(shopCost(meta, item))}
+        </small>
       </Button>
     </article>
   );

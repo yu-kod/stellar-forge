@@ -177,7 +177,7 @@ export function GameScreen({
       <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)} className="min-w-0 gap-3">
         <TabsList
           aria-label="画面"
-          className="w-full max-w-full justify-start overflow-x-auto sm:w-fit"
+          className="grid h-auto w-full grid-cols-4 sm:flex sm:h-9 sm:w-fit"
         >
           <TabsTrigger value="star">星</TabsTrigger>
           {game.meta.cluster.length > 0 && <TabsTrigger value="cluster">星団</TabsTrigger>}
@@ -251,9 +251,9 @@ export function GameScreen({
   );
 }
 
-function GoalText({ game }: { game: GameState }) {
-  const { meta, star } = game;
-  if (isLowMass(star) && star.agbStartedAt !== null) {
+/** 軽い星の今の様子（1行目）。軽い星を燃やしている間も、2行目に層の目標を出す */
+function LowMassText({ star }: { star: GameState["star"] }) {
+  if (star.agbStartedAt !== null) {
     const left = Math.max(0, Math.ceil(AGB_SECONDS - (star.time - star.agbStartedAt)));
     return (
       <>
@@ -261,15 +261,32 @@ function GoalText({ game }: { game: GameState }) {
       </>
     );
   }
-  if (isLowMass(star)) {
-    return (
-      <>
-        外層の水素が{" "}
-        <b className="text-ignite">{formatMass(WHITE_DWARF_HYDROGEN * star.initialMass)}</b>{" "}
-        を下回ると白色矮星になる。それまでにヘリウムを炭素・酸素に変えよう
-      </>
-    );
-  }
+  return (
+    <>
+      外層の水素が{" "}
+      <b className="text-ignite">{formatMass(WHITE_DWARF_HYDROGEN * star.initialMass)}</b>{" "}
+      を下回ると白色矮星になる。それまでにヘリウムを炭素・酸素に変えよう
+    </>
+  );
+}
+
+function GoalText({ game }: { game: GameState }) {
+  if (!isLowMass(game.star)) return <LayerGoal game={game} />;
+  return (
+    <>
+      <LowMassText star={game.star} />
+      {game.meta.supernovae > 0 && (
+        <>
+          <br />
+          <LayerGoal game={game} />
+        </>
+      )}
+    </>
+  );
+}
+
+function LayerGoal({ game }: { game: GameState }) {
+  const { meta, star } = game;
   const next = STAGE_IDS.find((stage) => !isIgnited(star, stage));
   if (meta.supernovae === 0 || (next === undefined && !canAutoRebirth(meta))) {
     return <RunGoal game={game} />;

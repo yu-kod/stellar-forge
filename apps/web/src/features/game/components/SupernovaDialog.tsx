@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { canAutoRebirth } from "@/game/actions";
 import { CHANDRASEKHAR_MASS, LAYER2_AFTER } from "@/game/balance";
 import { dustPreview, ejectedMetals } from "@/game/dust";
 import { neutronStarBin } from "@/game/rprocess";
@@ -24,7 +25,8 @@ const END_TITLE = { collapse: "超新星", fizzle: "燃え尽きた", whiteDwarf
 /** 星が終わったら出る。次の星を生むまで閉じない */
 export function SupernovaDialog({ game, onRebirth, dispatch }: Props) {
   const { meta, star } = game;
-  const open = star.end !== null;
+  // 自動で次の星を生むなら、次の更新で生むので画面は出さない
+  const open = star.end !== null && !canAutoRebirth(meta);
   const collapsed = star.end === "collapse";
   const gain = dustPreview(meta, star);
   const largest = Math.max(...DUST_IDS.map((id) => star.mass[id]), 0.01);

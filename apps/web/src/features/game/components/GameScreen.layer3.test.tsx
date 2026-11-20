@@ -183,6 +183,7 @@ describe("GameScreen：第3層の強化と自動化", () => {
 describe("第3層の解放を知らせる", () => {
   it("画面に、s過程が始まったと出す", async () => {
     const game = createGame();
+    game.meta.autoRebirth = false;
     game.meta.supernovae = LAYER2_AFTER;
     game.meta.whiteDwarfs = LAYER3_AFTER - 1;
     game.meta.nextMass = 3;
