@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { MERGER_SECONDS, R_ELEMENTS, R_PATH_START, formBinary } from "@/game/merger";
 import { createGame } from "@/game/star";
+import { createSlot } from "@/game/actions";
 import type { GameState } from "@/game/types";
 import { manualTicker, openTab } from "@/test-utils/game";
 import { createModel, gameReducer } from "../model";
@@ -47,15 +48,24 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(pool).toHaveTextContent("2.0 M☉×4");
   });
 
-  it("2つを選ぶと、質量比・Ye・届くところ・放出物を見込む。はじめは、いま作りたい元素を一番多く作る組", () => {
+  it("2つを選ぶと、潮汐の放出物と円盤風の量・Ye・作る範囲、合体までの時間を見込む。はじめは、いま作りたい元素を一番速く作る組", () => {
     renderGame(layer4());
     expect(within(panel()).getByRole("combobox", { name: "1つ目" })).toHaveValue(String(LIGHT));
-    expect(within(panel()).getByRole("combobox", { name: "2つ目" })).toHaveValue(String(HEAVY));
-    expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
-      "質量比 0.60・Ye 0.18 → 第3ピーク（金まで）・放出物 0.55"
+    expect(within(panel()).getByRole("combobox", { name: "2つ目" })).toHaveValue(String(LIGHT));
+    const preview = within(panel()).getByRole("status", { name: "合体の見込み" });
+    expect(preview).toHaveTextContent("潮汐（赤）0.20：Ye 0.40 → 第1・第2ピーク（バリウムまで）");
+    expect(preview).toHaveTextContent("円盤風（青）2.50：Ye 0.34 → 第1・第2ピーク（バリウムまで）");
+    expect(preview).toHaveTextContent("合体まで 15分53秒・1回でテルル（Te）+2.70");
+  });
+
+  it("偏った組は、潮汐の放出物が重い元素まで届く", async () => {
+    const { user } = renderGame(layer4());
+    await user.selectOptions(
+      within(panel()).getByRole("combobox", { name: "2つ目" }),
+      String(HEAVY)
     );
     expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
-      "1回でテルル（Te）+0.55"
+      "潮汐（赤）1.40：Ye 0.18 → 第3ピーク（金まで）"
     );
   });
 
@@ -65,8 +75,12 @@ describe("GameScreen：第4層 中性子星合体", () => {
       within(panel()).getByRole("combobox", { name: "1つ目" }),
       String(HEAVY)
     );
+    await user.selectOptions(
+      within(panel()).getByRole("combobox", { name: "2つ目" }),
+      String(HEAVY)
+    );
     expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
-      "合計 4.0 M☉：すぐブラックホールになり、放出物は 4分の1"
+      "合計 4.0 M☉：すぐブラックホールになり、円盤風は吹かない。潮汐の放出物 0.25"
     );
   });
 
@@ -74,13 +88,23 @@ describe("GameScreen：第4層 中性子星合体", () => {
     const { user, tick } = renderGame(layer4());
     await user.click(within(panel()).getByRole("button", { name: "連星にする" }));
     expect(within(panel()).getByRole("list", { name: "中性子星の在庫" })).toHaveTextContent(
-      "1.2 M☉×2"
+      "1.2 M☉×1"
     );
     const binaries = within(panel()).getByRole("list", { name: "合体を待つ連星" });
-    expect(binaries).toHaveTextContent("1.2 + 2.0 M☉ 合体まで 10分0秒");
+    expect(binaries).toHaveTextContent("1.2 + 1.2 M☉ 合体まで 15分53秒");
     expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeDisabled();
     for (let i = 0; i < 4; i++) tick(0.25);
-    expect(binaries).toHaveTextContent("合体まで 9分59秒");
+    expect(binaries).toHaveTextContent("合体まで 15分52秒");
+  });
+
+  it("自分で選ぶまでは、在庫が変わるとはじめの組も選び直す", async () => {
+    const game = layer4({ [LIGHT]: 2, [HEAVY]: 4 });
+    game.meta.shop.slots = 1;
+    const { user } = renderGame(game);
+    await user.click(within(panel()).getByRole("button", { name: "連星にする" }));
+    // 1.2 M☉ がなくなったので、残りで届く組（2.0 + 2.0）
+    expect(within(panel()).getByRole("combobox", { name: "1つ目" })).toHaveValue(String(HEAVY));
+    expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeEnabled();
   });
 
   it("r過程が主な元素の進み具合を見せる（金が最後）", () => {
@@ -93,7 +117,7 @@ describe("GameScreen：第4層 中性子星合体", () => {
 
   it("合体したら、キロノバと届いたところを知らせる", () => {
     const game = formBinary(layer4(), LIGHT, HEAVY);
-    const model = gameReducer(createModel(game), { type: "tick", seconds: MERGER_SECONDS });
+    const model = gameReducer(createModel(game), { type: "tick", seconds: 2 * MERGER_SECONDS });
     expect(model.notices.map((n) => n.event.type)).toContain("merger");
   });
 
@@ -107,6 +131,7 @@ describe("GameScreen：第4層 中性子星合体", () => {
     };
     game.meta.shop.auto = 1;
     game.meta.supernovae = 50;
+    game.meta.cluster = [createSlot(game.meta), createSlot(game.meta)];
     const model = gameReducer(createModel(game), { type: "tick", seconds: 0.1 });
     expect(model.notices.map((n) => n.event.type)).toContain("layer4Unlocked");
     render(<GameScreen initial={model.game} ticker={manualTicker().ticker} />);
@@ -116,9 +141,46 @@ describe("GameScreen：第4層 中性子星合体", () => {
 
 describe("第4層：在庫がない・全部作ったとき", () => {
   it("作りたい元素に届く組がなければ、在庫の一番軽いものと一番重いものを選んでおく", () => {
-    renderGame(layer4({ [HEAVY]: 4 }));
-    expect(within(panel()).getByRole("combobox", { name: "1つ目" })).toHaveValue(String(HEAVY));
+    const game = layer4({ [LIGHT]: 1, [HEAVY]: 4 });
+    game.meta.rProcess.discovered = [52, 53, 54];
+    renderGame(game);
+    expect(within(panel()).getByRole("combobox", { name: "1つ目" })).toHaveValue(String(LIGHT));
     expect(within(panel()).getByRole("combobox", { name: "2つ目" })).toHaveValue(String(HEAVY));
+  });
+
+  const goalOf = (game: GameState) => {
+    game.meta.supernovae = 50;
+    game.meta.shop.auto = 1;
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} />);
+    return screen.getByRole("note");
+  };
+
+  it("在庫でも、星団の星がこれから残す中性子星でも届かなければ、星団の星の質量を目標に出す", () => {
+    const game = layer4({ [LIGHT]: 5, [6]: 5 }); // 1.2 と 1.8：ランタノイドに届かない
+    game.meta.rProcess.discovered = [52, 53, 54];
+    expect(goalOf(game)).toHaveTextContent(
+      "ユウロピウム（Eu）に届く組がない：星団の星を 18 M☉ と 40 M☉ にすると、1.4 + 2.0 M☉ の組で届く"
+    );
+  });
+
+  it("届く中性子星をこれから残すなら、待つと書く", () => {
+    const game = layer4({});
+    game.meta.cluster = [10, 28].map((mass) => ({ ...createSlot(game.meta), nextMass: mass }));
+    expect(goalOf(game)).toHaveTextContent(
+      "r過程：次は テルル（Te）を作る（0%）。届く中性子星が星団の超新星から来るのを待つ"
+    );
+  });
+
+  it("どの組でも届かなければ、ニュートリノの遮蔽を勧める", () => {
+    const game = layer4();
+    game.meta.rProcess.discovered = [...R_ELEMENTS];
+    game.meta.discovered = Object.fromEntries(
+      ["He", "C", "N", "O", "Ne", "Mg", "Si", "S", "Fe"].map((id) => [id, true])
+    );
+    game.meta.lightFound = [3, 4, 5, 9, 11, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+    expect(goalOf(game)).toHaveTextContent(
+      "ウラン（U）に届く組がない：星屑タブでニュートリノの遮蔽を強化して Ye を下げる"
+    );
   });
 
   it("83マスがそろったら、目標を周期表の先にする", () => {
@@ -128,6 +190,7 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     );
     game.meta.lightFound = [3, 4, 5, 9, 11, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25];
     game.meta.rProcess.discovered = [...R_ELEMENTS];
+    game.meta.shop.shield = 4;
     game.meta.supernovae = 50;
     game.meta.shop.auto = 1;
     render(<GameScreen initial={game} ticker={manualTicker().ticker} />);
@@ -166,9 +229,10 @@ describe("第4層の周期表と知らせ", () => {
       { type: "merger", ye: 0.18, ejecta: 2.2, reach: 83, blackHole: false },
       "キロノバ（赤）：中性子星合体の r過程が第3ピーク（金まで）に届いた",
     ],
-    [{ type: "merger", ye: 0.4, ejecta: 1, reach: 50, blackHole: false }, "キロノバ（青）"],
+    [{ type: "merger", ye: 0.4, ejecta: 1, reach: 56, blackHole: false }, "キロノバ（青）"],
+    [{ type: "merger", ye: 0.25, ejecta: 1, reach: 72, blackHole: false }, "キロノバ（赤）"],
     [
-      { type: "merger", ye: 0.4, ejecta: 0.25, reach: 50, blackHole: true },
+      { type: "merger", ye: 0.4, ejecta: 0.25, reach: 56, blackHole: true },
       "すぐブラックホールになった",
     ],
     [{ type: "rDiscover", z: 79 }, "新元素 金（Au） 中性子星合体で作った"],

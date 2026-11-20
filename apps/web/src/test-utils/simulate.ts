@@ -15,7 +15,7 @@ import { funds, isShopItemOpen } from "@/game/shop";
 import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
-import { bestPair, formBinary, rGoal } from "@/game/merger";
+import { bestPair, formBinary, pairAdvice, rGoal } from "@/game/merger";
 import { S_DISCOVERABLE } from "@/game/sprocess";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { stageCost } from "@/game/rates";
@@ -188,10 +188,19 @@ export function playIdle(
     steer?: boolean;
     /** 第3層の解放後に主星として生む質量（省略すると第2層と同じ決め方） */
     layer3MainMass?: number;
+    /** 始める状態（省略すると新しいゲーム）。時刻は state.meta.elapsed から数える */
+    start?: GameState;
+    /** この印に届いたら止める */
+    stopAt?: keyof IdleReport["marks"];
+    /** これが true になったら止める */
+    stopWhen?: (state: GameState) => boolean;
+    /** 第4層で手で組む組（省略すると画面のはじめの選び方）。null なら組まない */
+    pairing?: (state: GameState) => readonly [number, number] | null;
   } = {}
 ): IdleReport {
   const steer = options.steer ?? true;
-  let state = createGame();
+  let state = options.start ?? createGame();
+  const offset = Math.round(state.meta.elapsed);
   const plan = options.seedTarget ?? DEFAULT_SEED_TARGET;
   const marks: IdleReport["marks"] = {};
   const purchasesPer10Min: number[] = [];
@@ -202,7 +211,10 @@ export function playIdle(
   const rAt: Record<number, number> = {};
   let heavyEarned = 0;
   const levels = (s: GameState) => SHOP_IDS.reduce((sum, id) => sum + s.meta.shop[id], 0);
-  for (let t = 1; t <= seconds; t++) {
+  const pairing = options.pairing ?? ((s: GameState) => bestPair(s.meta, rGoal(s.meta)));
+  for (let t = offset + 1; t <= offset + seconds; t++) {
+    if (options.stopAt && marks[options.stopAt] !== undefined) break;
+    if (options.stopWhen?.(state)) break;
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
     const currency = SHOP[nextShopGoal(state.meta).item].currency;
     const target = steer ? targetOr(currency, state.meta.target ?? "C") : "Si";
@@ -215,11 +227,18 @@ export function playIdle(
         !state.meta.rProcess.unlocked;
       state = setNextMass(state, layer3 ? options.layer3MainMass! : light ? 6 : null);
       // 第4層：星団の1つ目は軽い中性子星（1.2 M☉）を残す 10 M☉ の星にし、主星の重い中性子星と組む
-      // 第4層では、解放のときに決まる星団の質量（中性子星を残す星）のまま
+      // 第4層では、解放のときに決まる星団の質量（中性子星を残す星）のまま。届く組がなければ目標の案内に従う
       if (!state.meta.rProcess.unlocked) {
         state.meta.cluster.forEach((_, i) => {
           state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
         });
+      } else if (!options.pairing) {
+        const advice = pairAdvice(state.meta, rGoal(state.meta));
+        if (advice.type === "masses") {
+          advice.masses.forEach((mass, i) => {
+            if (i < state.meta.cluster.length) state = setSlotMass(state, i, mass);
+          });
+        }
       }
     }
     // 第3層：道の上の原子核の目標の量（Ia型超新星は自動で補う）。循環を見たら、重元素の星屑と Ia型超新星を稼ぐ
@@ -229,9 +248,18 @@ export function playIdle(
     const farm = sComplete && steer && options.seedTarget === undefined;
     state = setSeedTarget(state, farm ? 30 : seeds);
     // 第4層：自動化がなければ、画面のはじめの選び方（いま作りたい元素を一番多く作る組）で手で組む
+    // 組み方を指定したときは自動化を使わず、毎秒、枠が埋まるまで指定の組を組む
+    if (options.pairing && state.meta.shop.rAuto) {
+      state = { ...state, meta: { ...state.meta, shop: { ...state.meta.shop, rAuto: 0 } } };
+    }
     if (state.meta.rProcess.unlocked && !state.meta.shop.rAuto) {
-      const pair = bestPair(state.meta, rGoal(state.meta));
-      if (pair) state = formBinary(state, pair[0], pair[1]);
+      for (;;) {
+        const pair = pairing(state);
+        const formed = pair ? formBinary(state, pair[0], pair[1]) : state;
+        if (formed === state) break;
+        state = formed;
+        if (!options.pairing) break;
+      }
     }
     for (let half = 0; half < 2; half++) {
       const heavyBefore = state.meta.sProcess.heavy;

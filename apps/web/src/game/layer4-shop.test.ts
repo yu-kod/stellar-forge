@@ -11,7 +11,7 @@ import {
   predictMerger,
 } from "./merger";
 import { nextShopGoal } from "./goal";
-import { isShopItemOpen } from "./shop";
+import { isShopItemOpen, isShopItemUseful } from "./shop";
 import { S_DISCOVERABLE_ELEMENTS } from "./sprocess";
 import { createGame } from "./star";
 import type { GameState } from "./types";
@@ -71,23 +71,34 @@ describe("第4層の強化", () => {
     expect(SHOP.shield.maxLevel).toBe(4);
   });
 
-  it("連星の自動化：枠が空いたら、在庫の一番軽い星と一番重い星を組む", () => {
+  it("連星の自動化：枠が空いたら、いま作りたい元素を時間あたりで一番多く作る組を組む", () => {
     const game = buy(buy(layer4(), "rAuto"), "slots");
     const next = autoBinary(game);
+    // テルル（第2ピーク）が目標：合計の軽い 1.2 + 1.2 M☉（円盤風）
     expect(next.meta.rProcess.binaries.map(({ a, b }) => [a, b])).toEqual([
-      [LIGHT, HEAVY],
-      [LIGHT, HEAVY],
+      [LIGHT, LIGHT],
+      [LIGHT, LIGHT],
     ]);
     expect(autoBinary(layer4())).toEqual(layer4());
   });
 
   it("自動化は、いま作りたい元素に届かない組（ブラックホールなど）は作らない", () => {
     const game = buy(layer4(), "rAuto");
+    game.meta.rProcess.discovered = [52, 53, 54];
     game.meta.rProcess.pool = game.meta.rProcess.pool.map(() => 0);
     game.meta.rProcess.pool[HEAVY] = 4;
     expect(autoBinary(game).meta.rProcess.binaries).toEqual([]);
     game.meta.rProcess.pool[LIGHT] = 2;
     expect(autoBinary(game).meta.rProcess.binaries).toHaveLength(1);
+  });
+
+  it("ニュートリノの遮蔽は、ランタノイドがそろうまで、まとめて交換で買わない（はじめの組 1.4 + 2.0 M☉ がランタノイドに届かなくなる）", () => {
+    const game = layer4();
+    expect(isShopItemUseful(game.meta, "shield")).toBe(false);
+    expect(buyAllShopItems(game).meta.shop.shield).toBe(0);
+    game.meta.rProcess.discovered = [63, 64, 65, 66, 67, 68, 69];
+    expect(isShopItemUseful(game.meta, "shield")).toBe(true);
+    expect(buyShopItem(layer4(), "shield").meta.shop.shield).toBe(1); // 手で買うことはできる
   });
 
   it("自動化は毎回の更新で働く", () => {

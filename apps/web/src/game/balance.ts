@@ -409,8 +409,9 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   shield: {
     name: "ニュートリノの遮蔽",
     currency: "O",
-    description: "放出物の Ye −0.025（重い元素まで届きやすい）",
-    baseCost: 1e8,
+    description:
+      "潮汐の放出物の Ye −0.025（重い元素まで届く。ランタノイドを作る組は第3ピークへずれる）",
+    baseCost: 3e7,
     costGrowth: 3,
     maxLevel: 4,
     layer: 4,
@@ -418,7 +419,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   rAuto: {
     name: "連星の自動化",
     currency: "S",
-    description: "枠が空いたら、在庫の一番軽い星と一番重い星を組む",
+    description: "枠が空いたら、いま作りたい元素を一番速く作る組を在庫から組む",
     baseCost: 1e6,
     costGrowth: 1,
     maxLevel: 1,

@@ -113,7 +113,7 @@ function NoticeText({ event }: { event: NoticeEvent }) {
         </>
       ) : (
         <>
-          <b className="text-ignite">キロノバ（{event.reach > 50 ? "赤" : "青"}）</b>
+          <b className="text-ignite">キロノバ（{event.reach > 56 ? "赤" : "青"}）</b>
           ：中性子星合体の r過程が
           {reachName(event.reach)}に届いた
         </>
