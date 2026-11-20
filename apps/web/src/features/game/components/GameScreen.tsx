@@ -11,7 +11,7 @@ import {
 } from "@/game/balance";
 import { canAutoRebirth, canBuyShopItem, rebirth } from "@/game/actions";
 import { nextShopGoal } from "@/game/goal";
-import { S_DISCOVERABLE_ELEMENTS } from "@/game/sprocess";
+import { nextSDiscovery } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
 import { finalStageSeconds, isLowMass } from "@/game/step";
 import { createGame } from "@/game/star";
@@ -287,15 +287,16 @@ function SProcessGoal({ meta }: { meta: GameState["meta"] }) {
       </>
     );
   }
-  const next = S_DISCOVERABLE_ELEMENTS.find((z) => !meta.sProcess.discovered.includes(z))!;
-  const element = elementOf(next);
+  const next = nextSDiscovery(meta.sProcess);
+  if (!next) return <>s過程：ビスマスまで見つけた。ビスマスが中性子を捕まえて鉛へ戻るのを待つ</>;
+  const element = elementOf(next.z);
   return (
     <>
       s過程：次は{" "}
       <b className="text-ignite">
         {element.name}（{element.symbol}）
       </b>
-      を見つける
+      を見つける（{Math.floor(next.progress * 100)}%）
     </>
   );
 }
