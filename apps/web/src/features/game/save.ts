@@ -1,4 +1,5 @@
 import { advanceAll } from "@/game/cluster";
+import { createSProcess, type SProcess } from "@/game/sprocess";
 import { canAutoRebirth, createSlot } from "@/game/actions";
 import { createMeta } from "@/game/star";
 import {
@@ -140,6 +141,26 @@ function parseSlot(value: unknown): ClusterSlot {
   };
 }
 
+function parseSProcess(value: unknown): SProcess {
+  const fresh = createSProcess();
+  if (value === undefined) return fresh;
+  const raw = requireObject(value);
+  const { unlocked, looped } = withDefaults(
+    { unlocked: raw.unlocked, looped: raw.looped },
+    { unlocked: false, looped: false }
+  );
+  if (!Array.isArray(raw.amounts) || raw.amounts.length !== fresh.amounts.length) {
+    throw new InvalidSave();
+  }
+  if (!Array.isArray(raw.discovered)) throw new InvalidSave();
+  return {
+    unlocked,
+    looped,
+    amounts: raw.amounts.map(requireNumber),
+    discovered: raw.discovered.map(requireNumber),
+  };
+}
+
 function parseMeta(value: unknown): Meta {
   const raw = requireObject(value);
   const defaults = createMeta();
@@ -165,6 +186,7 @@ function parseMeta(value: unknown): Meta {
     autoRebirth: withDefaults({ on: raw.autoRebirth }, { on: defaults.autoRebirth }).on,
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
     cluster: ((raw.cluster as unknown[] | undefined) ?? []).map(parseSlot),
+    sProcess: parseSProcess(raw.sProcess),
   };
   // 星団を買ったのに星が無ければ作り直す
   while (meta.cluster.length < meta.shop.cluster) meta.cluster.push(createSlot(meta));

@@ -129,6 +129,24 @@ describe("restoreSave", () => {
     expect(restored?.game.meta.cluster[0]?.star.time).toBeCloseTo(60);
   });
 
+  it("s過程の道も戻す", () => {
+    const game = createGame();
+    game.meta.sProcess = {
+      unlocked: true,
+      amounts: game.meta.sProcess.amounts.map((_, i) => i / 100),
+      discovered: [27, 38],
+      looped: true,
+    };
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta.sProcess).toEqual(game.meta.sProcess);
+  });
+
+  it("s過程の道がなければ、空の道で始める", () => {
+    const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
+    delete save.game.meta.sProcess;
+    expect(restoreSave(save, NOW)?.game.meta.sProcess).toEqual(createGame().meta.sProcess);
+  });
+
   it("星団を持っているのに星が保存されていなければ、作り直す", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     save.game.meta.shop.cluster = 1;
@@ -152,6 +170,10 @@ describe("restoreSave", () => {
     ["自動の切り替えが真偽値でない", saveWith((g) => (g.meta.autoOn.H = 1))],
     ["狙いが知らない値", saveWith((g) => (g.meta.target = "Au"))],
     ["星団が配列でない", saveWith((g) => (g.meta.cluster = {}))],
+    ["s過程の道の長さが違う", saveWith((g) => (g.meta.sProcess.amounts = [1, 2]))],
+    ["s過程の発見が数でない", saveWith((g) => (g.meta.sProcess.discovered = ["Sr"]))],
+    ["s過程の発見が配列でない", saveWith((g) => (g.meta.sProcess.discovered = 38))],
+    ["s過程の解放が真偽値でない", saveWith((g) => (g.meta.sProcess.unlocked = "yes"))],
     [
       "星団の星の狙いがない",
       saveWith((g) => (g.meta.cluster = [{ star: g.star, nextMass: 7, target: null }])),

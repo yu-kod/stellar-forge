@@ -1,6 +1,7 @@
 import {
   AUTO_REBIRTH_AFTER,
   CLUSTER_DEFAULT_MASS,
+  LAYER3_AFTER,
   LOG_LIMIT,
   MAX_BUY_PER_ACTION,
   SHOP,
@@ -10,6 +11,7 @@ import {
 import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
 import { isShopItemOpen } from "./shop";
+import { seedsPerIa } from "./sprocess";
 import { createStar } from "./star";
 import {
   DUST_IDS,
@@ -84,6 +86,18 @@ export function canAutoRebirth(meta: Meta): boolean {
   return meta.autoRebirth && meta.supernovae >= AUTO_REBIRTH_AFTER;
 }
 
+/** 白色矮星を1つ使って Ia型超新星を起こし、鉄の種を道に入れる（第3層） */
+export function triggerIa(state: GameState): GameState {
+  const { meta } = state;
+  if (!meta.sProcess.unlocked || meta.whiteDwarfs < 1) return state;
+  const amounts = [...meta.sProcess.amounts];
+  amounts[0]! += seedsPerIa(meta);
+  return {
+    ...state,
+    meta: { ...meta, whiteDwarfs: meta.whiteDwarfs - 1, sProcess: { ...meta.sProcess, amounts } },
+  };
+}
+
 /** 終わった星から星屑と中性子星を受け取り、次の世代の星を生む */
 export function rebirth(state: GameState): GameState {
   const { meta, star } = state;
@@ -102,6 +116,10 @@ export function rebirth(state: GameState): GameState {
     supernovae: meta.supernovae + (star.end === "whiteDwarf" ? 0 : 1),
     neutronStars: meta.neutronStars + (star.end === "collapse" ? 1 : 0),
     whiteDwarfs: meta.whiteDwarfs + (star.end === "whiteDwarf" ? 1 : 0),
+    sProcess:
+      star.end === "whiteDwarf" && meta.whiteDwarfs + 1 >= LAYER3_AFTER
+        ? { ...meta.sProcess, unlocked: true }
+        : meta.sProcess,
     log: [record, ...meta.log].slice(0, LOG_LIMIT),
   };
   return { meta: nextMeta, star: createStar(nextMeta) };

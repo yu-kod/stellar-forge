@@ -6,6 +6,7 @@ import {
   LOW_MASS_CNO_NITROGEN_PER_HYDROGEN,
   LOW_MASS_LIMIT,
   LOW_MASS_MAX_TEMPERATURE,
+  NEUTRONS_PER_HELIUM,
   WHITE_DWARF_HYDROGEN,
   DISCOVERY_THRESHOLD,
   FIZZLE_AFTER_SECONDS,
@@ -17,6 +18,7 @@ import {
   STAGES,
 } from "./balance";
 import { burnRate, energyMultiplier, isIgnited, stageCost } from "./rates";
+import { captureNeutrons, neutronMultiplier } from "./sprocess";
 import { coreWeight, temperatureFromWeight } from "./temperature";
 import {
   ELEMENT_IDS,
@@ -35,7 +37,9 @@ export type GameEvent =
   | { type: "discover"; element: ElementId }
   | { type: "collapse" }
   | { type: "fizzle" }
-  | { type: "whiteDwarf" };
+  | { type: "whiteDwarf" }
+  | { type: "sDiscover"; z: number }
+  | { type: "sLoop" };
 
 export type StepResult = { state: GameState; events: GameEvent[] };
 
@@ -90,6 +94,7 @@ export function step(state: GameState, dt: number): StepResult {
 
   const delta = Object.fromEntries(ELEMENT_IDS.map((id) => [id, 0])) as Composition;
   let energy = 0;
+  let heliumBurned = 0;
   for (const stage of STAGE_IDS) {
     const { amount, fuel } = plannedBurn(meta, state.star, stage, dt);
     const available = fuel.reduce((sum, id) => sum + state.star.mass[id], 0);
@@ -100,6 +105,7 @@ export function step(state: GameState, dt: number): StepResult {
       delta[id] += burned * share;
     }
     energy += burned * STAGES[stage].energyPerMass;
+    if (stage === "He") heliumBurned = burned;
     if (stage === "H") {
       // CNO サイクル：燃えた水素に比例して、炭素を窒素に変える（炭素があるだけ）
       const perHydrogen = isLowMass(state.star)
@@ -124,6 +130,15 @@ export function step(state: GameState, dt: number): StepResult {
     star.ignitedAt[stage] = star.time;
     if (!STAGES[stage].final && star.levels[stage] === 0) star.levels[stage] = 1;
     events.push({ type: "ignite", stage });
+  }
+
+  // 第3層：軽い星のヘリウム燃焼の熱パルスが中性子を出し、s過程の道の原子核が捕まえる
+  if (meta.sProcess.unlocked && isLowMass(state.star) && heliumBurned > 0) {
+    const neutrons = heliumBurned * NEUTRONS_PER_HELIUM * neutronMultiplier(meta);
+    const captured = captureNeutrons(meta.sProcess, neutrons);
+    meta.sProcess = captured.sProcess;
+    for (const z of captured.discovered) events.push({ type: "sDiscover", z });
+    if (captured.looped) events.push({ type: "sLoop" });
   }
 
   for (const id of ELEMENT_IDS) {
