@@ -37,6 +37,8 @@ export const TEMPERATURE_CURVE: readonly { weight: number; temperature: number }
 
 /** 灰の重さを、この質量の星に換算する */
 export const REFERENCE_MASS = 25;
+/** コア温度の上限 [K]。鉄のコアが崩壊する直前の温度。曲線の外挿をここで止める */
+export const MAX_CORE_TEMPERATURE = 5e9;
 
 export type StageSpec = {
   name: string;

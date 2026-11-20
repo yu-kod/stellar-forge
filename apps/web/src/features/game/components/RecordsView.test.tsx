@@ -48,6 +48,12 @@ describe("RecordsView", () => {
     render(<RecordsView meta={meta} />);
     const rows = within(screen.getByRole("table", { name: "これまでの星" })).getAllByRole("row");
     expect(rows[1]).toHaveTextContent("第2世代132秒12.3 M☉—");
-    expect(rows[2]).toHaveTextContent("第1世代132秒12.3 M☉C3 O5 Si2");
+    expect(rows[2]).toHaveTextContent("第1世代132秒12.3 M☉");
+    const gain = within(rows[2]!).getByRole("list", { name: "第1世代で得た星屑" });
+    expect(
+      within(gain)
+        .getAllByRole("listitem")
+        .map((li) => li.getAttribute("aria-label"))
+    ).toEqual(["炭素 3", "酸素 5", "ケイ素 2"]);
   });
 });

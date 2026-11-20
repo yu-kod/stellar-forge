@@ -1,6 +1,7 @@
 import { DUST_IDS, type Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatMass } from "../format";
+import { ElementChip } from "./ElementChip";
 
 /** 次の層の予告を見せるまでの超新星の回数 */
 const PREVIEW_AFTER = 5;
@@ -88,10 +89,19 @@ export function RecordsView({ meta }: { meta: Meta }) {
                   <td className="px-2 py-1 font-mono">第{record.generation}世代</td>
                   <td className="px-2 py-1 font-mono">{Math.round(record.time)}秒</td>
                   <td className="px-2 py-1 font-mono">{formatMass(record.ejected)}</td>
-                  <td className="px-2 py-1 font-mono">
-                    {DUST_IDS.filter((id) => record.gain[id] > 0)
-                      .map((id) => `${id}${record.gain[id]}`)
-                      .join(" ") || "—"}
+                  <td className="px-2 py-1">
+                    {DUST_IDS.some((id) => record.gain[id] > 0) ? (
+                      <ul
+                        aria-label={`第${record.generation}世代で得た星屑`}
+                        className="flex flex-wrap gap-1"
+                      >
+                        {DUST_IDS.filter((id) => record.gain[id] > 0).map((id) => (
+                          <ElementChip key={id} element={id} value={String(record.gain[id])} />
+                        ))}
+                      </ul>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               ))

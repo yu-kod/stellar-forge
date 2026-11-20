@@ -13,7 +13,7 @@ export function Notices({ notices, onDismiss }: Props) {
   return (
     <div
       role="status"
-      className="pointer-events-none fixed top-3 left-1/2 z-30 grid w-[min(92vw,26rem)] -translate-x-1/2 gap-1.5"
+      className="pointer-events-none fixed bottom-3 left-1/2 z-30 grid w-[min(92vw,26rem)] -translate-x-1/2 gap-1.5 sm:top-3 sm:bottom-auto"
     >
       {notices.map((notice) => (
         <NoticeItem key={notice.id} notice={notice} onDismiss={onDismiss} />
