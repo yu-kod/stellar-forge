@@ -17,6 +17,11 @@ describe("第4層とエンディングのペーシング（画面を開いたま
     expect(report.marks.layer4! - report.marks.loop!).toBeLessThanOrEqual(15 * MINUTE);
   });
 
+  it("連星の自動化は解放から10分以内に買え、手で組むのは10回まで", () => {
+    expect(report.marks.rAuto! - report.marks.layer4!).toBeLessThanOrEqual(10 * MINUTE);
+    expect(report.manualPairs).toBeLessThanOrEqual(10);
+  });
+
   it("第4層の最初の発見は、解放から5分以内", () => {
     expect(Math.min(...Object.values(report.rAt)) - report.marks.layer4!).toBeLessThanOrEqual(
       5 * MINUTE
