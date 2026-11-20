@@ -1,7 +1,7 @@
 import { LAYER2_AFTER } from "@/game/balance";
 import { DUST_IDS, type Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
-import { formatMass } from "../format";
+import { formatMass, formatNumber } from "../format";
 import { ElementChip } from "./ElementChip";
 
 /** 第3層の予告を見せるまでの白色矮星の数 */
@@ -114,7 +114,11 @@ export function RecordsView({ meta }: { meta: Meta }) {
                         className="flex flex-wrap gap-1"
                       >
                         {DUST_IDS.filter((id) => record.gain[id] > 0).map((id) => (
-                          <ElementChip key={id} element={id} value={String(record.gain[id])} />
+                          <ElementChip
+                            key={id}
+                            element={id}
+                            value={formatNumber(record.gain[id])}
+                          />
                         ))}
                       </ul>
                     ) : (

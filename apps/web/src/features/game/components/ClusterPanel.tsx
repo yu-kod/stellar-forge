@@ -5,7 +5,7 @@ import { dustPreview } from "@/game/dust";
 import { maxMass } from "@/game/star";
 import { DUST_IDS, TARGET_IDS, type ClusterSlot, type Meta, type Target } from "@/game/types";
 import { TARGET_NAMES } from "../elements";
-import { formatMass } from "../format";
+import { formatMass, formatNumber } from "../format";
 import type { Action } from "../model";
 import { ElementChip } from "./ElementChip";
 
@@ -50,7 +50,7 @@ function SlotCard({ meta, slot, index, dispatch }: Props & { slot: ClusterSlot; 
       </p>
       <ul aria-label={`星団の星 ${index + 2} の今の星屑`} className="flex flex-wrap gap-1">
         {DUST_IDS.filter((id) => preview[id] > 0).map((id) => (
-          <ElementChip key={id} element={id} value={String(preview[id])} />
+          <ElementChip key={id} element={id} value={formatNumber(preview[id])} />
         ))}
       </ul>
       <div className="flex flex-wrap items-center gap-2">

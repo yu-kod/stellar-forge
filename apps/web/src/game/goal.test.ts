@@ -32,3 +32,11 @@ describe("nextShopGoal と層", () => {
     expect(SHOP[nextShopGoal(meta).item].layer).toBeUndefined();
   });
 });
+
+describe("nextShopGoal と自動制御", () => {
+  it("燃焼の自動制御をまだ持っていなければ、それを最初に勧める", () => {
+    const meta = createMeta();
+    meta.dust.O = 2;
+    expect(nextShopGoal(meta).item).toBe("auto");
+  });
+});
