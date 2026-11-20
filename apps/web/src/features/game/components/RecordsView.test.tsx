@@ -81,11 +81,13 @@ describe("RecordsView", () => {
     meta.supernovae = 12;
     meta.whiteDwarfs = 3;
     meta.neutronStars = 10;
+    meta.blackHoles = 7;
     render(<RecordsView meta={meta} />);
     const counts = screen.getByRole("list", { name: "これまでに残したもの" });
     expect(counts).toHaveTextContent("超新星12");
     expect(counts).toHaveTextContent("白色矮星3");
     expect(counts).toHaveTextContent("中性子星10");
+    expect(counts).toHaveTextContent("ブラックホール7");
   });
 
   it("まだ超新星がなければ、記録が空だと伝える", () => {

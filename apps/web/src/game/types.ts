@@ -76,6 +76,8 @@ export type Meta = {
   dust: Record<DustId, number>;
   supernovae: number;
   neutronStars: number;
+  /** 崩壊してブラックホールになった星（40 M☉ より重い）の数 */
+  blackHoles: number;
   /** 軽い星が残した白色矮星の数（第3層の材料） */
   whiteDwarfs: number;
   /** 次に生む星の質量 [M☉]。null なら上限。第2層の解放後に効く */

@@ -1,3 +1,4 @@
+import { LIGHT_SITES } from "./light";
 import { ELEMENT_IDS, type ElementId, type Meta } from "./types";
 
 /** 周期表の元素の数（水素〜ビスマス） */
@@ -51,4 +52,32 @@ export function originOf(z: number): Origin {
   if (z <= 22) return "massive";
   if (z <= 26) return "typeIa";
   return R_ONLY.has(z) ? "merger" : "lowMass";
+}
+
+/** Ia型超新星で作る軽い元素と、要る回数 */
+const IA_COUNTS: Readonly<Record<number, number>> = { 23: 5, 24: 20, 25: 50 };
+const F_HINT = "フッ素：第3層で炭素星（4 M☉ 未満）を白色矮星にする（星団の星の質量を 2〜3 M☉ に）";
+
+/** まだ見つけていない元素の作り方 */
+export function missingHint(meta: Meta, z: number): string {
+  const ia = IA_COUNTS[z];
+  if (ia !== undefined) {
+    return `Ia型超新星（あと ${ia - meta.iaSupernovae} 回。s過程の種を多く保つと白色矮星を使って増える）`;
+  }
+  if (z === 9) return F_HINT;
+  if (Object.values(ATOMIC_NUMBER).includes(z))
+    return "第1層の燃焼で作る（狙いを変えて、その段階まで燃やす）";
+  if (R_ONLY.has(z)) return "中性子星合体（第4層）";
+  const site = LIGHT_SITES[z];
+  if (site !== undefined) return site;
+  return "s過程（種を少なく保つと、遠くまで進む）";
+}
+
+/** 一番軽い未発見の元素と、その作り方。すべて見つけていれば null */
+export function nextMissing(meta: Meta): { z: number; hint: string } | null {
+  const found = new Set(foundElements(meta));
+  for (let z = 1; z <= ALL_ELEMENTS; z++) {
+    if (!found.has(z)) return { z, hint: missingHint(meta, z) };
+  }
+  return null;
 }

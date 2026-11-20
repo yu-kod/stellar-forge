@@ -8,13 +8,17 @@ import {
   binarySlots,
   createRProcess,
   formBinary,
+  bestPair,
   mergerSeconds,
   nextRDiscovery,
   rThreshold,
   reachName,
   predictMerger,
   rWeight,
+  R_ELEMENTS,
+  yieldOf,
 } from "./merger";
+import { NEUTRON_STAR_MASSES } from "./rprocess";
 import { createMeta } from "./star";
 import type { GameState, Meta } from "./types";
 import { createGame } from "./star";
@@ -31,23 +35,22 @@ function layer4(pool: Record<number, number> = { [LIGHT]: 5, [HEAVY]: 5 }): Meta
 
 const rAmount = (meta: Meta, z: number) => meta.rProcess.amounts[z - R_PATH_START]!;
 
-describe("合体の見込み（質量比 → 放出物の量と Ye → 届くところ）", () => {
-  it("同じ質量（q = 1）は放出物 1、Ye 0.40 で第1ピークまで", () => {
-    expect(predictMerger(createMeta(), 3, 3)).toMatchObject({
-      q: 1,
-      ejecta: 1,
-      reach: 50,
-      blackHole: false,
-    });
-    expect(predictMerger(createMeta(), 3, 3).ye).toBeCloseTo(0.4);
+describe("合体の見込み（質量比と合計 → 放出物と Ye → 届くところ）", () => {
+  it("軽い同士（1.2 + 1.2）は、合体後の星が長く残って放出物が多いが、Ye 0.40 で第1ピークまで", () => {
+    const p = predictMerger(createMeta(), LIGHT, LIGHT);
+    expect(p).toMatchObject({ q: 1, reach: 50, blackHole: false });
+    expect(p.ye).toBeCloseTo(0.4);
+    expect(p.ejecta).toBeCloseTo(1.25);
   });
 
-  it("非対称なほど放出物が多く、Ye が下がって重い元素まで届く（1.2 と 2.0 で第3ピーク）", () => {
-    const p = predictMerger(createMeta(), LIGHT, HEAVY);
-    expect(p.q).toBeCloseTo(0.6);
-    expect(p.ejecta).toBeCloseTo(1 + 3 * 0.4);
-    expect(p.ye).toBeCloseTo(0.4 - 0.55 * 0.4);
-    expect(p.reach).toBe(83);
+  it("非対称なほど Ye が下がって重い元素まで届く。合計が重いほど放出物は減る", () => {
+    const gold = predictMerger(createMeta(), LIGHT, 6); // 1.2 + 1.8
+    expect(gold.ye).toBeCloseTo(0.4 - 0.55 * (1 - 1.2 / 1.8));
+    expect(gold.reach).toBe(83);
+    expect(gold.ejecta).toBeCloseTo((1 + 3 * (1 - 1.2 / 1.8)) * 0.5);
+    const heavier = predictMerger(createMeta(), LIGHT, HEAVY); // 1.2 + 2.0
+    expect(heavier.reach).toBe(83);
+    expect(heavier.ejecta).toBeLessThan(gold.ejecta);
   });
 
   it("q ≤ 0.82 くらいで第2ピーク（Z 72 まで）", () => {
@@ -65,6 +68,39 @@ describe("合体の見込み（質量比 → 放出物の量と Ye → 届くと
     expect(predictMerger(createMeta(), HEAVY, LIGHT)).toEqual(
       predictMerger(createMeta(), LIGHT, HEAVY)
     );
+  });
+});
+
+describe("一番よい組は、作りたい元素で変わる（一番軽い×一番重いが常に最良ではない）", () => {
+  const full = () => layer4(Object.fromEntries([0, 1, 2, 3, 4, 5, 6, 7, 8].map((b) => [b, 5])));
+
+  it("金なら 1.2 + 1.8（それより重い相手は放出物が減る）", () => {
+    expect(bestPair(full(), 79)).toEqual([LIGHT, 6]);
+  });
+
+  it("テルル（第2ピーク）なら、もっと対称で放出物の多い組", () => {
+    const [a, b] = bestPair(full(), 52)!;
+    expect(predictMerger(full(), a, b).reach).toBeLessThan(83);
+    expect([a, b]).not.toEqual([LIGHT, 6]);
+  });
+
+  it("ニュートリノの遮蔽で Ye を下げると、金にもっと対称な組が使える", () => {
+    const meta = full();
+    meta.shop.shield = 2;
+    const [a, b] = bestPair(meta, 79)!;
+    expect(NEUTRON_STAR_MASSES[b]! - NEUTRON_STAR_MASSES[a]!).toBeLessThan(0.6);
+  });
+
+  it("在庫でその元素に届く組がなければ null", () => {
+    expect(bestPair(layer4({ [LIGHT]: 4 }), 79)).toBeNull();
+  });
+
+  it("1回の合体で作るその元素の量（届かなければ 0）", () => {
+    const meta = full();
+    expect(yieldOf(meta, LIGHT, 6, 79)).toBeCloseTo(
+      predictMerger(meta, LIGHT, 6).ejecta * rWeight(79)
+    );
+    expect(yieldOf(meta, LIGHT, LIGHT, 79)).toBe(0);
   });
 });
 
@@ -118,11 +154,12 @@ describe("合体と r過程", () => {
 
   it("届くところまでの元素に、放出物 × 重み を配る（届かない先には配らない）", () => {
     const first = merged(3, 3).meta;
-    expect(rAmount(first, 34)).toBeCloseTo(1 * rWeight(34));
+    const ejecta = predictMerger(createMeta(), 3, 3).ejecta;
+    expect(rAmount(first, 34)).toBeCloseTo(ejecta * rWeight(34));
     expect(rAmount(first, 52)).toBe(0);
     const third = merged(LIGHT, HEAVY).meta;
-    expect(rAmount(third, 78)).toBeCloseTo(2.2 * rWeight(78));
-    expect(rAmount(third, 79)).toBeCloseTo(2.2 * rWeight(79));
+    const thirdEjecta = predictMerger(createMeta(), LIGHT, HEAVY).ejecta;
+    expect(rAmount(third, 78)).toBeCloseTo(thirdEjecta * rWeight(78));
   });
 
   it("寿命の短い元素（Z 84〜89・91）には貯めない", () => {
@@ -131,24 +168,20 @@ describe("合体と r過程", () => {
     expect(rWeight(90)).toBeGreaterThan(0);
   });
 
-  it("r過程だけで作る元素は、その元素の発見の量を超えたら発見する（金が一番多い）", () => {
-    expect([63, 76, 77, 78, 79].map(rThreshold)).toEqual([5, 8, 20, 40, 200]);
-    let meta = layer4({ [LIGHT]: 20, [HEAVY]: 20 });
-    meta.rProcess.amounts[78 - R_PATH_START] = rThreshold(78) - 0.1;
+  it("r過程が主な元素15個を、作った量が発見の量を超えたら発見する（金が最後）", () => {
+    expect(R_ELEMENTS).toEqual([52, 53, 54, 63, 64, 65, 66, 67, 68, 69, 75, 76, 77, 78, 79]);
+    // 発見に要る放出物（発見の量 ÷ 重み）は、並びの順に増える
+    const ejectaNeeded = R_ELEMENTS.map((z) => rThreshold(z) / rWeight(z));
+    expect([...ejectaNeeded].sort((a, b) => a - b)).toEqual(ejectaNeeded);
+    let meta = layer4({ [LIGHT]: 20, [6]: 20 });
+    meta.rProcess.amounts[78 - R_PATH_START] = rThreshold(78) - 0.01;
     meta.rProcess.amounts[79 - R_PATH_START] = rThreshold(79) - 1;
-    const game = formBinary({ ...createGame(), meta }, LIGHT, HEAVY);
+    const game = formBinary({ ...createGame(), meta }, LIGHT, 6);
     const result = advanceBinaries(game.meta, MERGER_SECONDS);
     meta = result.meta;
     expect(meta.rProcess.discovered).toContain(78);
     expect(meta.rProcess.discovered).not.toContain(79);
     expect(result.events).toContainEqual({ type: "rDiscover", z: 78 });
-  });
-
-  it("s過程で作れる元素は、r過程で作っても数えない（すでに見つけているので）", () => {
-    const { meta } = merged(LIGHT, HEAVY);
-    expect(meta.rProcess.discovered.every((z) => [63, 76, 77, 78, 79, 90, 92].includes(z))).toBe(
-      true
-    );
   });
 
   it("毎回の更新で連星を進める（留守の間も）", () => {
@@ -159,6 +192,13 @@ describe("合体と r過程", () => {
 });
 
 describe("r過程の発見の効果", () => {
+  it("r過程の元素1つにつき放出物 +5%（ユウロピウムなど特別な効果のものを除く）", () => {
+    const meta = layer4();
+    const before = predictMerger(meta, LIGHT, HEAVY).ejecta;
+    meta.rProcess.discovered = [52, 53];
+    expect(predictMerger(meta, LIGHT, HEAVY).ejecta).toBeCloseTo(before * 1.1);
+  });
+
   it("ユウロピウム：放出物 ×2", () => {
     const meta = layer4();
     const before = predictMerger(meta, LIGHT, HEAVY).ejecta;
@@ -200,7 +240,7 @@ describe("届くところの名前と、次に作る元素", () => {
     const meta = layer4();
     meta.rProcess.amounts[78 - R_PATH_START] = rThreshold(78) / 2;
     expect(nextRDiscovery(meta.rProcess)).toEqual({ z: 78, progress: 0.5 });
-    meta.rProcess.discovered = [63, 76, 77, 78, 79];
+    meta.rProcess.discovered = [...R_ELEMENTS];
     expect(nextRDiscovery(meta.rProcess)).toBeNull();
   });
 });

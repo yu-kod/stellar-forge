@@ -11,21 +11,11 @@ import type { GameState, Meta } from "./types";
 export { R_PATH_START, createRProcess } from "./rprocess";
 
 /** 合体までの時間 [秒]（重力波で近づく） */
-export const MERGER_SECONDS = 900;
+export const MERGER_SECONDS = 600;
 /** 合計がこれを超えると、すぐブラックホールになる [M☉] */
 export const BLACK_HOLE_MASS = 3.4;
 /** ブラックホールになったときの放出物 */
 export const BLACK_HOLE_EJECTA = 0.25;
-/** r過程だけで作る元素を発見する量 */
-const R_THRESHOLDS: Readonly<Record<number, number>> = {
-  63: 5,
-  76: 8,
-  77: 20,
-  78: 40,
-  79: 200,
-};
-/** おまけ（トリウム・ウラン）を発見する量 */
-const ACTINIDE_THRESHOLD = 0.5;
 
 const EUROPIUM = 63;
 const OSMIUM = 76;
@@ -34,8 +24,40 @@ const PLATINUM = 78;
 const GOLD = 79;
 const THORIUM = 90;
 const URANIUM = 92;
-/** 第4層で発見する元素（r過程だけで作るもの） */
+/** 第4層で発見する元素（r過程だけで作るもの。周期表の83マスに数える） */
 export const R_ONLY_ELEMENTS: readonly number[] = [EUROPIUM, OSMIUM, IRIDIUM, PLATINUM, GOLD];
+/**
+ * r過程が主な元素（太陽系の量の8割ほど以上が r過程）。発見の順に並べる。
+ * s過程ですでに見つけているものは「r過程でも作った」印になる
+ */
+export const R_ELEMENTS: readonly number[] = [
+  52,
+  53,
+  54,
+  EUROPIUM,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69,
+  75,
+  OSMIUM,
+  IRIDIUM,
+  PLATINUM,
+  GOLD,
+];
+/** 発見に要る、その元素に届いた放出物の合計（R_ELEMENTS の順。等比） */
+const EJECTA_MILESTONES: readonly number[] = [
+  0.6, 2.1, 3, 4.3, 6.2, 9, 13, 18, 26, 37, 54, 77, 110, 155, 220,
+];
+/** おまけ（トリウム・ウラン）の発見に要る放出物 */
+const ACTINIDE_EJECTA = 40;
+/** 特別な効果のない r過程の元素1つあたりの放出物の上乗せ */
+const EJECTA_PER_R_ELEMENT = 0.05;
+/** 合計がこれより軽いほど、合体後の星が長く残って（円盤風で）放出物が増える [M☉] */
+const LONG_LIVED_SPAN = 0.8;
+const MAX_REMNANT_FACTOR = 1.5;
 /** おまけ（周期表の先） */
 export const ACTINIDES: readonly number[] = [THORIUM, URANIUM];
 
@@ -62,6 +84,8 @@ export function rWeight(z: number): number {
 }
 
 const has = (rProcess: RProcess, z: number) => rProcess.discovered.includes(z);
+/** 特別な効果を持つ r過程の元素 */
+const SPECIAL = new Set([EUROPIUM, OSMIUM, IRIDIUM, PLATINUM, GOLD, THORIUM, URANIUM]);
 
 /** 同時に持てる連星の数 */
 export function binarySlots(meta: Meta): number {
@@ -85,15 +109,23 @@ export type MergerPreview = {
 
 /** 2つの段の中性子星を合体させたらどうなるか */
 export function predictMerger(meta: Meta, a: number, b: number): MergerPreview {
-  const m1 = NEUTRON_STAR_MASSES[a]!;
-  const m2 = NEUTRON_STAR_MASSES[b]!;
+  // 並べる順によらないよう、軽い方を先にする
+  const m1 = NEUTRON_STAR_MASSES[Math.min(a, b)]!;
+  const m2 = NEUTRON_STAR_MASSES[Math.max(a, b)]!;
   const q = Math.min(m1, m2) / Math.max(m1, m2);
   const blackHole = m1 + m2 > BLACK_HOLE_MASS + 1e-9;
   const shielded = meta.shop.shield + (has(meta.rProcess, PLATINUM) ? 1 : 0);
   const ye = 0.4 - 0.55 * (1 - q) - SHIELD_YE * shielded;
+  const plain = meta.rProcess.discovered.filter((z) => !SPECIAL.has(z)).length;
   const ejectaMultiplier =
-    (has(meta.rProcess, EUROPIUM) ? 2 : 1) * (1 + TAIL_EJECTA * meta.shop.tail);
-  const ejecta = (blackHole ? BLACK_HOLE_EJECTA : 1 + 3 * (1 - q)) * ejectaMultiplier;
+    (has(meta.rProcess, EUROPIUM) ? 2 : 1) *
+    (1 + TAIL_EJECTA * meta.shop.tail + EJECTA_PER_R_ELEMENT * plain);
+  // 合計が軽いほど合体後の星が長く残り（すぐブラックホールにならず）、円盤から多く飛ぶ
+  const remnant = Math.min(
+    MAX_REMNANT_FACTOR,
+    Math.max(BLACK_HOLE_EJECTA, (BLACK_HOLE_MASS - m1 - m2) / LONG_LIVED_SPAN)
+  );
+  const ejecta = (blackHole ? BLACK_HOLE_EJECTA : (1 + 3 * (1 - q)) * remnant) * ejectaMultiplier;
   const reach = REACH.find((r) => ye <= r.maxYe + 1e-9)?.z ?? FIRST_PEAK_END;
   return { q, ye, ejecta, reach, blackHole };
 }
@@ -116,14 +148,39 @@ export function formBinary(state: GameState, a: number, b: number): GameState {
   };
 }
 
-/** 連星の自動化：枠が空いていれば、在庫の一番軽い星と一番重い星を組む */
+/** 1回の合体で作る、その元素の量（届かなければ 0） */
+export function yieldOf(meta: Meta, a: number, b: number, z: number): number {
+  const { ejecta, reach } = predictMerger(meta, a, b);
+  return z <= reach ? ejecta * rWeight(z) : 0;
+}
+
+/** 在庫で組める組のうち、その元素を一番多く作るもの。届く組がなければ null */
+export function bestPair(meta: Meta, z: number): [number, number] | null {
+  const { pool } = meta.rProcess;
+  let best: { pair: [number, number]; amount: number } | null = null;
+  for (let a = 0; a < pool.length; a++) {
+    for (let b = a; b < pool.length; b++) {
+      const enough = a === b ? pool[a]! >= 2 : pool[a]! >= 1 && pool[b]! >= 1;
+      const amount = enough ? yieldOf(meta, a, b, z) : 0;
+      if (amount > 0 && (best === null || amount > best.amount)) best = { pair: [a, b], amount };
+    }
+  }
+  return best?.pair ?? null;
+}
+
+/** いま作りたい元素：まだの r過程の元素のうち一番近いもの。すべて見つけていればおまけ（ウラン） */
+export function rGoal(meta: Meta): number {
+  return nextRDiscovery(meta.rProcess)?.z ?? URANIUM;
+}
+
+/** 連星の自動化：枠が空いていれば、いま作りたい元素を一番多く作る組を組む（届かない組は作らない） */
 export function autoBinary(state: GameState): GameState {
   if (!state.meta.shop.rAuto) return state;
   let next = state;
   for (;;) {
-    const held = next.meta.rProcess.pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
-    if (held.length === 0) return next;
-    const formed = formBinary(next, held[0]!, held.at(-1)!);
+    const pair = bestPair(next.meta, rGoal(next.meta));
+    if (!pair) return next;
+    const formed = formBinary(next, pair[0], pair[1]);
     if (formed === next) return next;
     next = formed;
   }
@@ -132,9 +189,10 @@ export function autoBinary(state: GameState): GameState {
 export type MergerEvent =
   ({ type: "merger" } & Omit<MergerPreview, "q">) | { type: "rDiscover"; z: number };
 
-/** その元素を発見する量 */
+/** その元素を発見する量（届いた放出物の合計 × 重み） */
 export function rThreshold(z: number): number {
-  return R_THRESHOLDS[z] ?? ACTINIDE_THRESHOLD;
+  const index = R_ELEMENTS.indexOf(z);
+  return (index >= 0 ? EJECTA_MILESTONES[index]! : ACTINIDE_EJECTA) * rWeight(z);
 }
 
 /** 合体させ、届くところまでの元素に 放出物 × 重み を配る */
@@ -144,7 +202,7 @@ function merge(meta: Meta, binary: Binary): { meta: Meta; events: MergerEvent[] 
     const z = i + R_PATH_START;
     return z <= reach ? amount + ejecta * rWeight(z) : amount;
   });
-  const found = [...R_ONLY_ELEMENTS, ...ACTINIDES].filter(
+  const found = [...R_ELEMENTS, ...ACTINIDES].filter(
     (z) => !has(meta.rProcess, z) && amounts[z - R_PATH_START]! >= rThreshold(z)
   );
   const rProcess: RProcess = {
@@ -186,7 +244,7 @@ export function advanceBinaries(
 
 /** まだ見つけていない r過程の元素のうち、発見の量に一番近いもの（割合は 0〜1）。すべて見つけていれば null */
 export function nextRDiscovery(rProcess: RProcess): { z: number; progress: number } | null {
-  const candidates = R_ONLY_ELEMENTS.filter((z) => !has(rProcess, z)).map((z) => ({
+  const candidates = R_ELEMENTS.filter((z) => !has(rProcess, z)).map((z) => ({
     z,
     progress: Math.min(1, rProcess.amounts[z - R_PATH_START]! / rThreshold(z)),
   }));

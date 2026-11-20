@@ -34,6 +34,7 @@ export function createMeta(): Meta {
     dust: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
     supernovae: 0,
     neutronStars: 0,
+    blackHoles: 0,
     whiteDwarfs: 0,
     nextMass: null,
     discovered: {},

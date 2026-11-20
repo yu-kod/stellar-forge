@@ -64,6 +64,9 @@ export function RecordsView({ meta, onEnding }: { meta: Meta; onEnding?: () => v
         <li>
           中性子星<b className="ml-1 font-mono">{meta.neutronStars}</b>
         </li>
+        <li>
+          ブラックホール<b className="ml-1 font-mono">{meta.blackHoles}</b>
+        </li>
       </ul>
       <ul aria-label="層" className="grid gap-2">
         {layers(meta).map((layer) => (

@@ -79,12 +79,12 @@ describe("第4層の強化", () => {
     expect(autoBinary(layer4())).toEqual(layer4());
   });
 
-  it("自動化は、在庫が1段だけなら同じ段で組み、1つしかなければ組まない", () => {
+  it("自動化は、いま作りたい元素に届かない組（ブラックホールなど）は作らない", () => {
     const game = buy(layer4(), "rAuto");
     game.meta.rProcess.pool = game.meta.rProcess.pool.map(() => 0);
-    game.meta.rProcess.pool[HEAVY] = 1;
+    game.meta.rProcess.pool[HEAVY] = 4;
     expect(autoBinary(game).meta.rProcess.binaries).toEqual([]);
-    game.meta.rProcess.pool[HEAVY] = 2;
+    game.meta.rProcess.pool[LIGHT] = 2;
     expect(autoBinary(game).meta.rProcess.binaries).toHaveLength(1);
   });
 

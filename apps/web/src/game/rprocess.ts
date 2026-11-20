@@ -1,3 +1,4 @@
+import { S_DISCOVERABLE } from "./sprocess";
 import type { GameState, Meta } from "./types";
 
 /** 中性子星の質量の段階 [M☉]（docs/design.md「中性子星の質量」） */
@@ -41,11 +42,18 @@ export function createRProcess(): RProcess {
   };
 }
 
-/** 親の星の初期質量から、残す中性子星の段 */
-export function neutronStarBin(initialMass: number): number {
+/** これより重い星は、崩壊するとブラックホールになる [M☉] */
+export const HEAVIEST_PROGENITOR = 40;
+
+/** 親の星の初期質量から、残す中性子星の段。40 M☉ より重い星はブラックホールになる（null） */
+export function neutronStarBin(initialMass: number): number | null {
+  if (initialMass > HEAVIEST_PROGENITOR) return null;
   const bin = Math.floor((initialMass - LIGHTEST_PROGENITOR) / MASS_PER_BIN);
   return Math.min(NEUTRON_STAR_MASSES.length - 1, Math.max(0, bin));
 }
+
+/** 第4層の解放時に星団の星に設定する質量：1.2 M☉ と 1.8 M☉ の中性子星を残す */
+export const LAYER4_SLOT_MASSES = [10, 32] as const;
 
 /** 中性子星を在庫に足す */
 export function addNeutronStars(rProcess: RProcess, bin: number, count: number): RProcess {
@@ -54,14 +62,21 @@ export function addNeutronStars(rProcess: RProcess, bin: number, count: number):
   return { ...rProcess, pool };
 }
 
-/** s過程の循環を見たら第4層を解放する。それまでの中性子星は主星の質量の段に入れる */
+/**
+ * s過程の循環を見たら第4層を解放する。星団の星を、中性子星を残す質量（軽いものと重いもの）にする
+ * （主星の上限の質量の星はブラックホールになり、中性子星を残さないため）
+ */
 export function unlockLayer4(state: GameState): GameState {
-  const { meta, star } = state;
-  if (meta.rProcess.unlocked || !meta.sProcess.looped) return state;
-  const rProcess = addNeutronStars(
-    { ...meta.rProcess, unlocked: true },
-    neutronStarBin(star.initialMass),
-    meta.neutronStars
-  );
-  return { ...state, meta: { ...meta, rProcess } satisfies Meta };
+  const { meta } = state;
+  const sComplete = meta.sProcess.discovered.length === S_DISCOVERABLE;
+  if (meta.rProcess.unlocked || !meta.sProcess.looped || !sComplete) return state;
+  const cluster = meta.cluster.map((slot, i) => ({
+    ...slot,
+    // 星団は2つまで
+    nextMass: LAYER4_SLOT_MASSES[i]!,
+  }));
+  return {
+    ...state,
+    meta: { ...meta, cluster, rProcess: { ...meta.rProcess, unlocked: true } } satisfies Meta,
+  };
 }

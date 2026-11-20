@@ -15,7 +15,8 @@ import { funds, isShopItemOpen } from "@/game/shop";
 import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
-import { formBinary } from "@/game/merger";
+import { bestPair, formBinary, rGoal } from "@/game/merger";
+import { S_DISCOVERABLE } from "@/game/sprocess";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { stageCost } from "@/game/rates";
 import { step } from "@/game/step";
@@ -208,22 +209,29 @@ export function playIdle(
     if (steer) {
       state = setTarget(state, target);
       const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
-      const layer3 = options.layer3MainMass !== undefined && state.meta.sProcess.unlocked;
+      const layer3 =
+        options.layer3MainMass !== undefined &&
+        state.meta.sProcess.unlocked &&
+        !state.meta.rProcess.unlocked;
       state = setNextMass(state, layer3 ? options.layer3MainMass! : light ? 6 : null);
       // 第4層：星団の1つ目は軽い中性子星（1.2 M☉）を残す 10 M☉ の星にし、主星の重い中性子星と組む
-      const layer4 = state.meta.rProcess.unlocked;
-      state.meta.cluster.forEach((_, i) => {
-        const mass = i === 0 ? (layer4 ? 10 : 6) : 2;
-        state = setSlotTarget(setSlotMass(state, i, mass), i, "C");
-      });
+      // 第4層では、解放のときに決まる星団の質量（中性子星を残す星）のまま
+      if (!state.meta.rProcess.unlocked) {
+        state.meta.cluster.forEach((_, i) => {
+          state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
+        });
+      }
     }
     // 第3層：道の上の原子核の目標の量（Ia型超新星は自動で補う）。循環を見たら、重元素の星屑と Ia型超新星を稼ぐ
     const seeds = typeof plan === "number" ? plan : plan(state);
-    const farm = state.meta.sProcess.looped && steer && options.seedTarget === undefined;
+    // 循環を見て s過程の元素がそろったら、重元素の星屑と Ia型超新星を稼ぐ
+    const sComplete = state.meta.sProcess.discovered.length === S_DISCOVERABLE;
+    const farm = sComplete && steer && options.seedTarget === undefined;
     state = setSeedTarget(state, farm ? 30 : seeds);
+    // 第4層：自動化がなければ、画面のはじめの選び方（いま作りたい元素を一番多く作る組）で手で組む
     if (state.meta.rProcess.unlocked && !state.meta.shop.rAuto) {
-      const held = state.meta.rProcess.pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
-      if (held.length > 0) state = formBinary(state, held[0]!, held.at(-1)!);
+      const pair = bestPair(state.meta, rGoal(state.meta));
+      if (pair) state = formBinary(state, pair[0], pair[1]);
     }
     for (let half = 0; half < 2; half++) {
       const heavyBefore = state.meta.sProcess.heavy;

@@ -1,8 +1,11 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  R_ONLY_ELEMENTS,
+  R_ELEMENTS,
   R_PATH_START,
+  bestPair,
+  rGoal,
+  yieldOf,
   binarySlots,
   mergerSeconds,
   predictMerger,
@@ -25,16 +28,20 @@ function countdown(seconds: number): string {
   return `${Math.floor(total / 60)}分${total % 60}秒`;
 }
 
-/** 在庫のある段のうち、一番軽いものと一番重いもの */
-function defaultPair(pool: number[]): [number, number] {
-  const held = pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
-  return [held[0] ?? 0, held.at(-1) ?? 0];
+/** はじめに選んでおく組：いま作りたい元素を一番多く作る組。なければ在庫の一番軽いものと一番重いもの */
+function defaultPair(meta: Meta): [number, number] {
+  const best = bestPair(meta, rGoal(meta));
+  if (best) return best;
+  const held = meta.rProcess.pool.flatMap((n, bin) => (n > 0 ? [bin] : []));
+  return held.length === 0 ? [0, 0] : [held[0]!, held.at(-1)!];
 }
 
 /** 第4層：中性子星を2つずつ連星にし、合体させて r過程で重い元素を作る */
 export function RProcessPanel({ meta, dispatch }: Props) {
   const { pool, binaries, amounts, discovered, mergers } = meta.rProcess;
-  const [initialA, initialB] = defaultPair(pool);
+  const [initialA, initialB] = defaultPair(meta);
+  const goal = rGoal(meta);
+  const goalElement = elementOf(goal);
   const [a, setA] = useState(initialA);
   const [b, setB] = useState(initialB);
   const ids = useId();
@@ -63,8 +70,8 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         ))}
       </ul>
       <p className="text-muted-foreground text-sm">
-        中性子星の質量は親の星で決まる：8〜11 M☉ の星から 1.2 M☉、40 M☉ 以上の星から 2.0 M☉。
-        主星と星団の星の「次に生む質量」を分けると両方を貯められる。
+        中性子星の質量は親の星で決まる：8〜11 M☉ の星から 1.2 M☉、40 M☉ の星から 2.0 M☉。 40 M☉
+        より重い星はブラックホールになり、中性子星を残さない。星団の星の「次に生む質量」で作り分ける。
       </p>
       <div className="grid grid-cols-2 gap-2">
         {(
@@ -93,6 +100,8 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         {preview.blackHole
           ? `合計 ${total.toFixed(1)} M☉：すぐブラックホールになり、放出物は 4分の1`
           : `質量比 ${preview.q.toFixed(2)}・Ye ${preview.ye.toFixed(2)} → ${reachName(preview.reach)}・放出物 ${preview.ejecta.toFixed(2)}`}
+        <br />
+        1回で{goalElement.name}（{goalElement.symbol}）+{yieldOf(meta, a, b, goal).toFixed(2)}
       </p>
       <Button
         className="h-11 w-fit active:scale-[0.97]"
@@ -121,7 +130,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回
       </p>
       <ul aria-label="r過程で作る元素" className="grid gap-1 text-sm sm:grid-cols-2">
-        {R_ONLY_ELEMENTS.map((z) => {
+        {R_ELEMENTS.map((z) => {
           const element = elementOf(z);
           const amount = amounts[z - R_PATH_START]!;
           return (
@@ -131,7 +140,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
             >
               {element.name}（{element.symbol}）
               <span className="font-mono">
-                {amount.toFixed(2)} / {rThreshold(z)}
+                {amount.toFixed(2)} / {formatNumber(rThreshold(z))}
               </span>
             </li>
           );
