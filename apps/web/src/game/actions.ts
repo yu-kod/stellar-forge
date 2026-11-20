@@ -12,7 +12,7 @@ import { dustPreview, ejectedMetals } from "./dust";
 import { isIgnited, stageCost } from "./rates";
 import { findLightElements } from "./light";
 import { addNeutronStars, neutronStarBin } from "./rprocess";
-import { funds, isShopItemOpen, spend } from "./shop";
+import { funds, isShopItemOpen, isShopItemUseful, spend } from "./shop";
 import { seedsPerIa } from "./sprocess";
 import { createStar } from "./star";
 import {
@@ -185,7 +185,9 @@ export function buyShopItem(state: GameState, item: ShopId): GameState {
 export function buyAllShopItems(state: GameState): GameState {
   let next = state;
   for (;;) {
-    const affordable = SHOP_IDS.filter((item) => canBuyShopItem(next.meta, item));
+    const affordable = SHOP_IDS.filter(
+      (item) => canBuyShopItem(next.meta, item) && isShopItemUseful(next.meta, item)
+    );
     if (affordable.length === 0) return next;
     const share = (item: ShopId) =>
       shopCost(next.meta, item) / funds(next.meta, SHOP[item].currency);

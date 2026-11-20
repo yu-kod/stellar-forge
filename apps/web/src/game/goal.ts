@@ -1,6 +1,6 @@
 import { shopCost } from "./actions";
 import { SHOP } from "./balance";
-import { funds, isShopItemOpen } from "./shop";
+import { funds, isShopItemOpen, isShopItemUseful } from "./shop";
 import { heavyRate } from "./sprocess";
 import { SHOP_IDS, type Currency, type Meta, type ShopId } from "./types";
 
@@ -19,7 +19,11 @@ function incomeRate(meta: Meta, currency: Currency): number {
 export function nextShopGoal(meta: Meta): ShopGoal {
   const goals = SHOP_IDS.filter((item) => {
     const { maxLevel } = SHOP[item];
-    return isShopItemOpen(meta, item) && (maxLevel === undefined || meta.shop[item] < maxLevel);
+    return (
+      isShopItemOpen(meta, item) &&
+      isShopItemUseful(meta, item) &&
+      (maxLevel === undefined || meta.shop[item] < maxLevel)
+    );
   }).map((item) => {
     const cost = shopCost(meta, item);
     const shortfall = Math.max(0, cost - funds(meta, SHOP[item].currency));
