@@ -97,6 +97,7 @@ describe("記録への挑戦", () => {
     const hall = screen.getByRole("region", { name: "記録への挑戦" });
     expect(hall).toHaveTextContent("完結 2回・最速 2時間58分（銀）");
     expect(hall).toHaveTextContent("金：2時間55分以内");
+    expect(hall).toHaveTextContent("第3層で重元素の星屑を貯める");
   });
 
   it("エンディングに今回の時間のメダルと、次の挑戦を出す", async () => {

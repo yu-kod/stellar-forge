@@ -21,6 +21,17 @@ export function ShopView({ meta, dispatch }: Props) {
         {DUST_IDS.map((id) => (
           <ElementChip key={id} element={id} value={formatNumber(meta.dust[id])} />
         ))}
+        {meta.sProcess.unlocked && (
+          <li
+            aria-label={`重元素の星屑 ${formatNumber(meta.sProcess.heavy)}`}
+            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm"
+          >
+            <span aria-hidden>重元素</span>
+            <span aria-hidden className="font-mono tabular-nums">
+              {formatNumber(meta.sProcess.heavy)}
+            </span>
+          </li>
+        )}
       </ul>
       <Button
         variant="outline"
