@@ -89,7 +89,7 @@ describe("第4層の解放（s過程の循環を見たら）", () => {
     expect(unlockLayer4(game)).toBe(game);
   });
 
-  it("解放のとき、在庫の一番軽い2つは、すでに重力波で近づいていた連星として2分で合体する", () => {
+  const looped = () => {
     const game = createGame();
     game.meta.sProcess = {
       ...game.meta.sProcess,
@@ -97,16 +97,33 @@ describe("第4層の解放（s過程の循環を見たら）", () => {
       looped: true,
       discovered: [...S_DISCOVERABLE_ELEMENTS],
     };
-    game.meta.rProcess.pool[4] = 1;
-    game.meta.rProcess.pool[5] = 2;
-    game.meta.rProcess.pool[7] = 1;
+    return game;
+  };
+
+  it("解放のとき、在庫の一番軽い2つは2分で合体する連星になり、銀河にあった 1.4 + 1.4 M☉ の連星が7分で合体する", () => {
+    const game = looped();
+    game.meta.rProcess.pool[0] = 1;
+    game.meta.rProcess.pool[4] = 2;
     const next = unlockLayer4(game);
-    expect(next.meta.rProcess.binaries).toEqual([{ a: 4, b: 5, remaining: STARTER_SECONDS }]);
-    expect(next.meta.rProcess.pool.slice(4, 8)).toEqual([0, 1, 0, 1]);
-    expect(STARTER_SECONDS).toBe(120);
-    game.meta.rProcess.pool = game.meta.rProcess.pool.map(() => 0);
-    game.meta.rProcess.pool[5] = 1; // 1つだけなら組まない
-    expect(unlockLayer4(game).meta.rProcess.binaries).toEqual([]);
+    expect(STARTER_SECONDS).toEqual([120, 420]);
+    expect(next.meta.rProcess.binaries).toEqual([
+      { a: 0, b: 4, remaining: 120 },
+      { a: 2, b: 2, remaining: 420 },
+    ]);
+    // 在庫からは1つ目の連星の2つだけを使う
+    expect(next.meta.rProcess.pool[0]).toBe(0);
+    expect(next.meta.rProcess.pool[4]).toBe(1);
+  });
+
+  it("在庫に中性子星が2つなければ、はじめの連星は作らない", () => {
+    for (const count of [0, 1]) {
+      const game = looped();
+      game.meta.rProcess.pool[3] = count;
+      const next = unlockLayer4(game);
+      expect(next.meta.rProcess.unlocked).toBe(true);
+      expect(next.meta.rProcess.binaries).toEqual([]);
+      expect(next.meta.rProcess.pool[3]).toBe(count);
+    }
   });
 
   it("循環を見る前は解放しない", () => {

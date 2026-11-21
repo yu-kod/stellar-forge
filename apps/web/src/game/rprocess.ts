@@ -77,25 +77,26 @@ export function addNeutronStars(rProcess: RProcess, bin: number, count: number):
  * s過程の循環を見たら第4層を解放する。星団の星を、中性子星を残す質量（軽いものと重いもの）にする
  * （主星の上限の質量の星はブラックホールになり、中性子星を残さないため）
  */
-/** 解放のとき、すでに重力波で近づいていた連星が合体するまでの時間 [秒] */
-export const STARTER_SECONDS = 120;
+/** 解放のとき、すでに重力波で近づいていた連星が合体するまでの時間 [秒]。1つ目は在庫の一番軽い2つ、2つ目は銀河にあった 1.4 + 1.4 M☉ */
+export const STARTER_SECONDS: readonly number[] = [120, 420];
+/** 2つ目のはじめの連星の中性子星の段（1.4 M☉） */
+const STARTER_BIN = 2;
 
-/** 在庫の一番軽い2つを、すでに近づいていた連星にする（在庫が2つ未満なら何もしない） */
-function starterBinary(rProcess: RProcess): RProcess {
+/** 在庫の一番軽い2つを近づいていた連星にし、銀河にあった 1.4 + 1.4 M☉ の連星を1つ足す */
+function starterBinaries(rProcess: RProcess): RProcess {
   const pool = [...rProcess.pool];
   const take = () => {
     const bin = pool.findIndex((n) => n > 0);
     if (bin >= 0) pool[bin]! -= 1;
     return bin;
   };
+  const binaries = [...rProcess.binaries];
   const a = take();
   const b = take();
-  if (b < 0) return rProcess;
-  return {
-    ...rProcess,
-    pool,
-    binaries: [...rProcess.binaries, { a, b, remaining: STARTER_SECONDS }],
-  };
+  if (b >= 0) binaries.push({ a, b, remaining: STARTER_SECONDS[0]! });
+  else return rProcess;
+  binaries.push({ a: STARTER_BIN, b: STARTER_BIN, remaining: STARTER_SECONDS[1]! });
+  return { ...rProcess, pool, binaries };
 }
 
 export function unlockLayer4(state: GameState): GameState {
@@ -112,7 +113,7 @@ export function unlockLayer4(state: GameState): GameState {
     meta: {
       ...meta,
       cluster,
-      rProcess: { ...starterBinary(meta.rProcess), unlocked: true },
+      rProcess: { ...starterBinaries(meta.rProcess), unlocked: true },
     } satisfies Meta,
   };
 }
