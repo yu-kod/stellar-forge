@@ -33,6 +33,19 @@ function almostComplete(): GameState {
   return game;
 }
 
+describe("gameReducer：層の解放の時刻", () => {
+  it("第2〜4層が解放された時刻を、初めてのときに残す", () => {
+    const game = createGame();
+    game.meta.elapsed = 1500;
+    game.meta.supernovae = 25;
+    let model = gameReducer(createModel(game), { type: "tick", seconds: 0.1 });
+    expect(model.game.meta.milestones.layer2).toBeCloseTo(1500.1);
+    expect(model.game.meta.milestones.layer3).toBeNull();
+    model = gameReducer(model, { type: "tick", seconds: 0.1 });
+    expect(model.game.meta.milestones.layer2).toBeCloseTo(1500.1);
+  });
+});
+
 describe("gameReducer：エンディング", () => {
   it("83マスが埋まったら、その時の遊んだ時間を残してエンディングを開く", () => {
     const model = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
@@ -42,7 +55,8 @@ describe("gameReducer：エンディング", () => {
 
   it("完結したら、やり直しても残る記録（回数と最速）に足す。やり直しても記録は残る", () => {
     const model = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
-    expect(model.hall).toEqual({ completions: 1, best: 4 * 3600 + 1 });
+    expect(model.hall).toMatchObject({ completions: 1, best: 4 * 3600 + 1 });
+    expect(model.hall.last?.complete).toBe(4 * 3600 + 1);
     expect(gameReducer(model, { type: "reset" }).hall).toEqual(model.hall);
   });
 

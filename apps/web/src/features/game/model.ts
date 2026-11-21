@@ -183,13 +183,33 @@ function checkComplete(model: Model): Model {
   return {
     ...model,
     ending: true,
-    hall: recordCompletion(model.hall, meta.elapsed),
+    hall: recordCompletion(model.hall, { ...meta.milestones, complete: meta.elapsed }),
     game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
   };
 }
 
+/** 第2〜4層が初めて解放された時刻を残す */
+function markMilestones(model: Model): Model {
+  const { meta } = model.game;
+  const { milestones } = meta;
+  const now = (done: boolean, at: number | null) => (at === null && done ? meta.elapsed : at);
+  const next = {
+    layer2: now(meta.supernovae >= LAYER2_AFTER, milestones.layer2),
+    layer3: now(meta.sProcess.unlocked, milestones.layer3),
+    layer4: now(meta.rProcess.unlocked, milestones.layer4),
+  };
+  if (
+    next.layer2 === milestones.layer2 &&
+    next.layer3 === milestones.layer3 &&
+    next.layer4 === milestones.layer4
+  ) {
+    return model;
+  }
+  return { ...model, game: { ...model.game, meta: { ...meta, milestones: next } } };
+}
+
 export function gameReducer(model: Model, action: Action): Model {
-  return checkComplete(reduce(model, action));
+  return checkComplete(markMilestones(reduce(model, action)));
 }
 
 function reduce(model: Model, action: Action): Model {

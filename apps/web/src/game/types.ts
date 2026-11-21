@@ -104,6 +104,8 @@ export type Meta = {
   elapsed: number;
   /** 83マスが埋まった時の遊んだ時間 [秒]。まだなら null */
   completedAt: number | null;
+  /** 第2〜4層が解放された時刻（遊んだ時間 [秒]）。まだなら null */
+  milestones: Milestones;
   /** 起こした Ia型超新星の数 */
   iaSupernovae: number;
   /** 見つけた軽い元素（リチウム〜マンガン）の原子番号 */
@@ -114,3 +116,6 @@ export type Meta = {
 export type ClusterSlot = { star: Star; nextMass: number | null; target: Target };
 
 export type GameState = { meta: Meta; star: Star };
+
+/** 第2〜4層が解放された時刻 [秒] */
+export type Milestones = { layer2: number | null; layer3: number | null; layer4: number | null };

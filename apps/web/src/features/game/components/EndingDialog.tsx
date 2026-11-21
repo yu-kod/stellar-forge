@@ -11,7 +11,7 @@ import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatDuration, formatNumber } from "../format";
 import { PERIODIC_TABLE } from "../periodicTable";
-import { medalOf, type Hall } from "../hall";
+import { medalOf, type Hall, type Splits } from "../hall";
 import { MedalTargets } from "./HallView";
 
 type Props = { game: GameState; hall: Hall; open: boolean; onClose: () => void };
@@ -24,6 +24,44 @@ const ORIGIN_COLOR: Record<Origin, string> = {
   typeIa: "bg-el-fe",
   merger: "bg-el-he",
 };
+
+/** 前回との差（「+5分」「−5分」「±0分」） */
+function diff(now: number, before: number): string {
+  const minutes = Math.round((now - before) / 60);
+  if (minutes === 0) return "±0分";
+  return `${minutes > 0 ? "+" : "−"}${Math.abs(minutes)}分`;
+}
+
+/** 層ごとの解放と完結の時刻と、前回との差 */
+function SplitsTable({ game, previous }: { game: GameState; previous: Splits | null }) {
+  const { milestones, completedAt } = game.meta;
+  const rows: [string, number | null, number | null][] = [
+    ["第2層", milestones.layer2, previous?.layer2 ?? null],
+    ["第3層", milestones.layer3, previous?.layer3 ?? null],
+    ["第4層", milestones.layer4, previous?.layer4 ?? null],
+    ["完結", completedAt, previous?.complete ?? null],
+  ];
+  return (
+    <table aria-label="層ごとの時刻" className="w-full text-left text-sm">
+      <thead className="text-muted-foreground">
+        <tr>
+          <th className="py-1 font-medium">解放</th>
+          <th className="py-1 font-medium">今回</th>
+          <th className="py-1 font-medium">前回との差</th>
+        </tr>
+      </thead>
+      <tbody className="font-mono">
+        {rows.map(([label, now, before]) => (
+          <tr key={label}>
+            <td className="py-0.5 font-sans">{label}</td>
+            <td className="py-0.5">{now === null ? "—" : formatDuration(now)}</td>
+            <td className="py-0.5">{now === null || before === null ? "—" : diff(now, before)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
 /** 83マスが埋まったときの画面。元素ごとの起源で塗り分けた周期表を見せる */
 export function EndingDialog({ game, hall, open, onClose }: Props) {
@@ -56,6 +94,7 @@ export function EndingDialog({ game, hall, open, onClose }: Props) {
           </p>
           <MedalTargets />
         </div>
+        <SplitsTable game={game} previous={hall.previous} />
         <ul aria-label="ここまでの星" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {stats.map(([label, value]) => (
             <li key={label}>
