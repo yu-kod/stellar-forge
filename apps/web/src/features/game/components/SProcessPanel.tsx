@@ -20,7 +20,7 @@ type Props = {
   meta: Meta;
   /** s過程で次に見つける元素の進み具合の追跡（モデルが持つので、タブを移っても続く） */
   track: ProgressTrack | null;
-  /** 種ごとの循環までの見込み（モデルが少しずつ計算する） */
+  /** 種ごとの次のピークまでの見込み（モデルが少しずつ計算する） */
   projection: readonly SeedProjection[] | null;
   dispatch: (action: Action) => void;
 };
@@ -156,14 +156,12 @@ function NextDiscoveryEta({ track }: { track: ProgressTrack | null }) {
   );
 }
 
-/** その種での循環までの見込みの文言（一番速いものに印） */
-function loopText(projection: readonly SeedProjection[], seeds: number): string {
+/** その種での次のピークまでの見込みの文言（どれが一番かの印は付けない：局面で種を変える最善は見込みに出ない） */
+function peakText(projection: readonly SeedProjection[], seeds: number): string {
   const job = projection.find((j) => j.seeds === seeds)!;
-  if (job.loopAt !== null) {
-    const fastest = Math.min(...projection.map((j) => j.loopAt ?? Infinity));
-    return `約${formatDuration(job.loopAt)}${job.loopAt === fastest ? "（一番速い）" : ""}`;
-  }
-  return job.elapsed >= PROJECTION_HORIZON ? " 90分より先" : " 計算中";
+  const name = elementOf(job.peak).name;
+  if (job.reachedAt !== null) return `${name}まで約${formatDuration(job.reachedAt)}`;
+  return `${name}まで${job.elapsed >= PROJECTION_HORIZON ? " 90分より先" : " 計算中"}`;
 }
 
 /** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど重元素の星屑を稼ぐ */
@@ -202,7 +200,7 @@ function SeedTargetPicker({ meta, track, projection, dispatch }: Props) {
             <li key={target}>
               {target}：中性子の{Math.round(preview.share * 100)}%が道に・1つの速さ ×
               {preview.speed.toFixed(2)}・重元素 毎秒 +{preview.heavyPerSecond.toFixed(2)}
-              {projection && `・循環まで${loopText(projection, target)}`}
+              {projection && projection.length > 0 && `・${peakText(projection, target)}`}
             </li>
           );
         })}

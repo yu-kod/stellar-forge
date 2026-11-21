@@ -39,13 +39,14 @@ describe("SProcessPanel：次の発見までの見込み", () => {
     expect(screen.queryByText(/次の発見/)).not.toBeInTheDocument();
   });
 
-  it("種ごとに、自動交換で進めたときの循環（ビスマス → 鉛）までの見込みを出す", () => {
+  it("種ごとに、自動交換で進めたときの次のピークまでの見込みを出す（どれが一番かの印は付けない）", () => {
     const meta = at(0, 0.1);
-    const job = (seeds: number, loopAt: number | null, elapsed: number) => ({
+    const job = (seeds: number, reachedAt: number | null, elapsed: number) => ({
       seeds,
+      peak: 56,
       state: { meta, star: createGame().star },
       elapsed,
-      loopAt,
+      reachedAt,
     });
     const projection = [
       job(1, null, PROJECTION_HORIZON),
@@ -56,9 +57,10 @@ describe("SProcessPanel：次の発見までの見込み", () => {
     render(<SProcessPanel meta={meta} track={null} projection={projection} dispatch={() => {}} />);
     const list = screen.getByRole("list", { name: "種の見込み" });
     const rows = within(list).getAllByRole("listitem");
-    expect(rows[0]).toHaveTextContent("循環まで 90分より先");
-    expect(rows[1]).toHaveTextContent("循環まで約40分");
-    expect(rows[2]).toHaveTextContent("循環まで約34分（一番速い）");
-    expect(rows[3]).toHaveTextContent("循環まで 計算中");
+    expect(rows[0]).toHaveTextContent("バリウムまで 90分より先");
+    expect(rows[1]).toHaveTextContent("バリウムまで約40分");
+    expect(rows[2]).toHaveTextContent("バリウムまで約34分");
+    expect(rows[3]).toHaveTextContent("バリウムまで 計算中");
+    expect(list).not.toHaveTextContent("一番");
   });
 });
