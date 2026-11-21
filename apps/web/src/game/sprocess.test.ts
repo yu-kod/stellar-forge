@@ -7,6 +7,7 @@ import {
   S_DISCOVERY_THRESHOLD,
   S_PATH_END,
   discoveryThreshold,
+  seedPreview,
   S_PATH_START,
   captureNeutrons,
   captures,
@@ -314,5 +315,25 @@ describe("魔法数の元素", () => {
   it("Sr・Y・Zr、Ba・La・Ce、Pb・Bi", () => {
     expect([38, 39, 40, 56, 57, 58, 82, 83].every(isMagic)).toBe(true);
     expect(isMagic(41)).toBe(false);
+  });
+});
+
+describe("鉄の種の目標の見込み", () => {
+  it("種を増やすほど中性子を毒に取られにくく、恒星風の稼ぎも増えるが、1つの種の速さは落ちる", () => {
+    const meta = createMeta();
+    meta.sProcess.amounts[index(38)] = 5;
+    const [one, ten, thirty] = [1, 10, 30].map((target) => seedPreview(meta, target));
+    expect(one!.share).toBeLessThan(ten!.share);
+    expect(ten!.share).toBeLessThan(thirty!.share);
+    expect(one!.speed).toBeGreaterThan(ten!.speed);
+    expect(thirty!.heavyPerSecond).toBeCloseTo(3 * ten!.heavyPerSecond);
+    // 道の組成に合わせる（いまのストロンチウムの断面積）
+    const weight = 10 * crossSection(38);
+    expect(ten!.share).toBeCloseTo(weight / (weight + NEUTRON_POISON));
+  });
+
+  it("道が空なら鉄の種で見込む", () => {
+    const preview = seedPreview(createMeta(), 1);
+    expect(preview.share).toBeCloseTo(crossSection(26) / (crossSection(26) + NEUTRON_POISON));
   });
 });

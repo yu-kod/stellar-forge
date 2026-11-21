@@ -175,6 +175,20 @@ describe("GameScreen：第3層の強化と自動化", () => {
     expect(screen.getByRole("article", { name: "¹³C ポケット" })).toBeInTheDocument();
   });
 
+  it("鉄の種の目標ごとに、道に届く中性子の割合と恒星風の稼ぎの見込みを出す", () => {
+    renderGame(layer3(0));
+    const preview = screen.getByRole("list", { name: "種の見込み" });
+    expect(within(preview).getAllByRole("listitem")).toHaveLength(4);
+    expect(preview).toHaveTextContent(/1：中性子の\d+%が道に・1つの速さ ×[\d.]+・重元素 毎秒 \+/);
+  });
+
+  it("第3層からは、星タブの燃焼の段階を畳む（第3層の操作を上に出す）", () => {
+    renderGame(layer3());
+    openTab("星");
+    const fold = screen.getByText(/燃焼の段階/, { selector: "summary" }).closest("details");
+    expect(fold).not.toHaveAttribute("open");
+  });
+
   it("第3層では、鉄の種の目標の量を選べる", async () => {
     const game = layer3(0);
     const { user } = renderGame(game);
