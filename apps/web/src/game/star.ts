@@ -10,6 +10,7 @@ import {
   REFERENCE_MASS,
   GALAXIES,
   HERITAGE_DUST,
+  HERITAGE_HEAVY,
 } from "./balance";
 import { createSProcess } from "./sprocess";
 import {
@@ -77,7 +78,7 @@ export function createMeta(galaxy: Galaxy = "milkyWay", completions = 0): Meta {
     autoShop: false,
     log: [],
     cluster: [],
-    sProcess: createSProcess(),
+    sProcess: { ...createSProcess(), heavy: completions > 0 ? HERITAGE_HEAVY : 0 },
     rProcess: createRProcess(),
     iaSupernovae: 0,
     elapsed: 0,

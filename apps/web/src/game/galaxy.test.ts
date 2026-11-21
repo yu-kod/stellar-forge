@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GALAXIES, HERITAGE_DUST } from "./balance";
+import { GALAXIES, HERITAGE_DUST, HERITAGE_HEAVY } from "./balance";
 import { binarySlots } from "./merger";
 import { NEUTRON_POISON, captureNeutrons, neutronPoison, seedPreview } from "./sprocess";
 import { createGame, whiteDwarfsMade } from "./star";
@@ -51,5 +51,17 @@ describe("周の初めに選ぶ銀河", () => {
     expect(Object.values(createGame().meta.dust).every((n) => n === 0)).toBe(true);
     expect(createGame("milkyWay", 1).meta.dust).toEqual(HERITAGE_DUST);
     expect(createGame("metalRich", 3).meta.dust).toEqual(HERITAGE_DUST);
+  });
+
+  it("前の周の s元素も残り、重元素の星屑を持って始まる（1周目は持たない）", () => {
+    expect(HERITAGE_HEAVY).toBeGreaterThan(0);
+    expect(createGame().meta.sProcess.heavy).toBe(0);
+    expect(createGame("milkyWay", 1).meta.sProcess.heavy).toBe(HERITAGE_HEAVY);
+    expect(createGame("metalRich", 2).meta.sProcess.heavy).toBe(HERITAGE_HEAVY);
+  });
+
+  it("ケイ素と硫黄は残さない（はじめに使い切ると、爆発的ケイ素燃焼の元素を見つける機会がなくなる）", () => {
+    expect(HERITAGE_DUST.Si).toBe(0);
+    expect(HERITAGE_DUST.S).toBe(0);
   });
 });
