@@ -219,7 +219,7 @@ describe("gameReducer：種ごとの見込み", () => {
 
   it("見込みが出たら、1分ごとに今の状態から出し直す", () => {
     let model = gameReducer(createModel(layer3()), { type: "tick", seconds: 0.25 });
-    const done = model.seedProjection!.jobs.map((job) => ({ ...job, loopAt: 600 }));
+    const done = model.seedProjection!.jobs.map((job) => ({ ...job, reachedAt: 600 }));
     model = { ...model, seedProjection: { jobs: done, startedAt: model.game.meta.elapsed } };
     const kept = gameReducer(model, { type: "tick", seconds: 1 });
     expect(kept.seedProjection?.jobs).toBe(done);
@@ -233,7 +233,7 @@ describe("gameReducer：種ごとの見込み", () => {
       },
       { type: "tick", seconds: 0.25 }
     );
-    expect(later.seedProjection?.jobs[0]?.loopAt).toBeNull();
+    expect(later.seedProjection?.jobs[0]?.reachedAt).toBeNull();
     expect(later.seedProjection?.startedAt).toBe(later.game.meta.elapsed);
   });
 });

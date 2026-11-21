@@ -72,7 +72,7 @@ export type Model = {
   nextNoticeId: number;
   /** s過程で次に見つける元素の進み具合の追跡（次の発見までの見積もり。保存しない） */
   sTrack: ProgressTrack | null;
-  /** 種ごとの循環までの見込み（第3層の間だけ。少しずつ計算する。保存しない） */
+  /** 種ごとの次のピークまでの見込み（第3層の間だけ。少しずつ計算する。保存しない） */
   seedProjection: { jobs: SeedProjection[]; startedAt: number } | null;
 };
 
