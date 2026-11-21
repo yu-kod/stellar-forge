@@ -12,7 +12,7 @@ function incomeRate(meta: Meta, currency: Currency): number {
 }
 
 /**
- * 次に狙う星屑の強化。買えるものがあればそれ。なければ燃焼の自動制御、
+ * 次に狙う星屑の強化。買えるものがあればそれ。なければ燃焼の自動制御・連星の自動化、
  * その次は 不足 ÷ 稼ぎ（次に買えるまでの推定時間）が一番短いもの。
  * 稼いだことのある通貨がなければ、足りない割合（不足 / 費用）が一番小さいもの
  */
@@ -36,8 +36,8 @@ export function nextShopGoal(meta: Meta): ShopGoal {
   });
   const affordable = goals.find(({ goal }) => goal.affordable);
   if (affordable) return affordable.goal;
-  // 燃焼の自動制御は遊び方を大きく変えるので、交換できるものがなければ真っ先に勧める
-  const auto = goals.find(({ goal }) => goal.item === "auto");
+  // 自動化（燃焼の自動制御・連星の自動化）は遊び方を大きく変えるので、交換できるものがなければ真っ先に勧める
+  const auto = goals.find(({ goal }) => goal.item === "auto" || goal.item === "rAuto");
   if (auto) return auto.goal;
   const timed = goals.filter((g) => g.seconds < Infinity);
   if (timed.length > 0) return timed.reduce((a, b) => (b.seconds < a.seconds ? b : a)).goal;

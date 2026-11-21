@@ -105,6 +105,17 @@ describe("第4層の強化", () => {
   });
 });
 
+describe("第4層の目標", () => {
+  it("連星の自動化は、燃焼の自動制御と同じく、交換できるものがなければ真っ先に勧める", () => {
+    const game = layer4();
+    game.meta.shop.auto = 1;
+    game.meta.dust = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
+    game.meta.sProcess.heavy = 0;
+    game.meta.bestRate = { ...game.meta.bestRate, O: 1e9, S: 1 };
+    expect(nextShopGoal(game.meta).item).toBe("rAuto");
+  });
+});
+
 describe("重元素の星屑の第4層での使い道", () => {
   it("s過程を終えたら、まとめて交換でも s過程の強化は買わない", () => {
     const game = layer4();
