@@ -98,7 +98,7 @@ export function RecordsView({ meta, onEnding }: { meta: Meta; onEnding?: () => v
             <tr className="text-muted-foreground border-b text-left">
               <th className="px-2 py-1 font-medium">星</th>
               <th className="px-2 py-1 font-medium">寿命</th>
-              <th className="px-2 py-1 font-medium">放出した重元素</th>
+              <th className="px-2 py-1 font-medium">放出した金属</th>
               <th className="px-2 py-1 font-medium">得た星屑</th>
             </tr>
           </thead>

@@ -95,7 +95,12 @@ describe("RecordsView", () => {
     expect(screen.getByRole("cell", { name: "まだ超新星は起きていない" })).toBeInTheDocument();
   });
 
-  it("これまでの星の寿命・放出した重元素・得た星屑を並べる", () => {
+  it("放出量の列は「放出した金属」（重元素の星屑と紛らわしくしない）", () => {
+    render(<RecordsView meta={createMeta()} />);
+    expect(screen.getByRole("columnheader", { name: "放出した金属" })).toBeInTheDocument();
+  });
+
+  it("これまでの星の寿命・放出した金属・得た星屑を並べる", () => {
     const meta = createMeta();
     meta.log = [
       record({ generation: 2, gain: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 } }),

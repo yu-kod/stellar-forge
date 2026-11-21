@@ -51,6 +51,7 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(details).not.toBeNull();
     expect(details).not.toHaveAttribute("open");
     expect(within(details!).getByText("しくみ")).toBeInTheDocument();
+    expect(details).toHaveTextContent("ゲーム用の簡略化");
   });
 
   it("第4層では、星屑タブの第1・2層の強化を畳む（まとめて交換で買える）", async () => {
