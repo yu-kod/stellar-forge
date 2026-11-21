@@ -355,13 +355,19 @@ function merge(meta: Meta, binary: Binary): { meta: Meta; events: MergerEvent[] 
   const amounts = meta.rProcess.amounts.map(
     (amount, i) => amount + deposit(preview, i + R_PATH_START)
   );
+  // 追観測にしていれば、放出物は貯めずに、いま作りたい元素の発見に回す
+  const { observing } = meta.rProcess;
+  if (observing) {
+    const z = rGoal(meta);
+    amounts[z - R_PATH_START]! += ejecta * OBSERVE_RATE * rWeight(z);
+  }
   const found = reached(meta.rProcess, amounts);
   const rProcess: RProcess = {
     ...meta.rProcess,
     amounts,
     discovered: [...meta.rProcess.discovered, ...found],
     mergers: meta.rProcess.mergers + 1,
-    ejecta: meta.rProcess.ejecta + ejecta,
+    ejecta: meta.rProcess.ejecta + (observing ? 0 : ejecta),
   };
   return {
     meta: { ...meta, rProcess },
@@ -403,6 +409,17 @@ export function observe(state: GameState): { state: GameState; events: MergerEve
     state: { ...state, meta: { ...state.meta, rProcess: next } },
     events: found.map((found) => ({ type: "rDiscover" as const, z: found })),
   };
+}
+
+/** 放出物の使い道を切り替える。追観測にしたら、貯めた分もすぐ回す。第4層の前は何もしない */
+export function setObserving(
+  state: GameState,
+  on: boolean
+): { state: GameState; events: MergerEvent[] } {
+  if (!state.meta.rProcess.unlocked) return { state, events: [] };
+  const rProcess = { ...state.meta.rProcess, observing: on };
+  const next = { ...state, meta: { ...state.meta, rProcess } };
+  return on ? observe(next) : { state: next, events: [] };
 }
 
 /** 連星を進め、時間が来たものを合体させる */

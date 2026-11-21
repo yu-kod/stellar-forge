@@ -31,6 +31,8 @@ export type RProcess = {
   mergers: number;
   /** 貯めたキロノバの放出物（第4層の強化の通貨） */
   ejecta: number;
+  /** 放出物の使い道を追観測にしているか（合体のたびに、いま作りたい元素の発見に回す） */
+  observing: boolean;
 };
 
 export function createRProcess(): RProcess {
@@ -42,6 +44,7 @@ export function createRProcess(): RProcess {
     discovered: [],
     mergers: 0,
     ejecta: 0,
+    observing: false,
   };
 }
 
