@@ -95,7 +95,12 @@ const BASE_BINARY_SLOTS = 2;
 
 /** 同時に持てる連星の数 */
 export function binarySlots(meta: Meta): number {
-  return BASE_BINARY_SLOTS + GALAXIES[meta.galaxy].binarySlots + meta.shop.slots + (has(meta.rProcess, IRIDIUM) ? 1 : 0);
+  return (
+    BASE_BINARY_SLOTS +
+    GALAXIES[meta.galaxy].binarySlots +
+    meta.shop.slots +
+    (has(meta.rProcess, IRIDIUM) ? 1 : 0)
+  );
 }
 
 /** 放出物の稼ぎ [毎秒]：待っている連星の 放出物 ÷ 合体までの時間 の合計 */
