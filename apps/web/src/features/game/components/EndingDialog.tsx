@@ -92,7 +92,7 @@ export function EndingDialog({ game, hall, open, onClose }: Props) {
             {meta.galaxy !== "milkyWay" && `（${GALAXIES[meta.galaxy].name}）`}
             {best && `（最速 ${formatDuration(best.complete)}・完結 ${hall.completions}回）`}
           </p>
-          <MedalTargets galaxy={meta.galaxy} />
+          <MedalTargets galaxy={meta.galaxy} hall={hall} />
         </div>
         <SplitsTable
           game={game}
