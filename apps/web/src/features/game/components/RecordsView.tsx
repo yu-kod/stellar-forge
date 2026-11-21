@@ -1,3 +1,5 @@
+import { HallView } from "./HallView";
+import { EMPTY_HALL, type Hall } from "../hall";
 import { Button } from "@/components/ui/button";
 import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
 import { DUST_IDS, type Meta } from "@/game/types";
@@ -46,9 +48,18 @@ function layers(meta: Meta): Layer[] {
   ];
 }
 
-export function RecordsView({ meta, onEnding }: { meta: Meta; onEnding?: () => void }) {
+export function RecordsView({
+  meta,
+  hall = EMPTY_HALL,
+  onEnding,
+}: {
+  meta: Meta;
+  hall?: Hall;
+  onEnding?: () => void;
+}) {
   return (
     <div className="grid gap-4">
+      <HallView hall={hall} />
       {meta.completedAt !== null && (
         <Button variant="outline" className="h-11 justify-self-start" onClick={onEnding}>
           エンディングを見る

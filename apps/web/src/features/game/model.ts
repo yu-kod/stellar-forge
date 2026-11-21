@@ -1,3 +1,4 @@
+import { EMPTY_HALL, recordCompletion, type Hall } from "./hall";
 import {
   buyAllShopItems,
   buyShopItem,
@@ -52,6 +53,8 @@ export type Away = {
 
 export type Model = {
   game: GameState;
+  /** やり直しても残る記録 */
+  hall: Hall;
   away: Away | null;
   /** エンディングの画面を開いているか */
   ending: boolean;
@@ -85,9 +88,13 @@ export type Action =
 
 const NOTICE_LIMIT = 4;
 
-export function createModel(game: GameState, events: NoticeEvent[] = []): Model {
+export function createModel(
+  game: GameState,
+  events: NoticeEvent[] = [],
+  hall: Hall = EMPTY_HALL
+): Model {
   return notify(
-    { game, away: null, ending: false, speed: 1, notices: [], nextNoticeId: 1 },
+    { game, hall, away: null, ending: false, speed: 1, notices: [], nextNoticeId: 1 },
     events
   );
 }
@@ -174,6 +181,7 @@ function checkComplete(model: Model): Model {
   return {
     ...model,
     ending: true,
+    hall: recordCompletion(model.hall, meta.elapsed),
     game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
   };
 }
@@ -264,6 +272,6 @@ function reduce(model: Model, action: Action): Model {
     case "setSpeed":
       return { ...model, speed: action.speed };
     case "reset":
-      return { ...createModel(createGame()), speed: model.speed };
+      return { ...createModel(createGame(), [], model.hall), speed: model.speed };
   }
 }

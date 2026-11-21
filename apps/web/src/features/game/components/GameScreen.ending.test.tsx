@@ -5,6 +5,37 @@ import { createGame } from "@/game/star";
 import { manualTicker } from "@/test-utils/game";
 import { createModel, gameReducer } from "../model";
 import { GameScreen } from "./GameScreen";
+import { EMPTY_HALL, HALL_KEY } from "../hall";
+import { createJsonStorage } from "@app/web-core";
+
+/** jsdom の localStorage を空にして、初めの中身を入れる */
+function memoryStorage(initial: Record<string, unknown>) {
+  window.localStorage.clear();
+  const storage = createJsonStorage();
+  for (const [key, value] of Object.entries(initial)) storage.set(key, value);
+  return storage;
+}
+
+/** 金だけが残っていて、すぐ合体する */
+function almostDone() {
+  const game = createGame();
+  game.meta.discovered = Object.fromEntries(
+    ["He", "C", "N", "O", "Ne", "Mg", "Si", "S", "Fe"].map((id) => [id, true])
+  );
+  game.meta.lightFound = [3, 4, 5, 9, 11, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+  game.meta.sProcess = {
+    ...game.meta.sProcess,
+    unlocked: true,
+    looped: true,
+    discovered: Array.from({ length: 57 }, (_, i) => 27 + i).filter(
+      (z) => ![63, 76, 77, 78, 79].includes(z)
+    ),
+  };
+  game.meta.rProcess = { ...game.meta.rProcess, unlocked: true, discovered: [63, 76, 77, 78] };
+  game.meta.rProcess.amounts[79 - 31] = 199;
+  game.meta.rProcess.binaries = [{ a: 0, b: 8, remaining: 0.1 }];
+  return game;
+}
 
 function completed() {
   const game = createGame();
@@ -57,10 +88,50 @@ describe("GameScreen：エンディング", () => {
   });
 });
 
+describe("記録への挑戦", () => {
+  it("保存された記録を読み、記録タブに完結の回数と最速、メダルの目安を出す", async () => {
+    const user = userEvent.setup();
+    const storage = memoryStorage({ [HALL_KEY]: { completions: 2, best: 178 * 60 } });
+    render(<GameScreen ticker={manualTicker().ticker} storage={storage} now={() => 0} />);
+    await user.click(screen.getByRole("tab", { name: "記録" }));
+    const hall = screen.getByRole("region", { name: "記録への挑戦" });
+    expect(hall).toHaveTextContent("完結 2回・最速 2時間58分（銀）");
+    expect(hall).toHaveTextContent("金：2時間55分以内");
+  });
+
+  it("エンディングに今回の時間のメダルと、次の挑戦を出す", async () => {
+    const { EndingDialog } = await import("./EndingDialog");
+    render(
+      <EndingDialog
+        game={completed()}
+        hall={{ completions: 1, best: 4 * 3600 + 30 * 60 }}
+        open
+        onClose={() => {}}
+      />
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("今回のメダル：銅");
+    expect(dialog).toHaveTextContent("金：2時間55分以内");
+  });
+
+  it("完結したら記録を保存する", () => {
+    const storage = memoryStorage({});
+    const { tick } = (() => {
+      const clock = manualTicker();
+      render(
+        <GameScreen initial={almostDone()} ticker={clock.ticker} storage={storage} now={() => 0} />
+      );
+      return clock;
+    })();
+    tick(0.25);
+    expect(storage.get(HALL_KEY)).toEqual({ completions: 1, best: expect.any(Number) });
+  });
+});
+
 describe("EndingDialog", () => {
   it("まだ埋まっていなければ時間は 0分（記録からは開けない）", async () => {
     const { EndingDialog } = await import("./EndingDialog");
-    render(<EndingDialog game={createGame()} open onClose={() => {}} />);
+    render(<EndingDialog game={createGame()} hall={EMPTY_HALL} open onClose={() => {}} />);
     expect(screen.getByRole("dialog")).toHaveTextContent("（0分）");
   });
 });

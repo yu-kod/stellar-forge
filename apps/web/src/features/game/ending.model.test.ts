@@ -40,6 +40,12 @@ describe("gameReducer：エンディング", () => {
     expect(model.ending).toBe(true);
   });
 
+  it("完結したら、やり直しても残る記録（回数と最速）に足す。やり直しても記録は残る", () => {
+    const model = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
+    expect(model.hall).toEqual({ completions: 1, best: 4 * 3600 + 1 });
+    expect(gameReducer(model, { type: "reset" }).hall).toEqual(model.hall);
+  });
+
   it("閉じたら遊び続けられ、もう自分では開かない。記録からは開ける", () => {
     let model = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
     model = gameReducer(model, { type: "closeEnding" });
