@@ -4,12 +4,12 @@ import { EMPTY_HALL, MEDALS, medalOf, parseHall, recordCompletion } from "./hall
 const MINUTE = 60;
 
 describe("記録への挑戦（やり直しても残る記録）", () => {
-  it("完結までの時間でメダル：金 2時間55分以内、銀 3時間5分以内、それ以外は銅", () => {
+  it("完結までの時間でメダル：金 2時間50分以内、銀 3時間以内、それ以外は銅", () => {
     expect(MEDALS.map((m) => m.name)).toEqual(["金", "銀", "銅"]);
-    expect(medalOf(175 * MINUTE)).toBe("金");
-    expect(medalOf(175 * MINUTE + 1)).toBe("銀");
-    expect(medalOf(185 * MINUTE)).toBe("銀");
-    expect(medalOf(185 * MINUTE + 1)).toBe("銅");
+    expect(medalOf(170 * MINUTE)).toBe("金");
+    expect(medalOf(170 * MINUTE + 1)).toBe("銀");
+    expect(medalOf(180 * MINUTE)).toBe("銀");
+    expect(medalOf(180 * MINUTE + 1)).toBe("銅");
   });
 
   it("完結の回数を数え、一番速い時間を残す", () => {

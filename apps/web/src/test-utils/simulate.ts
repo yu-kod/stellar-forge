@@ -16,7 +16,7 @@ import { funds, isShopItemOpen } from "@/game/shop";
 import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
-import { bestPair, formBinary, pairAdvice, rGoal } from "@/game/merger";
+import { bestPair, formBinary, nextRDiscovery, pairAdvice, rGoal } from "@/game/merger";
 import { S_DISCOVERABLE } from "@/game/sprocess";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { stageCost } from "@/game/rates";
@@ -200,6 +200,8 @@ export function playIdle(
     touchEvery?: number;
     /** 燃焼の自動制御を手に入れたら、星屑の自動交換を ON にする */
     autoShop?: boolean;
+    /** 第4層の前も星団の星の質量を変えない（画面の初期値のまま） */
+    keepCluster?: boolean;
     /** 狙いを固定する（省略すると次の目標に合わせる） */
     target?: Target | ((state: GameState) => Target);
     /** これが true になったら止める */
@@ -244,9 +246,17 @@ export function playIdle(
       // 第4層：星団の1つ目は軽い中性子星（1.2 M☉）を残す 10 M☉ の星にし、主星の重い中性子星と組む
       // 第4層では、解放のときに決まる星団の質量（中性子星を残す星）のまま。届く組がなければ目標の案内に従う
       if (!state.meta.rProcess.unlocked) {
-        state.meta.cluster.forEach((_, i) => {
-          state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
-        });
+        if (!options.keepCluster)
+          state.meta.cluster.forEach((_, i) => {
+            state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
+          });
+      } else if (
+        !options.pairing &&
+        !state.meta.lightFound.includes(9) &&
+        nextRDiscovery(state.meta.rProcess) === null
+      ) {
+        // 目標の「まだの元素 フッ素：炭素星を白色矮星にする」に従う
+        state = setSlotMass(state, 0, 2);
       } else if (!options.pairing) {
         const advice = pairAdvice(state.meta, rGoal(state.meta));
         const hint =
