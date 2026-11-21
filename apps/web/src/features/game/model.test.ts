@@ -2,7 +2,13 @@ import { buyShopItem } from "@/game/actions";
 import { describe, expect, it } from "vitest";
 import { createGame } from "@/game/star";
 import { aboutToCollapse, collapsed } from "@/test-utils/game";
-import { createModel, gameReducer, type Model } from "./model";
+import {
+  PROJECTION_REFRESH,
+  PROJECTION_SECONDS_PER_TICK,
+  createModel,
+  gameReducer,
+  type Model,
+} from "./model";
 import { LAYER2_AFTER } from "@/game/balance";
 
 function modelWith(overrides: Partial<Model> = {}): Model {
@@ -189,5 +195,45 @@ describe("gameReducer：s過程の次の発見の追跡", () => {
   it("第3層の前は追わない", () => {
     const model = gameReducer(createModel(createGame()), { type: "tick", seconds: 1 });
     expect(model.sTrack).toBeNull();
+  });
+});
+
+describe("gameReducer：種ごとの見込み", () => {
+  const layer3 = () => {
+    const game = createGame();
+    game.meta.shop.auto = 1;
+    game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, discovered: [27] };
+    return game;
+  };
+
+  it("第3層の間、進めるたびに見込みを少しずつ進める", () => {
+    let model = gameReducer(createModel(layer3()), { type: "tick", seconds: 0.25 });
+    expect(model.seedProjection?.jobs.map((job) => job.seeds)).toEqual([1, 3, 10, 30]);
+    expect(model.seedProjection?.startedAt).toBe(model.game.meta.elapsed);
+    model = gameReducer(model, { type: "tick", seconds: 0.25 });
+    expect(model.seedProjection?.jobs[0]?.elapsed).toBe(PROJECTION_SECONDS_PER_TICK);
+    expect(
+      gameReducer(createModel(createGame()), { type: "tick", seconds: 0.25 }).seedProjection
+    ).toBeNull();
+  });
+
+  it("見込みが出たら、1分ごとに今の状態から出し直す", () => {
+    let model = gameReducer(createModel(layer3()), { type: "tick", seconds: 0.25 });
+    const done = model.seedProjection!.jobs.map((job) => ({ ...job, loopAt: 600 }));
+    model = { ...model, seedProjection: { jobs: done, startedAt: model.game.meta.elapsed } };
+    const kept = gameReducer(model, { type: "tick", seconds: 1 });
+    expect(kept.seedProjection?.jobs).toBe(done);
+    const later = gameReducer(
+      {
+        ...kept,
+        game: {
+          ...kept.game,
+          meta: { ...kept.game.meta, elapsed: kept.game.meta.elapsed + PROJECTION_REFRESH },
+        },
+      },
+      { type: "tick", seconds: 0.25 }
+    );
+    expect(later.seedProjection?.jobs[0]?.loopAt).toBeNull();
+    expect(later.seedProjection?.startedAt).toBe(later.game.meta.elapsed);
   });
 });
