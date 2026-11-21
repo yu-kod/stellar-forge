@@ -357,6 +357,14 @@ describe("第4層の周期表と知らせ", () => {
       "テクネチウムには安定な同位体がない。1952年に赤色巨星のスペクトルで見つかり、星の中でいまも元素が作られている証拠になった",
     ],
     [{ type: "layer4Unlocked" }, "第4層：中性子星合体が始まった"],
+    [
+      { type: "burst", process: "s", zs: [42, 43, 44] },
+      "新元素 3つ：モリブデン（Mo）・テクネチウム（Tc）・ルテニウム（Ru） s過程で作った。テクネチウムには安定な同位体がない",
+    ],
+    [
+      { type: "burst", process: "r", zs: [90, 92] },
+      "新元素 2つ：トリウム（Th）・ウラン（U） 中性子星合体で作った。ウラン238",
+    ],
   ] as const)("知らせ：%o", async (event, text) => {
     const { Notices } = await import("./Notices");
     render(<Notices notices={[{ id: 1, event }]} onDismiss={() => {}} />);
