@@ -35,7 +35,7 @@ export function ResetDialog({ onReset, chooseGalaxy }: Props) {
         <DialogHeader>
           <DialogTitle>最初からやり直しますか？</DialogTitle>
           <DialogDescription>
-            星屑・発見した元素・記録がすべて消えます。元には戻せません。
+            星屑・発見した元素・超新星の記録が消えます。記録への挑戦（完結の回数と最速）は残ります。元には戻せません。
           </DialogDescription>
         </DialogHeader>
         {chooseGalaxy && (

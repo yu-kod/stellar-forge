@@ -146,7 +146,9 @@ describe("GameScreen：保存と再開", () => {
 
     await user.click(screen.getByRole("button", { name: "最初からやり直す" }));
     const dialog = screen.getByRole("dialog", { name: "最初からやり直しますか？" });
-    expect(dialog).toHaveTextContent("星屑・発見した元素・記録がすべて消えます");
+    expect(dialog).toHaveTextContent(
+      "星屑・発見した元素・超新星の記録が消えます。記録への挑戦（完結の回数と最速）は残ります"
+    );
     await user.click(screen.getByRole("button", { name: "消してやり直す" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

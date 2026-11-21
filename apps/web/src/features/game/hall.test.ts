@@ -56,6 +56,8 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     expect(parseHall(null)).toEqual(EMPTY_HALL);
     expect(parseHall({ completions: "x" })).toEqual(EMPTY_HALL);
     expect(parseHall({ completions: 0, bests: {} })).toEqual(EMPTY_HALL);
+    expect(parseHall({ completions: 2 })).toEqual(EMPTY_HALL);
+    expect(parseHall({ completions: 2, bests: null })).toEqual(EMPTY_HALL);
     const saved = {
       completions: 2,
       bests: { milkyWay: splits(100), metalRich: splits(150, "metalRich") },
