@@ -1,6 +1,8 @@
 import { Fragment, useId, useMemo } from "react";
+import { SHOP } from "@/game/balance";
+import { nextShopGoal } from "@/game/goal";
 import { previewRun, type RunPreview } from "@/game/preview";
-import { DUST_IDS, TARGET_IDS, type Meta, type Target } from "@/game/types";
+import { DUST_IDS, TARGET_IDS, type DustId, type Meta, type Target } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { TARGET_NAMES } from "../elements";
 import { formatNumber } from "../format";
@@ -11,13 +13,20 @@ type Props = { meta: Meta; dispatch: (action: Action) => void };
 /** 見込みに出す星屑の数（多い順） */
 const PREVIEW_TOP = 2;
 
-/** 見込みの区切り（時間・多く取れる星屑）。区切りの中では折り返さない */
-function describePreview({ seconds, dust }: RunPreview): string[] {
-  const top = [...DUST_IDS]
-    .sort((a, b) => dust[b] - dust[a])
-    .slice(0, PREVIEW_TOP)
-    .map((id) => `${id} ${formatNumber(dust[id])}`);
-  return [`約${Math.round(seconds)}秒`, ...top];
+/**
+ * 見込みの区切り（時間・多く取れる星屑）。区切りの中では折り返さない。
+ * 次の目標の星屑が多い順に入らなければ添える（どの狙いで多く取れるかを見込みで比べられるように）
+ */
+function describePreview({ seconds, dust }: RunPreview, goal: DustId | null): string[] {
+  const ids = [...DUST_IDS].sort((a, b) => dust[b] - dust[a]).slice(0, PREVIEW_TOP);
+  if (goal && !ids.includes(goal)) ids.push(goal);
+  return [`約${Math.round(seconds)}秒`, ...ids.map((id) => `${id} ${formatNumber(dust[id])}`)];
+}
+
+/** 次の目標の通貨が星屑ならその元素（重元素の星屑・放出物は狙いで増えない） */
+function goalDust(meta: Meta): DustId | null {
+  const currency = SHOP[nextShopGoal(meta).item].currency;
+  return (DUST_IDS as readonly string[]).includes(currency) ? (currency as DustId) : null;
 }
 
 /** 狙いごとの次の1周の見込み。星屑が変わるたびには計算しない（強化や設定が変わったときだけ） */
@@ -28,12 +37,13 @@ function usePreviews(meta: Meta): Record<Target, string[]> | null {
     meta.discovered,
     meta.lightFound.length,
     meta.sProcess.discovered.length,
+    goalDust(meta),
   ]);
   return useMemo(
     () =>
       meta.shop.auto
         ? (Object.fromEntries(
-            TARGET_IDS.map((id) => [id, describePreview(previewRun(meta, id))])
+            TARGET_IDS.map((id) => [id, describePreview(previewRun(meta, id), goalDust(meta))])
           ) as Record<Target, string[]>)
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- key に見込みに効く項目をまとめた

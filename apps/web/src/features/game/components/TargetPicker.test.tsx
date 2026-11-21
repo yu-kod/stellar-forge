@@ -1,4 +1,6 @@
 import { render, screen } from "@testing-library/react";
+import { SHOP } from "@/game/balance";
+import { nextShopGoal } from "@/game/goal";
 import { describe, expect, it } from "vitest";
 import { createMeta } from "@/game/star";
 import { TargetPicker } from "./TargetPicker";
@@ -27,6 +29,17 @@ describe("TargetPicker：狙いごとの見込み", () => {
       expect.stringMatching(/^\w+ \S+$/),
     ]);
     for (const part of parts) expect(part).toHaveClass("whitespace-nowrap");
+  });
+
+  it("次の目標の星屑が多い順の2つに入らなくても、見込みに添える（狙いを見込みで比べられるように）", () => {
+    const meta = midMeta();
+    const currency = SHOP[nextShopGoal(meta).item].currency;
+    render(<TargetPicker meta={meta} dispatch={() => {}} />);
+    for (const name of ["炭素", "ネオン", "酸素・マグネシウム", "ケイ素・硫黄"]) {
+      expect(screen.getByRole("radio", { name })).toHaveAccessibleDescription(
+        new RegExp(` ${currency} [\\d.,×⁰¹²³⁴⁵⁶⁷⁸⁹]+`)
+      );
+    }
   });
 
   it("自動制御がなければ見込みは出さない（手で強化するので当てにならない）", () => {

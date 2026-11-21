@@ -380,7 +380,7 @@ function LayerGoal({ game }: { game: GameState }) {
     <>
       次の目標：「<b className="text-ignite">{spec.name}</b>」まで{currencyName(spec.currency)} あと{" "}
       {formatNumber(goal.shortfall)}
-      {targetHint(spec.currency)}
+      {targetHint(spec.currency, meta.shop.auto > 0)}
       {layer3}
       {spec.currency === "S" && meta.bestRate.S === 0 && (
         <>
