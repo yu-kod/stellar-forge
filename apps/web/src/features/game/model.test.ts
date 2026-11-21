@@ -9,7 +9,8 @@ import {
   gameReducer,
   type Model,
 } from "./model";
-import { LAYER2_AFTER } from "@/game/balance";
+import { HERITAGE_DUST, LAYER2_AFTER } from "@/game/balance";
+import { EMPTY_HALL } from "./hall";
 
 function modelWith(overrides: Partial<Model> = {}): Model {
   return { ...createModel(createGame()), ...overrides };
@@ -132,6 +133,12 @@ describe("gameReducer：reset", () => {
     const model = gameReducer(start, { type: "reset" });
     expect(model.game).toEqual(createGame());
     expect(model.notices).toEqual([]);
+  });
+
+  it("1回でも完結していれば、やり直した周は前の周の星屑を持って始まる", () => {
+    const start = { ...createModel(createGame()), hall: { ...EMPTY_HALL, completions: 1 } };
+    expect(gameReducer(start, { type: "reset" }).game.meta.dust).toEqual(HERITAGE_DUST);
+    expect(gameReducer(createModel(createGame()), { type: "reset" }).game.meta.dust.C).toBe(0);
   });
 
   it("銀河を選んでやり直せる（選ばなければ天の川）", () => {

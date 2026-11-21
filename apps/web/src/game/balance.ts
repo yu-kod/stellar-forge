@@ -466,21 +466,42 @@ export const LOG_LIMIT = 20;
  */
 export const GALAXIES: Record<
   Galaxy,
-  { name: string; description: string; poison: number; whiteDwarfs: number; par: number }
+  {
+    name: string;
+    description: string;
+    poison: number;
+    whiteDwarfs: number;
+    /** はじめから多い連星の枠 */
+    binarySlots: number;
+    par: number;
+  }
 > = {
   milkyWay: {
     name: "天の川",
     description: "いつもの銀河",
     poison: 1,
     whiteDwarfs: 0,
+    binarySlots: 0,
     par: 1,
   },
   metalRich: {
     name: "金属の多い銀河の中心",
     description:
-      "古い星が多く、はじめから白色矮星が20個ある。金属の多い星ほど、中性子を吸う軽い原子核（中性子の毒）も多い。中性子の毒 ×4",
+      "古い星が多く、はじめから白色矮星が20個ある。星が密集していて、連星の枠が1つ多い。金属の多い星ほど、中性子を吸う軽い原子核（中性子の毒）も多い。中性子の毒 ×4",
     poison: 4,
     whiteDwarfs: 20,
+    binarySlots: 1,
     par: 1.28,
   },
+};
+
+/** 2周目から、前の周で作った元素が星間物質に残り、はじめから持っている星屑（銀河の化学進化） */
+export const HERITAGE_DUST: Readonly<Record<DustId, number>> = {
+  C: 200,
+  N: 50,
+  O: 200,
+  Ne: 50,
+  Mg: 50,
+  Si: 50,
+  S: 50,
 };

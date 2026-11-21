@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GALAXIES } from "./balance";
+import { GALAXIES, HERITAGE_DUST } from "./balance";
+import { binarySlots } from "./merger";
 import { NEUTRON_POISON, captureNeutrons, neutronPoison, seedPreview } from "./sprocess";
 import { createGame, whiteDwarfsMade } from "./star";
 import { GALAXY_IDS } from "./types";
@@ -34,5 +35,21 @@ describe("周の初めに選ぶ銀河", () => {
     sp.amounts = sp.amounts.map((_, i) => (i === 0 ? 1 : 0));
     const moved = (poison: number) => 1 - captureNeutrons(sp, 1, poison).sProcess.amounts[0]!;
     expect(moved(NEUTRON_POISON * 4)).toBeLessThan(moved(NEUTRON_POISON));
+  });
+
+  it("金属の多い銀河の中心は星が密集していて、連星の枠がはじめから1つ多い", () => {
+    const rich = createGame("metalRich").meta;
+    rich.rProcess = { ...rich.rProcess, unlocked: true };
+    const milky = createGame().meta;
+    milky.rProcess = { ...milky.rProcess, unlocked: true };
+    expect(GALAXIES.metalRich.binarySlots).toBe(1);
+    expect(binarySlots(rich)).toBe(binarySlots(milky) + 1);
+  });
+
+  it("2周目からは、前の周で作った元素が星間物質に残り、星屑を持って始まる", () => {
+    expect(createGame().meta.dust).toEqual(createGame("milkyWay", 0).meta.dust);
+    expect(Object.values(createGame().meta.dust).every((n) => n === 0)).toBe(true);
+    expect(createGame("milkyWay", 1).meta.dust).toEqual(HERITAGE_DUST);
+    expect(createGame("metalRich", 3).meta.dust).toEqual(HERITAGE_DUST);
   });
 });

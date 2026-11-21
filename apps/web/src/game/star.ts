@@ -9,6 +9,7 @@ import {
   PRE_MAIN_SEQUENCE_TEMPERATURE,
   REFERENCE_MASS,
   GALAXIES,
+  HERITAGE_DUST,
 } from "./balance";
 import { createSProcess } from "./sprocess";
 import {
@@ -37,9 +38,11 @@ function birthMass(meta: Meta): number {
   return Math.min(max, meta.nextMass);
 }
 
-export function createMeta(galaxy: Galaxy = "milkyWay"): Meta {
+/** 新しい周の進行。completions：これまでに完結した回数（2周目からは前の周の星屑を持って始まる） */
+export function createMeta(galaxy: Galaxy = "milkyWay", completions = 0): Meta {
   return {
-    dust: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
+    dust:
+      completions > 0 ? { ...HERITAGE_DUST } : { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
     supernovae: 0,
     neutronStars: 0,
     blackHoles: 0,
@@ -113,7 +116,7 @@ export function createStar(meta: Meta): Star {
   };
 }
 
-export function createGame(galaxy: Galaxy = "milkyWay"): GameState {
-  const meta = createMeta(galaxy);
+export function createGame(galaxy: Galaxy = "milkyWay", completions = 0): GameState {
+  const meta = createMeta(galaxy, completions);
   return { meta, star: createStar(meta) };
 }
