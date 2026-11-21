@@ -1,10 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { FASTER_MOVES, medalOf } from "@/features/game/hall";
+import { FASTER_MOVES, medalLimit, medalOf } from "@/features/game/hall";
 import { playIdle, type IdleReport } from "@/test-utils/simulate";
 import { S_DISCOVERABLE } from "./sprocess";
+import { createGame } from "./star";
 import type { GameState } from "./types";
 
 const LIMIT = 330 * 60;
+const MINUTE = 60;
 
 /** ストロンチウムまでは30、その先は1、s元素がそろったら30 */
 const shifting = (s: GameState) =>
@@ -59,5 +61,42 @@ describe("記録への挑戦のメダル", () => {
     for (const report of Object.values(alone)) {
       expect(standard.marks.complete! - report.marks.complete!).toBeGreaterThanOrEqual(3 * 60);
     }
+  });
+});
+
+/** 2周目（前の周の星屑を持って始める）は、厳しい基準で同じ判断を求める */
+describe("2周目のメダル", () => {
+  const flows: Record<string, IdleReport> = {};
+  let firstStandard: IdleReport;
+  beforeAll(() => {
+    const second = (options: Parameters<typeof playIdle>[1] = {}) =>
+      playIdle(LIMIT, {
+        start: createGame("milkyWay", 1),
+        keepCluster: true,
+        stopAt: "complete",
+        ...options,
+      });
+    flows.standard = second();
+    flows.shiftOnly = second({ seedTarget: shifting });
+    flows.carbonOnly = second({ layer3MainMass: 2 });
+    flows.best = second({ layer3MainMass: 2, seedTarget: shifting });
+    firstStandard = playIdle(LIMIT, { keepCluster: true, stopAt: "complete" });
+  }, 900_000);
+
+  it("何もしないと銅。手を1つ打つと銀、2つで金（1周目と同じ）", () => {
+    const medal = (name: string) => medalOf(flows[name]!.marks.complete!, "milkyWay", true);
+    expect(medal("standard")).toBe("銅");
+    expect(medal("shiftOnly")).toBe("銀");
+    expect(medal("carbonOnly")).toBe("銀");
+    expect(medal("best")).toBe("金");
+  });
+
+  it("何もしない流れは、1周目も2周目も銀の基準から5分以上外にある（色を誤差で決めない）", () => {
+    expect(
+      firstStandard.marks.complete! - medalLimit("銀", "milkyWay", false)
+    ).toBeGreaterThanOrEqual(5 * MINUTE);
+    expect(
+      flows.standard!.marks.complete! - medalLimit("銀", "milkyWay", true)
+    ).toBeGreaterThanOrEqual(5 * MINUTE);
   });
 });

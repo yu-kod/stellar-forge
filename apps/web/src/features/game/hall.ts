@@ -1,4 +1,4 @@
-import { GALAXIES } from "@/game/balance";
+import { GALAXIES, HERITAGE_PAR } from "@/game/balance";
 import { GALAXY_IDS, type Galaxy, type Milestones } from "@/game/types";
 
 /** やり直しても残る記録（完結の回数と最速）。進行のセーブとは別に保存する */
@@ -14,6 +14,8 @@ export type Splits = {
   galaxy: Galaxy;
   /** 見つけた元素の数が i + 1 になった時刻（古い記録では空） */
   found: number[];
+  /** 前の周の星屑を持って始めた周か（古い記録では false） */
+  heritage: boolean;
 };
 
 export type Hall = {
@@ -32,10 +34,10 @@ export function bestOf(hall: Hall, galaxy: Galaxy): Splits | null {
 }
 
 export type MedalName = "金" | "銀" | "銅";
-/** 完結までの時間 [秒] のメダル（画面の初期設定で案内に従うと銅、種の切り替えで銀、炭素星を組み合わせると金。medals.test.ts） */
+/** 完結までの時間 [秒] のメダル（画面の初期設定のままでは銅、手を1つ打つと銀、2つで金。medals.test.ts） */
 export const MEDALS: readonly { name: MedalName; within: number }[] = [
   { name: "金", within: 135 * 60 },
-  { name: "銀", within: 158 * 60 },
+  { name: "銀", within: 155 * 60 },
   { name: "銅", within: Infinity },
 ];
 
@@ -45,10 +47,15 @@ export const FASTER_MOVES: Record<Galaxy, readonly string[]> = {
   metalRich: ["第3層で主星を炭素星にする", "鉄の種を局面で変える（減らしすぎない）"],
 };
 
-/** 完結までの時間のメダル。基準には銀河の目安の倍率を掛ける */
-export function medalOf(seconds: number, galaxy: Galaxy = "milkyWay"): MedalName {
-  const par = GALAXIES[galaxy].par;
-  return MEDALS.find((medal) => seconds <= medal.within * par)!.name;
+/** そのメダルに届く完結までの時間 [秒]。銀河の目安の倍率と、前の周の星屑を持って始めた周の倍率を掛ける */
+export function medalLimit(name: MedalName, galaxy: Galaxy, heritage: boolean): number {
+  const within = MEDALS.find((medal) => medal.name === name)!.within;
+  return within * GALAXIES[galaxy].par * (heritage ? HERITAGE_PAR : 1);
+}
+
+/** 完結までの時間のメダル */
+export function medalOf(seconds: number, galaxy: Galaxy = "milkyWay", heritage = false): MedalName {
+  return MEDALS.find((medal) => seconds <= medalLimit(medal.name, galaxy, heritage))!.name;
 }
 
 export function recordCompletion(hall: Hall, splits: Splits): Hall {
@@ -87,6 +94,7 @@ export function parseHall(raw: unknown): Hall {
         complete,
         galaxy: "milkyWay",
         found: [],
+        heritage: false,
       }
     );
   }
@@ -101,13 +109,15 @@ function parseSplits(raw: unknown): Splits | null {
     complete,
     galaxy = "milkyWay",
     found = [],
+    heritage = false,
   } = raw as Record<string, unknown>;
   if (
     typeof complete !== "number" ||
     !Array.isArray(found) ||
     found.some((t) => typeof t !== "number") ||
     [layer2, layer3, layer4].some((v) => v !== null && typeof v !== "number") ||
-    !GALAXY_IDS.includes(galaxy as Galaxy)
+    !GALAXY_IDS.includes(galaxy as Galaxy) ||
+    typeof heritage !== "boolean"
   ) {
     return null;
   }
@@ -119,6 +129,7 @@ function parseSplits(raw: unknown): Splits | null {
     complete,
     galaxy: galaxy as Galaxy,
     found: found as number[],
+    heritage,
   };
 }
 

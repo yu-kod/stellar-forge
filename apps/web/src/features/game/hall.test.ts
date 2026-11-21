@@ -1,10 +1,11 @@
-import { GALAXIES } from "@/game/balance";
+import { GALAXIES, HERITAGE_PAR } from "@/game/balance";
 import { describe, expect, it } from "vitest";
 import type { Galaxy } from "@/game/types";
 import {
   EMPTY_HALL,
   MEDALS,
   bestOf,
+  medalLimit,
   medalOf,
   paceAgainstBest,
   parseHall,
@@ -19,8 +20,8 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     expect(MEDALS.map((m) => m.name)).toEqual(["金", "銀", "銅"]);
     expect(medalOf(135 * MINUTE)).toBe("金");
     expect(medalOf(135 * MINUTE + 1)).toBe("銀");
-    expect(medalOf(158 * MINUTE)).toBe("銀");
-    expect(medalOf(158 * MINUTE + 1)).toBe("銅");
+    expect(medalOf(155 * MINUTE)).toBe("銀");
+    expect(medalOf(155 * MINUTE + 1)).toBe("銅");
   });
 
   const splits = (complete: number, galaxy: Galaxy = "milkyWay"): Splits => ({
@@ -30,6 +31,7 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     complete,
     galaxy,
     found: [],
+    heritage: false,
   });
 
   it("完結の回数を数え、銀河ごとの最速の周と、今回・前回の層ごとの時刻を残す", () => {
@@ -84,6 +86,7 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
           complete: 100,
           galaxy: "milkyWay",
           found: [],
+          heritage: false,
         },
       },
       last: null,
@@ -105,6 +108,37 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
       )
     ).toEqual(splits(100));
     expect(parseHall({ completions: 0, best: null })).toEqual(EMPTY_HALL);
+  });
+
+  it("2周目から（前の周の星屑を持って始めた周）は、メダルの基準に HERITAGE_PAR を掛けて厳しくする", () => {
+    expect(HERITAGE_PAR).toBeLessThan(1);
+    expect(medalOf(135 * MINUTE * HERITAGE_PAR, "milkyWay", true)).toBe("金");
+    expect(medalOf(135 * MINUTE * HERITAGE_PAR + 1, "milkyWay", true)).toBe("銀");
+    expect(medalOf(135 * MINUTE * HERITAGE_PAR + 1, "milkyWay")).toBe("金");
+    const rich = GALAXIES.metalRich.par * HERITAGE_PAR;
+    expect(medalOf(155 * MINUTE * rich, "metalRich", true)).toBe("銀");
+    expect(medalOf(155 * MINUTE * rich + 1, "metalRich", true)).toBe("銅");
+    expect(medalLimit("金", "milkyWay", true)).toBe(135 * MINUTE * HERITAGE_PAR);
+    expect(medalLimit("銀", "metalRich", false)).toBe(155 * MINUTE * GALAXIES.metalRich.par);
+  });
+
+  it("古い記録の周は、前の周の星屑を持たずに始めた周として読む", () => {
+    const { heritage: _, ...old } = splits(150 * MINUTE);
+    const hall = parseHall({ completions: 1, bests: { milkyWay: old }, last: old, previous: null });
+    expect(hall.bests.milkyWay?.heritage).toBe(false);
+    const later = { ...old, heritage: true };
+    expect(
+      parseHall({ completions: 2, bests: { milkyWay: later }, last: later, previous: null }).last
+        ?.heritage
+    ).toBe(true);
+    expect(
+      parseHall({
+        completions: 2,
+        bests: { milkyWay: { ...old, heritage: "yes" } },
+        last: null,
+        previous: null,
+      }).bests
+    ).toEqual({});
   });
 
   it("メダルの基準には銀河の目安の倍率を掛ける", () => {

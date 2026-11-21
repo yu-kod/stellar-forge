@@ -244,6 +244,15 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)).toBeNull();
   });
 
+  it("前の周の星屑を持って始めた周かを戻す。古いセーブに無ければ持たずに始めた周、真偽でなければ壊れたセーブ", () => {
+    const raw = JSON.parse(JSON.stringify(toSave(createGame("milkyWay", 1), NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta.heritage).toBe(true);
+    delete raw.game.meta.heritage;
+    expect(restoreSave(raw, NOW)?.game.meta.heritage).toBe(false);
+    raw.game.meta.heritage = "yes";
+    expect(restoreSave(raw, NOW)).toBeNull();
+  });
+
   it("遊んだ時間と、83マスが埋まった時を戻す。古いセーブに無ければ 0 と null", () => {
     const game = createGame();
     game.meta.elapsed = 5000;

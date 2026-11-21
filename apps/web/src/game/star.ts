@@ -85,6 +85,7 @@ export function createMeta(galaxy: Galaxy = "milkyWay", completions = 0): Meta {
     completedAt: null,
     milestones: { layer2: null, layer3: null, layer4: null },
     galaxy,
+    heritage: completions > 0,
     // はじめから水素がある
     foundTimes: [0],
     bestRate: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },

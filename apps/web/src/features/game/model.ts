@@ -234,6 +234,7 @@ function checkComplete(model: Model): Model {
       complete: meta.elapsed,
       galaxy: meta.galaxy,
       found: meta.foundTimes,
+      heritage: meta.heritage,
     }),
     game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
   };

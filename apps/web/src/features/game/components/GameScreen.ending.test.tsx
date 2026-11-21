@@ -197,6 +197,7 @@ describe("記録への挑戦", () => {
     const { EndingDialog } = await import("./EndingDialog");
     const game = completed();
     game.meta.galaxy = "metalRich";
+    game.meta.heritage = true;
     game.meta.completedAt = 2 * 3600 + 16 * 60;
     render(
       <EndingDialog game={game} hall={{ ...EMPTY_HALL, completions: 1 }} open onClose={() => {}} />
@@ -204,6 +205,41 @@ describe("記録への挑戦", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：金（金属の多い銀河の中心）");
     expect(dialog).toHaveTextContent("金：2時間18分以内");
+  });
+
+  it("前の周の星屑を持って始めた周は、厳しい基準でメダルを決め、そう書く", async () => {
+    const { EndingDialog } = await import("./EndingDialog");
+    const game = completed();
+    game.meta.heritage = true;
+    game.meta.completedAt = 2 * 3600 + 10 * 60;
+    render(
+      <EndingDialog game={game} hall={{ ...EMPTY_HALL, completions: 1 }} open onClose={() => {}} />
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("今回のメダル：銀");
+    expect(dialog).toHaveTextContent("金：2時間4分以内");
+    expect(dialog).toHaveTextContent("前の周の星屑を持って始めた周");
+  });
+
+  it("記録タブの最速の周のメダルは、その周の基準で決める", async () => {
+    const user = userEvent.setup();
+    const best = {
+      layer2: null,
+      layer3: null,
+      layer4: null,
+      complete: 130 * 60,
+      galaxy: "milkyWay",
+      found: [],
+      heritage: true,
+    };
+    const storage = memoryStorage({
+      [HALL_KEY]: { completions: 2, bests: { milkyWay: best }, last: best, previous: null },
+    });
+    render(<GameScreen ticker={manualTicker().ticker} storage={storage} now={() => 0} />);
+    await user.click(screen.getByRole("tab", { name: "記録" }));
+    const hall = screen.getByRole("region", { name: "記録への挑戦" });
+    expect(hall).toHaveTextContent("天の川 最速 2時間10分（銀）");
+    expect(hall).toHaveTextContent("第3層で主星を炭素星にする");
   });
 
   it("エンディングに層ごとの時刻と、前回との差を出す", async () => {
@@ -223,6 +259,7 @@ describe("記録への挑戦", () => {
             complete: 4 * 3600,
             galaxy: "milkyWay",
             found: [],
+            heritage: false,
           },
         }}
         open

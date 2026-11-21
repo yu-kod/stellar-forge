@@ -98,11 +98,13 @@ export function EndingDialog({ game, hall, open, onClose, onNextRun }: Props) {
         <div className="grid gap-1 text-sm">
           <p>
             今回のメダル：
-            <b className="text-ignite">{medalOf(meta.completedAt ?? 0, meta.galaxy)}</b>
+            <b className="text-ignite">
+              {medalOf(meta.completedAt ?? 0, meta.galaxy, meta.heritage)}
+            </b>
             {meta.galaxy !== "milkyWay" && `（${GALAXIES[meta.galaxy].name}）`}
             {best && `（最速 ${formatDuration(best.complete)}・完結 ${hall.completions}回）`}
           </p>
-          <MedalTargets galaxy={meta.galaxy} hall={hall} />
+          <MedalTargets galaxy={meta.galaxy} hall={hall} heritage={meta.heritage} />
         </div>
         <SplitsTable
           game={game}

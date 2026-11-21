@@ -42,8 +42,8 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
   });
 
   it("金はその最善（炭素星＋種を10まで）だけ。ほかの減らし方は金に届かない", () => {
-    expect(medalOf(minutes[10]!, "metalRich")).toBe("金");
-    for (const to of [1, 3, 30]) expect(medalOf(minutes[to]!, "metalRich")).not.toBe("金");
+    expect(medalOf(minutes[10]!, "metalRich", true)).toBe("金");
+    for (const to of [1, 3, 30]) expect(medalOf(minutes[to]!, "metalRich", true)).not.toBe("金");
   });
 
   it("記録タブで挙げる手は、それぞれ単独で何もしない流れより3分以上速い", () => {
