@@ -1,3 +1,4 @@
+import { GALAXIES } from "@/game/balance";
 import { describe, expect, it } from "vitest";
 import { EMPTY_HALL, MEDALS, medalOf, parseHall, recordCompletion } from "./hall";
 
@@ -47,5 +48,11 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     expect(parseHall({ ...withSplits, last: { layer2: "x" } }).last).toBeNull();
     expect(parseHall({ ...withSplits, last: { ...splits(100), layer3: "x" } }).last).toBeNull();
     expect(parseHall({ completions: 0, best: null })).toEqual(EMPTY_HALL);
+  });
+
+  it("メダルの基準には銀河の目安の倍率を掛ける", () => {
+    expect(medalOf(135 * MINUTE * GALAXIES.metalRich.par, "metalRich")).toBe("金");
+    expect(medalOf(135 * MINUTE * GALAXIES.metalRich.par + 1, "metalRich")).toBe("銀");
+    expect(medalOf(135 * MINUTE + 1)).toBe("銀");
   });
 });

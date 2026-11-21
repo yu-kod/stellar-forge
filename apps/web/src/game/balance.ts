@@ -1,4 +1,4 @@
-import type { Currency, DustId, ElementId, ShopId, StageId, Target } from "./types";
+import type { Currency, DustId, ElementId, Galaxy, ShopId, StageId, Target } from "./types";
 
 /** その星屑を一番多く残す狙い */
 const BEST_TARGET: Record<DustId, Target> = {
@@ -459,3 +459,26 @@ export const CLUSTER_DEFAULT_MASS = 7;
 
 /** 超新星の記録を残す件数 */
 export const LOG_LIMIT = 20;
+
+/**
+ * 周の初めに選ぶ銀河（docs/design.md「銀河」）。poison：中性子の毒の倍率。
+ * par：完結の目安の倍率（メダルの基準に掛ける）
+ */
+export const GALAXIES: Record<
+  Galaxy,
+  { name: string; description: string; poison: number; par: number }
+> = {
+  milkyWay: {
+    name: "天の川",
+    description: "いつもの銀河",
+    poison: 1,
+    par: 1,
+  },
+  metalRich: {
+    name: "金属の多い銀河の中心",
+    description:
+      "金属の多い星ほど、中性子を吸う軽い原子核も多い。中性子の毒 ×4：種を減らすと中性子が毒に取られる",
+    poison: 4,
+    par: 1.37,
+  },
+};

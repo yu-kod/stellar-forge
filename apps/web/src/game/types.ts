@@ -110,7 +110,13 @@ export type Meta = {
   iaSupernovae: number;
   /** 見つけた軽い元素（リチウム〜マンガン）の原子番号 */
   lightFound: number[];
+  /** この周の銀河（周の初めに選ぶ） */
+  galaxy: Galaxy;
 };
+
+/** 周の初めに選ぶ銀河。最善の作戦が変わる */
+export const GALAXY_IDS = ["milkyWay", "metalRich"] as const;
+export type Galaxy = (typeof GALAXY_IDS)[number];
 
 /** 星団で主星と一緒に燃やす星。いつも自動で強化し、終わったら自動で次の星を生む */
 export type ClusterSlot = { star: Star; nextMass: number | null; target: Target };

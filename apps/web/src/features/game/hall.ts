@@ -1,3 +1,6 @@
+import { GALAXIES } from "@/game/balance";
+import type { Galaxy } from "@/game/types";
+
 /** やり直しても残る記録（完結の回数と最速）。進行のセーブとは別に保存する */
 export const HALL_KEY = "stellar-forge/hall";
 
@@ -32,8 +35,10 @@ export const FASTER_MOVES: readonly string[] = [
   "第3層で主星を炭素星にする",
 ];
 
-export function medalOf(seconds: number): MedalName {
-  return MEDALS.find((medal) => seconds <= medal.within)!.name;
+/** 完結までの時間のメダル。基準には銀河の目安の倍率を掛ける */
+export function medalOf(seconds: number, galaxy: Galaxy = "milkyWay"): MedalName {
+  const par = GALAXIES[galaxy].par;
+  return MEDALS.find((medal) => seconds <= medal.within * par)!.name;
 }
 
 export function recordCompletion(hall: Hall, splits: Splits): Hall {

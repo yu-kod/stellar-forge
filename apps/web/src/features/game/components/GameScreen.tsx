@@ -33,7 +33,7 @@ import { SHOP_IDS, STAGE_IDS, type GameState } from "@/game/types";
 import { currencyName, targetHint } from "../elements";
 import { shopCost } from "@/game/actions";
 import { funds } from "@/game/shop";
-import type { Meta } from "@/game/types";
+import type { Galaxy, Meta } from "@/game/types";
 import { formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
@@ -159,8 +159,8 @@ export function GameScreen({
     if (SHOP_IDS.some((item) => canBuyShopItem(rebirth(game).meta, item))) setTab("shop");
   }
 
-  function reset() {
-    dispatchAndSave({ type: "reset" });
+  function reset(galaxy: Galaxy) {
+    dispatchAndSave({ type: "reset", galaxy });
     setTab("star");
   }
 
@@ -285,7 +285,7 @@ export function GameScreen({
       </Tabs>
       <footer className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-3 pb-6 text-sm">
         <p>進行はこのブラウザに保存されます。</p>
-        <ResetDialog onReset={reset} />
+        <ResetDialog onReset={reset} chooseGalaxy={model.hall.completions > 0} />
       </footer>
       <SupernovaDialog game={game} onRebirth={startNextStar} dispatch={dispatch} />
       <EndingDialog
