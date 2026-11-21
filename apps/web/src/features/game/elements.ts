@@ -53,8 +53,12 @@ export function currencyName(currency: Currency): string {
 }
 
 /** 次の目標の通貨を貯めるための手がかり */
-export function targetHint(currency: Currency): string {
+export function targetHint(currency: Currency, previews = false): string {
   if (currency === "ejecta") return "（中性子星を合体させると貯まる）";
   const target = bestTarget(currency);
-  return target ? `（狙い：${TARGET_NAMES[target]}）` : "（s過程の種を増やすと速く貯まる）";
+  if (!target) return "（s過程の種を増やすと速く貯まる）";
+  // 燃焼の自動制御を持っていれば、狙いごとの見込みが出るので答えは書かない
+  return previews
+    ? "（どの狙いで多く取れるかは、狙う星屑の見込みで比べる）"
+    : `（狙い：${TARGET_NAMES[target]}）`;
 }

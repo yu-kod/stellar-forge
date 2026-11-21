@@ -100,15 +100,17 @@ describe("GameScreen：星と時間", () => {
 });
 
 describe("GameScreen：2周目からの目標", () => {
-  it("一番近い星屑の強化と、あといくつかと、どれを狙えばよいかを出す", () => {
+  it("一番近い星屑の強化と、あといくつかを出す。燃焼の自動制御を持っていれば、狙いの答えは書かず見込みで比べさせる", () => {
     const game = createGame();
     game.meta.supernovae = 1;
     game.meta.shop.auto = 1;
     game.meta.dust.C = 2;
     renderGame(game);
-    expect(screen.getByRole("note")).toHaveTextContent(
-      "次の目標：「金属量（CNOサイクル）」まで炭素の星屑 あと 1（狙い：炭素）"
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent(
+      "次の目標：「金属量（CNOサイクル）」まで炭素の星屑 あと 1（どの狙いで多く取れるかは、狙う星屑の見込みで比べる）"
     );
+    expect(note).not.toHaveTextContent("狙い：");
   });
 
   it("燃焼の自動制御をまだ持っていなければ、それを勧める", () => {
