@@ -166,7 +166,7 @@ describe("GameScreen：保存と再開", () => {
     const galaxies = within(dialog).getByRole("radiogroup", { name: "次の周の銀河" });
     expect(within(galaxies).getByRole("radio", { name: /天の川/ })).toBeChecked();
     const rich = within(galaxies).getByRole("radio", { name: /金属の多い銀河の中心/ });
-    expect(galaxies).toHaveTextContent("中性子の毒 ×4");
+    expect(galaxies).toHaveTextContent("中性子の毒 ×3");
     await user.click(rich);
     await user.click(screen.getByRole("button", { name: "消してやり直す" }));
     expect(saved()?.game.meta.galaxy).toBe("metalRich");
