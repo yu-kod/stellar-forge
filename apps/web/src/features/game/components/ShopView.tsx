@@ -101,7 +101,7 @@ export function ShopView({ meta, dispatch }: Props) {
             </>
           ) : (
             <p className="text-muted-foreground text-sm">
-              s過程は終えた。ここの強化はもう効かないので畳んだ。重元素の星屑は第4層の強化に使う。
+              s過程は終えた。ここの強化はもう効かないので畳んだ。第4層の強化は、中性子星合体のキロノバの放出物で交換する。
             </p>
           )}
         </>
