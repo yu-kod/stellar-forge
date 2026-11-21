@@ -47,11 +47,14 @@ export const TARGET_NAMES: Record<Target, string> = {
 
 /** 恒久強化の通貨の名前 */
 export function currencyName(currency: Currency): string {
-  return currency === "heavy" ? "重元素の星屑" : `${ELEMENTS[currency].name}の星屑`;
+  if (currency === "heavy") return "重元素の星屑";
+  if (currency === "ejecta") return "キロノバの放出物";
+  return `${ELEMENTS[currency].name}の星屑`;
 }
 
 /** 次の目標の通貨を貯めるための手がかり */
 export function targetHint(currency: Currency): string {
+  if (currency === "ejecta") return "（中性子星を合体させると貯まる）";
   const target = bestTarget(currency);
   return target ? `（狙い：${TARGET_NAMES[target]}）` : "（s過程の種を増やすと速く貯まる）";
 }

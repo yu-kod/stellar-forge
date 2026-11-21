@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buyAllShopItems, buyShopItem, canBuyShopItem } from "./actions";
+import { buyAllShopItems, buyShopItem, canBuyShopItem, shopCost } from "./actions";
 import { SHOP } from "./balance";
 import { advanceAll } from "./cluster";
 import {
@@ -27,6 +27,7 @@ function layer4(): GameState {
   game.meta.rProcess.pool[HEAVY] = 6;
   game.meta.dust = { C: 1e12, N: 1e12, O: 1e12, Ne: 1e12, Mg: 1e12, Si: 1e12, S: 1e12 };
   game.meta.sProcess.heavy = 1e12;
+  game.meta.rProcess.ejecta = 1e12;
   return game;
 }
 
@@ -52,10 +53,10 @@ describe("第4層の強化", () => {
     expect(SHOP.envelope.maxLevel).toBe(3);
   });
 
-  it("連星の枠：同時に持てる連星 +1（3回まで）", () => {
+  it("連星の枠：同時に持てる連星 +1（2回まで）", () => {
     const game = buy(layer4(), "slots", 2);
-    expect(binarySlots(game.meta)).toBe(3);
-    expect(SHOP.slots.maxLevel).toBe(3);
+    expect(binarySlots(game.meta)).toBe(4);
+    expect(SHOP.slots.maxLevel).toBe(2);
   });
 
   it("潮汐の尾：放出物 +50%（足し算）", () => {
@@ -72,7 +73,7 @@ describe("第4層の強化", () => {
   });
 
   it("連星の自動化：枠が空いたら、いま作りたい元素を時間あたりで一番多く作る組を組む", () => {
-    const game = buy(buy(layer4(), "rAuto"), "slots");
+    const game = buy(layer4(), "rAuto");
     const next = autoBinary(game);
     // テルル（第2ピーク）が目標：合計の軽い 1.2 + 1.2 M☉（円盤風）
     expect(next.meta.rProcess.binaries.map(({ a, b }) => [a, b])).toEqual([
@@ -88,8 +89,26 @@ describe("第4層の強化", () => {
     game.meta.rProcess.pool = game.meta.rProcess.pool.map(() => 0);
     game.meta.rProcess.pool[HEAVY] = 4;
     expect(autoBinary(game).meta.rProcess.binaries).toEqual([]);
-    game.meta.rProcess.pool[LIGHT] = 2;
+    game.meta.rProcess.pool[LIGHT] = 1;
     expect(autoBinary(game).meta.rProcess.binaries).toHaveLength(1);
+  });
+
+  it("作りたい元素に届く組がないとき、自動化は放出物を一番速く貯める組を組む（遮蔽を買うまで止まらない）", () => {
+    const game = buy(layer4(), "rAuto");
+    // 1.4 + 2.0 M☉ だけ：ランタノイドまでは見つけた。第3ピークには遮蔽が要る
+    game.meta.rProcess.discovered = [52, 53, 54, 63, 64, 65, 66, 67, 68, 69];
+    game.meta.rProcess.pool = game.meta.rProcess.pool.map(() => 0);
+    game.meta.rProcess.pool[2] = 4;
+    game.meta.rProcess.pool[HEAVY] = 4;
+    const pairs = autoBinary(game).meta.rProcess.binaries.map(({ a, b }) => [a, b]);
+    const rate = (a: number, b: number) =>
+      predictMerger(game.meta, a, b).ejecta / mergerSeconds(game.meta, a, b);
+    // 1.4 + 2.0 は潮汐の放出物が多く、合体も速い。2.0 + 2.0 はすぐブラックホールになるので組まない
+    expect(rate(2, HEAVY)).toBeGreaterThan(Math.max(rate(2, 2), rate(HEAVY, HEAVY)));
+    expect(pairs).toEqual([
+      [2, HEAVY],
+      [2, HEAVY],
+    ]);
   });
 
   it("ニュートリノの遮蔽は、まとめて交換でいつでも買う（買えしだい買うほうが速い）", () => {
@@ -100,7 +119,7 @@ describe("第4層の強化", () => {
 
   it("自動化は毎回の更新で働く", () => {
     const game = buy(layer4(), "rAuto");
-    expect(advanceAll(game, 0.1).state.meta.rProcess.binaries).toHaveLength(1);
+    expect(advanceAll(game, 0.1).state.meta.rProcess.binaries).toHaveLength(2);
     expect(formBinary(game, LIGHT, HEAVY).meta.rProcess.binaries).toHaveLength(1);
   });
 });
@@ -111,12 +130,46 @@ describe("第4層の目標", () => {
     game.meta.shop.auto = 1;
     game.meta.dust = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
     game.meta.sProcess.heavy = 0;
+    game.meta.rProcess.ejecta = 0;
     game.meta.bestRate = { ...game.meta.bestRate, O: 1e9, S: 1 };
     expect(nextShopGoal(game.meta).item).toBe("rAuto");
   });
+
+  it("放出物の強化は、待っている連星の稼ぎから次に買えるまでの時間を見積もる", () => {
+    const game = formBinary(layer4(), LIGHT, HEAVY);
+    game.meta.shop.auto = 1;
+    game.meta.shop.rAuto = 1;
+    game.meta.dust = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
+    game.meta.sProcess.heavy = 0;
+    game.meta.sProcess.discovered = [...S_DISCOVERABLE_ELEMENTS];
+    game.meta.rProcess.ejecta = 0;
+    game.meta.bestRate = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
+    // 稼ぎのある通貨は放出物だけ。一番安い潮汐の尾が一番早く買える
+    expect(nextShopGoal(game.meta).item).toBe("tail");
+  });
 });
 
-describe("重元素の星屑の第4層での使い道", () => {
+describe("第4層の強化の通貨", () => {
+  it("遮蔽・枠・共通外層・潮汐の尾は、合体で貯めたキロノバの放出物で買う（第4層の中で稼ぐ）", () => {
+    for (const item of ["shield", "slots", "envelope", "tail"] as const) {
+      expect(SHOP[item].currency).toBe("ejecta");
+    }
+    const game = layer4();
+    game.meta.rProcess.ejecta = shopCost(game.meta, "tail");
+    const bought = buyShopItem(game, "tail").meta;
+    expect(bought.shop.tail).toBe(1);
+    expect(bought.rProcess.ejecta).toBeCloseTo(0);
+    expect(bought.sProcess.heavy).toBe(1e12);
+    expect(canBuyShopItem(bought, "tail")).toBe(false);
+  });
+
+  it("放出物の費用は 0.1 刻み（切り捨て）。最初の合体1回で潮汐の尾が買える", () => {
+    const game = layer4();
+    expect(shopCost(game.meta, "tail")).toBeCloseTo(0.6);
+    expect(shopCost(buy(game, "tail").meta, "tail")).toBeCloseTo(1.8);
+    expect(shopCost(game.meta, "shield")).toBe(25);
+  });
+
   it("s過程を終えたら、まとめて交換でも s過程の強化は買わない", () => {
     const game = layer4();
     game.meta.sProcess.discovered = [...S_DISCOVERABLE_ELEMENTS];
@@ -125,16 +178,12 @@ describe("重元素の星屑の第4層での使い道", () => {
     expect(bought.envelope).toBeGreaterThan(0);
   });
 
-  it("共通外層と潮汐の尾は重元素の星屑で買う", () => {
-    expect(SHOP.envelope.currency).toBe("heavy");
-    expect(SHOP.tail.currency).toBe("heavy");
-  });
-
   it("s過程を終えたら（循環を見て元素がそろったら）、s過程の強化は次の目標に勧めない", () => {
     const game = layer4();
     game.meta.sProcess.discovered = [...S_DISCOVERABLE_ELEMENTS];
     game.meta.dust = { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 };
     game.meta.sProcess.heavy = 0;
+    game.meta.rProcess.ejecta = 0;
     game.meta.sProcess.amounts[0] = 30;
     game.meta.shop.auto = 1;
     const goal = nextShopGoal(game.meta).item;

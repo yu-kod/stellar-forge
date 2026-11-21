@@ -1,14 +1,17 @@
 import { shopCost } from "./actions";
 import { SHOP } from "./balance";
 import { funds, isShopItemOpen, isShopItemUseful } from "./shop";
+import { ejectaRate } from "./merger";
 import { heavyRate } from "./sprocess";
 import { SHOP_IDS, type Currency, type Meta, type ShopId } from "./types";
 
 export type ShopGoal = { item: ShopId; shortfall: number; affordable: boolean };
 
-/** その通貨を毎秒どれだけ稼げそうか。星屑はこれまでの一番よい1周、重元素の星屑は今の恒星風 */
+/** その通貨を毎秒どれだけ稼げそうか。星屑はこれまでの一番よい1周、重元素の星屑は今の恒星風、放出物は待っている連星 */
 function incomeRate(meta: Meta, currency: Currency): number {
-  return currency === "heavy" ? heavyRate(meta) : meta.bestRate[currency];
+  if (currency === "heavy") return heavyRate(meta);
+  if (currency === "ejecta") return ejectaRate(meta);
+  return meta.bestRate[currency];
 }
 
 /**

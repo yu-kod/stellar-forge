@@ -4,14 +4,20 @@ import type { Currency, Meta, ShopId } from "./types";
 
 /** 恒久強化に払える手持ち */
 export function funds(meta: Meta, currency: Currency): number {
-  return currency === "heavy" ? meta.sProcess.heavy : meta.dust[currency];
+  if (currency === "heavy") return meta.sProcess.heavy;
+  if (currency === "ejecta") return meta.rProcess.ejecta;
+  return meta.dust[currency];
 }
 
 /** 手持ちから払う */
 export function spend(meta: Meta, currency: Currency, amount: number): Meta {
-  return currency === "heavy"
-    ? { ...meta, sProcess: { ...meta.sProcess, heavy: meta.sProcess.heavy - amount } }
-    : { ...meta, dust: { ...meta.dust, [currency]: meta.dust[currency] - amount } };
+  if (currency === "heavy") {
+    return { ...meta, sProcess: { ...meta.sProcess, heavy: meta.sProcess.heavy - amount } };
+  }
+  if (currency === "ejecta") {
+    return { ...meta, rProcess: { ...meta.rProcess, ejecta: meta.rProcess.ejecta - amount } };
+  }
+  return { ...meta, dust: { ...meta.dust, [currency]: meta.dust[currency] - amount } };
 }
 
 /** その恒久強化の層が解放されているか */

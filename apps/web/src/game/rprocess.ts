@@ -29,6 +29,8 @@ export type RProcess = {
   discovered: number[];
   /** 合体の回数 */
   mergers: number;
+  /** 貯めたキロノバの放出物（第4層の強化の通貨） */
+  ejecta: number;
 };
 
 export function createRProcess(): RProcess {
@@ -39,6 +41,7 @@ export function createRProcess(): RProcess {
     amounts: Array.from({ length: R_PATH_END - R_PATH_START + 1 }, () => 0),
     discovered: [],
     mergers: 0,
+    ejecta: 0,
   };
 }
 

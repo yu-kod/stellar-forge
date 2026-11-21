@@ -181,6 +181,7 @@ function parseRProcess(value: unknown): RProcess {
     binaries: ((raw.binaries as unknown[] | undefined) ?? []).map(parseBinary),
     discovered: parseNumbers(raw.discovered),
     mergers: raw.mergers === undefined ? 0 : requireNumber(raw.mergers),
+    ejecta: raw.ejecta === undefined ? 0 : requireNumber(raw.ejecta),
   };
 }
 

@@ -19,9 +19,10 @@ describe("遊び方による違い", () => {
     expect(handsOff.marks.layer3! - steer.marks.layer3!).toBeGreaterThanOrEqual(5 * MINUTE);
   });
 
-  it("第3層で主星を炭素星にすると、循環に8分以上早く届くが、超新星の星屑が減って第4層は長くなる（どちらが速いかは第4層の星屑しだい）", () => {
+  it("第3層で主星を炭素星にすると、循環に8分以上早く届き、その分だけ早く完結する（第4層の長さはほぼ変わらない）", () => {
     expect(steer.marks.loop! - carbonStar.marks.loop!).toBeGreaterThanOrEqual(8 * MINUTE);
     const layer4 = (r: IdleReport) => r.marks.complete! - r.marks.layer4!;
-    expect(layer4(carbonStar)).toBeGreaterThan(layer4(steer));
+    expect(Math.abs(layer4(carbonStar) - layer4(steer))).toBeLessThanOrEqual(5 * MINUTE);
+    expect(steer.marks.complete! - carbonStar.marks.complete!).toBeGreaterThanOrEqual(8 * MINUTE);
   });
 });

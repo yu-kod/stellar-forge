@@ -5,6 +5,7 @@ import {
   MERGER_SECONDS,
   R_PATH_START,
   advanceBinaries,
+  ejectaRate,
   binarySlots,
   createRProcess,
   formBinary,
@@ -262,11 +263,12 @@ describe("連星を組む", () => {
     expect(formBinary(game, HEAVY, HEAVY)).toBe(game);
   });
 
-  it("連星の枠（初期値 1）が埋まっていたら組めない", () => {
+  it("連星の枠（初期値 2）が埋まっていたら組めない", () => {
     const game: GameState = { ...createGame(), meta: layer4() };
-    const once = formBinary(game, LIGHT, HEAVY);
-    expect(binarySlots(once.meta)).toBe(1);
-    expect(formBinary(once, LIGHT, HEAVY)).toBe(once);
+    const twice = formBinary(formBinary(game, LIGHT, HEAVY), LIGHT, HEAVY);
+    expect(binarySlots(twice.meta)).toBe(2);
+    expect(twice.meta.rProcess.binaries).toHaveLength(2);
+    expect(formBinary(twice, LIGHT, HEAVY)).toBe(twice);
   });
 
   it("第4層の前は組めない", () => {
@@ -306,6 +308,22 @@ describe("合体と r過程", () => {
     expect(rAmount(uneven, 78)).toBeCloseTo(q.dynamical.amount * rWeight(78));
     expect(rAmount(uneven, 52)).toBeCloseTo(q.disk.amount * rWeight(52));
     expect(rAmount(uneven, 64)).toBe(0);
+  });
+
+  it("合体の放出物は、第4層の強化に使う通貨として貯まる", () => {
+    const once = merged(LIGHT, HEAVY).meta;
+    expect(once.rProcess.ejecta).toBeCloseTo(predictMerger(createMeta(), LIGHT, HEAVY).ejecta);
+    expect(createRProcess().ejecta).toBe(0);
+  });
+
+  it("放出物の稼ぎ（毎秒）は、待っている連星の 放出物 ÷ 合体までの時間 の合計", () => {
+    const meta = layer4();
+    meta.shop.slots = 1;
+    expect(ejectaRate(meta)).toBe(0);
+    const game = formBinary(formBinary({ ...createGame(), meta }, LIGHT, HEAVY), LIGHT, LIGHT);
+    const per = (a: number, b: number) =>
+      predictMerger(meta, a, b).ejecta / mergerSeconds(meta, a, b);
+    expect(ejectaRate(game.meta)).toBeCloseTo(per(LIGHT, HEAVY) + per(LIGHT, LIGHT));
   });
 
   it("寿命の短い元素（Z 84〜89・91）には貯めない", () => {
@@ -361,7 +379,7 @@ describe("r過程の発見の効果", () => {
   it("イリジウム：連星の枠 +1", () => {
     const meta = layer4();
     meta.rProcess.discovered = [77];
-    expect(binarySlots(meta)).toBe(2);
+    expect(binarySlots(meta)).toBe(3);
   });
 
   it("白金：Ye −0.025", () => {

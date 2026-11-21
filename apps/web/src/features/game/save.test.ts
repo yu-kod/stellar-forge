@@ -200,6 +200,7 @@ describe("restoreSave", () => {
       binaries: [{ a: 0, b: 8, remaining: 120 }],
       discovered: [63],
       mergers: 4,
+      ejecta: 12.5,
     };
     game.meta.rProcess.amounts[3] = 2.5;
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
@@ -208,7 +209,7 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual(createGame().meta.rProcess);
   });
 
-  it("r過程の道・連星・合体の回数が古いセーブに無ければ、空で始める", () => {
+  it("r過程の道・連星・合体の回数・放出物が古いセーブに無ければ、空で始める", () => {
     const game = createGame();
     game.meta.rProcess.unlocked = true;
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
@@ -216,6 +217,7 @@ describe("restoreSave", () => {
     delete raw.game.meta.rProcess.binaries;
     delete raw.game.meta.rProcess.discovered;
     delete raw.game.meta.rProcess.mergers;
+    delete raw.game.meta.rProcess.ejecta;
     expect(restoreSave(raw, NOW)?.game.meta.rProcess).toEqual({
       ...createGame().meta.rProcess,
       unlocked: true,

@@ -21,8 +21,8 @@ export const EMPTY_HALL: Hall = { completions: 0, best: null, last: null, previo
 export type MedalName = "金" | "銀" | "銅";
 /** 完結までの時間 [秒] のメダル（画面の初期設定で案内に従うと銅、種の切り替えで銀、炭素星を組み合わせると金。medals.test.ts） */
 export const MEDALS: readonly { name: MedalName; within: number }[] = [
-  { name: "金", within: 168 * 60 },
-  { name: "銀", within: 180 * 60 },
+  { name: "金", within: 135 * 60 },
+  { name: "銀", within: 158 * 60 },
   { name: "銅", within: Infinity },
 ];
 
