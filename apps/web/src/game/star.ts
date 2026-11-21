@@ -77,13 +77,18 @@ export function createMeta(): Meta {
   };
 }
 
+/** これまでに作った白色矮星の数（Ia型超新星で使った分も含める。Ia型超新星1回で1つ使う） */
+export function whiteDwarfsMade(meta: Meta): number {
+  return meta.whiteDwarfs + meta.iaSupernovae;
+}
+
 export function createStar(meta: Meta): Star {
   const initialMass = birthMass(meta);
   const mass = emptyComposition();
   mass.C = CARBON_PER_CNO_LEVEL * meta.shop.cno * Math.min(1, initialMass / REFERENCE_MASS);
   mass.H = initialMass - mass.C;
   return {
-    generation: meta.supernovae + meta.whiteDwarfs + 1,
+    generation: whiteDwarfsMade(meta) + meta.supernovae + 1,
     initialMass,
     mass,
     energy: 0,
