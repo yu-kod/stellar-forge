@@ -23,7 +23,7 @@ import {
   type PairAdvice,
 } from "@/game/merger";
 import { NEUTRON_STAR_MASSES } from "@/game/rprocess";
-import { nextMissing } from "@/game/progress";
+import { missingHint, nextMissing } from "@/game/progress";
 import { massForOneDust } from "@/game/dust";
 import { nextSDiscovery } from "@/game/sprocess";
 import { isIgnited } from "@/game/rates";
@@ -465,8 +465,24 @@ function MissingGoal({ meta }: { meta: GameState["meta"] }) {
   );
 }
 
-/** 第3層の目標：s過程で次に見つける元素 */
+const FLUORINE = 9;
+
+/** 第3層の目標：s過程で次に見つける元素。フッ素がまだなら作り方を添える（第3層でしか作れない） */
 function SProcessGoal({ meta }: { meta: GameState["meta"] }) {
+  const fluorine = !meta.lightFound.includes(FLUORINE) && (
+    <>
+      。まだの元素 <b className="text-ignite">フッ素（F）</b>：{missingHint(meta, FLUORINE)}
+    </>
+  );
+  return (
+    <>
+      <SProcessStep meta={meta} />
+      {fluorine}
+    </>
+  );
+}
+
+function SProcessStep({ meta }: { meta: GameState["meta"] }) {
   if (meta.sProcess.looped) {
     return (
       <>
