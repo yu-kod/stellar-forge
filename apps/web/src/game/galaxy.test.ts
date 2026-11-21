@@ -11,6 +11,8 @@ describe("周の初めに選ぶ銀河", () => {
     expect(createGame("metalRich").meta.galaxy).toBe("metalRich");
     expect(GALAXIES.milkyWay.name).toBe("天の川");
     expect(GALAXIES.metalRich.name).toBe("金属の多い銀河の中心");
+    // 説明は物理だけ。作戦（種をどうするか）は書かない
+    expect(GALAXIES.metalRich.description).not.toMatch(/種/);
   });
 
   it("金属の多い銀河では、中性子を吸う軽い原子核（中性子の毒）が4倍。道に届く中性子が減る", () => {
