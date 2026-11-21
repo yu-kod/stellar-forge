@@ -13,12 +13,12 @@ function layer4(ejecta: number): GameState {
 
 describe("追観測：放出物を強化に使わず、いま作りたい元素の発見に回す", () => {
   it("放出物をすべて使い、いま作りたい元素に 放出物 × 倍率 × 重み を足す", () => {
-    const game = layer4(0.1);
+    const game = layer4(0.05);
     const z = rGoal(game.meta);
     const { state, events } = observe(game);
     expect(state.meta.rProcess.ejecta).toBe(0);
     expect(state.meta.rProcess.amounts[z - R_PATH_START]).toBeCloseTo(
-      0.1 * OBSERVE_RATE * rWeight(z)
+      0.05 * OBSERVE_RATE * rWeight(z)
     );
     expect(events).toEqual([]);
   });
