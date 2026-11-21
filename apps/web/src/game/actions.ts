@@ -167,7 +167,9 @@ export function rebirth(state: GameState): GameState {
 
 export function shopCost(meta: Meta, item: ShopId): number {
   const spec = SHOP[item];
-  return Math.floor(spec.baseCost * spec.costGrowth ** meta.shop[item]);
+  const cost = spec.baseCost * spec.costGrowth ** meta.shop[item];
+  // 放出物は1回の合体で 1 ほどしか貯まらないので、0.1 刻みで数える
+  return spec.currency === "ejecta" ? Math.floor(cost * 10 + 1e-9) / 10 : Math.floor(cost);
 }
 
 export function canBuyShopItem(meta: Meta, item: ShopId): boolean {

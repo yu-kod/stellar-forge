@@ -90,9 +90,20 @@ const has = (rProcess: RProcess, z: number) => rProcess.discovered.includes(z);
 /** 特別な効果を持つ r過程の元素 */
 const SPECIAL = new Set([EUROPIUM, OSMIUM, IRIDIUM, PLATINUM, GOLD, THORIUM, URANIUM]);
 
+/** はじめから同時に持てる連星の数 */
+const BASE_BINARY_SLOTS = 2;
+
 /** 同時に持てる連星の数 */
 export function binarySlots(meta: Meta): number {
-  return 1 + meta.shop.slots + (has(meta.rProcess, IRIDIUM) ? 1 : 0);
+  return BASE_BINARY_SLOTS + meta.shop.slots + (has(meta.rProcess, IRIDIUM) ? 1 : 0);
+}
+
+/** 放出物の稼ぎ [毎秒]：待っている連星の 放出物 ÷ 合体までの時間 の合計 */
+export function ejectaRate(meta: Meta): number {
+  return meta.rProcess.binaries.reduce(
+    (sum, { a, b }) => sum + predictMerger(meta, a, b).ejecta / mergerSeconds(meta, a, b),
+    0
+  );
 }
 
 /** 連星が合体するまでの時間 [秒]。重力波で近づく時間は m1·m2·(m1+m2) に反比例する（1.4 + 1.4 M☉ が基準） */
@@ -295,12 +306,31 @@ export function usefulPair(meta: Meta, a: number, b: number): boolean {
   );
 }
 
-/** 連星の自動化：枠が空いていれば、いま作りたい元素を一番多く作る組を組む（届かない組は作らない） */
+/** 在庫で組める組のうち、放出物を時間あたりで一番多く貯めるもの（すぐブラックホールになる組は除く）。なければ null */
+function richestPair(meta: Meta): [number, number] | null {
+  const { pool } = meta.rProcess;
+  let best: { pair: [number, number]; rate: number } | null = null;
+  for (let a = 0; a < NEUTRON_STAR_MASSES.length; a++) {
+    for (let b = a; b < NEUTRON_STAR_MASSES.length; b++) {
+      const have = a === b ? pool[a]! >= 2 : pool[a]! >= 1 && pool[b]! >= 1;
+      const preview = predictMerger(meta, a, b);
+      if (!have || preview.blackHole) continue;
+      const rate = preview.ejecta / mergerSeconds(meta, a, b);
+      if (best === null || rate > best.rate) best = { pair: [a, b], rate };
+    }
+  }
+  return best?.pair ?? null;
+}
+
+/**
+ * 連星の自動化：枠が空いていれば、いま作りたい元素を一番多く作る組を組む。
+ * 届く組がなければ、強化（遮蔽など）を買うために放出物を一番速く貯める組を組む（すぐブラックホールになる組は作らない）
+ */
 export function autoBinary(state: GameState): GameState {
   if (!state.meta.shop.rAuto) return state;
   let next = state;
   for (;;) {
-    const pair = bestPair(next.meta, rGoal(next.meta));
+    const pair = bestPair(next.meta, rGoal(next.meta)) ?? richestPair(next.meta);
     if (!pair) return next;
     const formed = formBinary(next, pair[0], pair[1]);
     if (formed === next) return next;
@@ -333,6 +363,7 @@ function merge(meta: Meta, binary: Binary): { meta: Meta; events: MergerEvent[] 
     amounts,
     discovered: [...meta.rProcess.discovered, ...found],
     mergers: meta.rProcess.mergers + 1,
+    ejecta: meta.rProcess.ejecta + ejecta,
   };
   return {
     meta: { ...meta, rProcess },

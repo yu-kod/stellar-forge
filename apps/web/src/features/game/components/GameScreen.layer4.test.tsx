@@ -73,6 +73,18 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(screen.getByRole("list", { name: "手持ちの星屑" })).toHaveTextContent("重元素1,234");
   });
 
+  it("星屑タブと r過程タブに、貯めたキロノバの放出物を出す（第4層の強化の通貨）", async () => {
+    const game = layer4();
+    game.meta.rProcess.ejecta = 12.34;
+    const { user } = renderGame(game);
+    expect(panel()).toHaveTextContent("放出物 12.34");
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByRole("list", { name: "手持ちの星屑" })).toHaveTextContent("放出物12.34");
+    expect(screen.getByRole("article", { name: "潮汐の尾" })).toHaveTextContent(
+      "キロノバの放出物 0.6"
+    );
+  });
+
   it("第4層では、星屑タブの第1・2層の強化を畳む（まとめて交換で買える）", async () => {
     const { user } = renderGame(layer4());
     await user.click(screen.getByRole("tab", { name: "星屑" }));
@@ -132,6 +144,8 @@ describe("GameScreen：第4層 中性子星合体", () => {
     );
     const binaries = within(panel()).getByRole("list", { name: "合体を待つ連星" });
     expect(binaries).toHaveTextContent("1.2 + 1.2 M☉ 合体まで 15分53秒");
+    // 枠ははじめ2つ
+    await user.click(within(panel()).getByRole("button", { name: "連星にする" }));
     expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeDisabled();
     for (let i = 0; i < 4; i++) tick(0.25);
     expect(binaries).toHaveTextContent("合体まで 15分52秒");
@@ -221,7 +235,7 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     const game = layer4({ [2]: 5, [HEAVY]: 5 });
     game.meta.rProcess.discovered = [52, 53, 54, 63, 64, 65, 66, 67, 68, 69];
     expect(goalOf(game)).toHaveTextContent(
-      "レニウム（Re）に届く組がない：ニュートリノの遮蔽（酸素の星屑 あと"
+      "レニウム（Re）に届く組がない：ニュートリノの遮蔽（キロノバの放出物 あと"
     );
     expect(screen.getByRole("note")).toHaveTextContent(
       "。または星団の星を 10 M☉ と 40 M☉ にすると、1.2 + 2.0 M☉ の組で届く"
@@ -236,7 +250,7 @@ describe("第4層：在庫がない・全部作ったとき", () => {
     );
     game.meta.lightFound = [3, 4, 5, 9, 11, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25];
     expect(goalOf(game)).toHaveTextContent(
-      `ウラン（U）に届く組がない：ニュートリノの遮蔽（酸素の星屑 あと ${formatNumber(SHOP.shield.baseCost)}）で Ye を下げる`
+      `ウラン（U）に届く組がない：ニュートリノの遮蔽（キロノバの放出物 あと ${formatNumber(SHOP.shield.baseCost)}）で Ye を下げる`
     );
   });
 

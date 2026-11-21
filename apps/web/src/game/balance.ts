@@ -11,9 +11,9 @@ const BEST_TARGET: Record<DustId, Target> = {
   S: "Si",
 };
 
-/** その通貨を一番多く残す狙い。重元素の星屑は狙いでは増えない（null） */
+/** その通貨を一番多く残す狙い。重元素の星屑と放出物は狙いでは増えない（null） */
 export function bestTarget(currency: Currency): Target | null {
-  return currency === "heavy" ? null : BEST_TARGET[currency];
+  return currency === "heavy" || currency === "ejecta" ? null : BEST_TARGET[currency];
 }
 
 /**
@@ -381,37 +381,37 @@ export const SHOP: Record<ShopId, ShopSpec> = {
   },
   envelope: {
     name: "共通外層",
-    currency: "heavy",
+    currency: "ejecta",
     description: "連星が近い状態で生まれる。合体までの時間 ×0.6",
-    baseCost: 400,
+    baseCost: 5,
     costGrowth: 3,
     maxLevel: 3,
     layer: 4,
   },
   slots: {
     name: "連星の枠",
-    currency: "Mg",
+    currency: "ejecta",
     description: "同時に持てる連星 +1",
-    baseCost: 2e6,
-    costGrowth: 5,
-    maxLevel: 3,
+    baseCost: 10,
+    costGrowth: 4,
+    maxLevel: 2,
     layer: 4,
   },
   tail: {
     name: "潮汐の尾",
-    currency: "heavy",
+    currency: "ejecta",
     description: "合体の放出物 +50%",
-    baseCost: 320,
-    costGrowth: 2,
+    baseCost: 0.6,
+    costGrowth: 3,
     maxLevel: 5,
     layer: 4,
   },
   shield: {
     name: "ニュートリノの遮蔽",
-    currency: "O",
+    currency: "ejecta",
     description:
       "潮汐の放出物の Ye −0.025（重い元素まで届く。ランタノイドを作る組は第3ピークへずれる）",
-    baseCost: 3e7,
+    baseCost: 25,
     costGrowth: 3,
     maxLevel: 4,
     layer: 4,

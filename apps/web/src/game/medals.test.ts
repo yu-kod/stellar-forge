@@ -31,12 +31,19 @@ describe("記録への挑戦のメダル", () => {
     });
   }, 900_000);
 
-  it("初期設定で案内に従うだけでは金に届かない。種を局面で変えると速くなる", () => {
-    expect(medalOf(standard.marks.complete!)).not.toBe("金");
-    expect(shiftOnly.marks.complete!).toBeLessThan(standard.marks.complete!);
+  it("初期設定で案内に従うだけでは銅。種を局面で変えるだけでは銀（金には判断が2つ要る）", () => {
+    expect(medalOf(standard.marks.complete!)).toBe("銅");
+    expect(medalOf(shiftOnly.marks.complete!)).toBe("銀");
   });
 
   it("炭素星と種の切り替えを組み合わせると金", () => {
     expect(medalOf(best.marks.complete!)).toBe("金");
+  });
+
+  it("第4層に早く着いた分は、ほとんど（85% 以上）完結まで残る（第4層の強化は第4層で稼ぐ）", () => {
+    const earlier = standard.marks.layer4! - best.marks.layer4!;
+    const kept = standard.marks.complete! - best.marks.complete!;
+    expect(earlier).toBeGreaterThan(0);
+    expect(kept / earlier).toBeGreaterThanOrEqual(0.85);
   });
 });

@@ -91,13 +91,13 @@ describe("GameScreen：エンディング", () => {
 describe("記録への挑戦", () => {
   it("保存された記録を読み、記録タブに完結の回数と最速、メダルの目安を出す", async () => {
     const user = userEvent.setup();
-    const storage = memoryStorage({ [HALL_KEY]: { completions: 2, best: 178 * 60 } });
+    const storage = memoryStorage({ [HALL_KEY]: { completions: 2, best: 150 * 60 } });
     render(<GameScreen ticker={manualTicker().ticker} storage={storage} now={() => 0} />);
     await user.click(screen.getByRole("tab", { name: "記録" }));
     const hall = screen.getByRole("region", { name: "記録への挑戦" });
-    expect(hall).toHaveTextContent("完結 2回・最速 2時間58分（銀）");
-    expect(hall).toHaveTextContent("金：2時間48分以内");
-    expect(hall).toHaveTextContent("第3層で重元素の星屑を貯める");
+    expect(hall).toHaveTextContent("完結 2回・最速 2時間30分（銀）");
+    expect(hall).toHaveTextContent("金：2時間15分以内");
+    expect(hall).toHaveTextContent("第3層で主星を炭素星にする");
   });
 
   it("エンディングに今回の時間のメダルと、次の挑戦を出す", async () => {
@@ -112,7 +112,7 @@ describe("記録への挑戦", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：銅");
-    expect(dialog).toHaveTextContent("金：2時間48分以内");
+    expect(dialog).toHaveTextContent("金：2時間15分以内");
   });
 
   it("エンディングに層ごとの時刻と、前回との差を出す", async () => {

@@ -35,9 +35,9 @@ describe("第4層とエンディングのペーシング（画面を開いたま
     expect(Math.max(...gaps)).toBeLessThanOrEqual(15 * MINUTE);
   });
 
-  it("金は第4層の45分〜2時間後", () => {
+  it("金は第4層の35分〜2時間後", () => {
     const gap = report.marks.gold! - report.marks.layer4!;
-    expect(gap).toBeGreaterThanOrEqual(45 * MINUTE);
+    expect(gap).toBeGreaterThanOrEqual(35 * MINUTE);
     expect(gap).toBeLessThanOrEqual(120 * MINUTE);
   });
 

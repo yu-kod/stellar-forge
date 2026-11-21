@@ -11,8 +11,8 @@ export type StageId = (typeof STAGE_IDS)[number];
 export const DUST_IDS = ["C", "N", "O", "Ne", "Mg", "Si", "S"] as const;
 export type DustId = (typeof DUST_IDS)[number];
 
-/** 恒久強化の通貨。星屑と、s過程の重元素の星屑（heavy） */
-export type Currency = DustId | "heavy";
+/** 恒久強化の通貨。星屑と、s過程の重元素の星屑（heavy）と、合体で貯めるキロノバの放出物（ejecta） */
+export type Currency = DustId | "heavy" | "ejecta";
 
 /** 狙う星屑。燃焼をどこまで強化するか（玉ねぎをどこまで焼くか）の4段階 */
 export const TARGET_IDS = ["C", "Ne", "O", "Si"] as const;

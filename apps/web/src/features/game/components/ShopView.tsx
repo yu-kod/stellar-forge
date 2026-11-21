@@ -32,6 +32,17 @@ export function ShopView({ meta, dispatch }: Props) {
             </span>
           </li>
         )}
+        {meta.rProcess.unlocked && (
+          <li
+            aria-label={`キロノバの放出物 ${formatNumber(meta.rProcess.ejecta)}`}
+            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm"
+          >
+            <span aria-hidden>放出物</span>
+            <span aria-hidden className="font-mono tabular-nums">
+              {formatNumber(meta.rProcess.ejecta)}
+            </span>
+          </li>
+        )}
       </ul>
       <Button
         variant="outline"

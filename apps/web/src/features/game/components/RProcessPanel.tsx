@@ -40,7 +40,7 @@ function defaultPair(meta: Meta): [number, number] {
 
 /** 第4層：中性子星を2つずつ連星にし、合体させて r過程で重い元素を作る */
 export function RProcessPanel({ meta, dispatch }: Props) {
-  const { pool, binaries, amounts, discovered, mergers } = meta.rProcess;
+  const { pool, binaries, amounts, discovered, mergers, ejecta } = meta.rProcess;
   const goal = rGoal(meta);
   const goalElement = elementOf(goal);
   // 自分で選ぶまでは、在庫に合わせてはじめの組を選び直す
@@ -161,7 +161,8 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         ))}
       </ul>
       <p className="text-muted-foreground text-sm">
-        連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回
+        連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回・放出物{" "}
+        {formatNumber(ejecta)}（星屑タブで強化に使う）
       </p>
       <ul aria-label="r過程で作る元素" className="grid gap-1 text-sm sm:grid-cols-2">
         {[...R_ELEMENTS, ...ACTINIDES].map((z) => {
