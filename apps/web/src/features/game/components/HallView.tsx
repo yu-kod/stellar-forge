@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { MEDALS, medalOf, type Hall } from "../hall";
+import { FASTER_MOVES, MEDALS, medalOf, type Hall } from "../hall";
 import { formatDuration } from "../format";
 
 /** 記録への挑戦：完結の回数・最速と、メダルの目安 */
@@ -27,7 +27,7 @@ export function MedalTargets() {
       {MEDALS.filter((medal) => medal.within < Infinity)
         .map((medal) => `${medal.name}：${formatDuration(medal.within)}以内`)
         .join("・")}
-      。鉄の種を局面で変える・第3層で主星を炭素星にするなど、判断で速くなる。最初からやり直しても記録は残る
+      。{FASTER_MOVES.join("・")}と速くなる（両方で金に届く）。最初からやり直しても記録は残る
     </p>
   );
 }
