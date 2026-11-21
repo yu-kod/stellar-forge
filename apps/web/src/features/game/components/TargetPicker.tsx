@@ -1,4 +1,4 @@
-import { useId, useMemo } from "react";
+import { Fragment, useId, useMemo } from "react";
 import { previewRun, type RunPreview } from "@/game/preview";
 import { DUST_IDS, TARGET_IDS, type Meta, type Target } from "@/game/types";
 import { cn } from "@/lib/utils";
@@ -11,16 +11,17 @@ type Props = { meta: Meta; dispatch: (action: Action) => void };
 /** 見込みに出す星屑の数（多い順） */
 const PREVIEW_TOP = 2;
 
-function describePreview({ seconds, dust }: RunPreview): string {
+/** 見込みの区切り（時間・多く取れる星屑）。区切りの中では折り返さない */
+function describePreview({ seconds, dust }: RunPreview): string[] {
   const top = [...DUST_IDS]
     .sort((a, b) => dust[b] - dust[a])
     .slice(0, PREVIEW_TOP)
     .map((id) => `${id} ${formatNumber(dust[id])}`);
-  return [`約${Math.round(seconds)}秒`, ...top].join(" ");
+  return [`約${Math.round(seconds)}秒`, ...top];
 }
 
 /** 狙いごとの次の1周の見込み。星屑が変わるたびには計算しない（強化や設定が変わったときだけ） */
-function usePreviews(meta: Meta): Record<Target, string> | null {
+function usePreviews(meta: Meta): Record<Target, string[]> | null {
   const key = JSON.stringify([
     meta.shop,
     meta.nextMass,
@@ -33,7 +34,7 @@ function usePreviews(meta: Meta): Record<Target, string> | null {
       meta.shop.auto
         ? (Object.fromEntries(
             TARGET_IDS.map((id) => [id, describePreview(previewRun(meta, id))])
-          ) as Record<Target, string>)
+          ) as Record<Target, string[]>)
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- key に見込みに効く項目をまとめた
     [key]
@@ -77,7 +78,12 @@ export function TargetPicker({ meta, dispatch }: Props) {
             <span aria-hidden>{TARGET_NAMES[id]}</span>
             {previews && (
               <small id={`${idBase}-${id}`} className="text-muted-foreground font-mono text-xs">
-                {previews[id]}
+                {previews[id].map((part, i) => (
+                  <Fragment key={part}>
+                    {i > 0 && " "}
+                    <span className="whitespace-nowrap">{part}</span>
+                  </Fragment>
+                ))}
               </small>
             )}
           </label>
