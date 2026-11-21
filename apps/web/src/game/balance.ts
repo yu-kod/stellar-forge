@@ -476,8 +476,7 @@ export const GALAXIES: Record<
   },
   metalRich: {
     name: "金属の多い銀河の中心",
-    description:
-      "金属の多い星ほど、中性子を吸う軽い原子核も多い。中性子の毒 ×4：種を減らすと中性子が毒に取られる",
+    description: "金属の多い星ほど、中性子を吸う軽い原子核（中性子の毒）も多い。中性子の毒 ×4",
     poison: 4,
     par: 1.37,
   },

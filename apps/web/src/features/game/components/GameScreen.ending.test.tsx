@@ -128,7 +128,28 @@ describe("記録への挑戦", () => {
     expect(pace).not.toHaveTextContent("最速");
   });
 
-  it("保存された記録を読み、記録タブに完結の回数と最速、メダルの目安を出す", async () => {
+  it("完結する前は、メダルの目安だけを出し、作戦は書かない（気づいた人の得にする）", async () => {
+    const user = userEvent.setup();
+    render(<GameScreen ticker={manualTicker().ticker} storage={memoryStorage({})} now={() => 0} />);
+    await user.click(screen.getByRole("tab", { name: "記録" }));
+    const hall = screen.getByRole("region", { name: "記録への挑戦" });
+    expect(hall).toHaveTextContent("まだ完結していない");
+    expect(hall).toHaveTextContent("金：2時間15分以内");
+    expect(hall).not.toHaveTextContent("炭素星");
+    expect(hall).not.toHaveTextContent("種");
+  });
+
+  it("金を取った銀河では、作戦の目安を出さない", async () => {
+    const user = userEvent.setup();
+    const storage = memoryStorage({ [HALL_KEY]: { completions: 1, best: 130 * 60 } });
+    render(<GameScreen ticker={manualTicker().ticker} storage={storage} now={() => 0} />);
+    await user.click(screen.getByRole("tab", { name: "記録" }));
+    const hall = screen.getByRole("region", { name: "記録への挑戦" });
+    expect(hall).toHaveTextContent("天の川 最速 2時間10分（金）");
+    expect(hall).not.toHaveTextContent("炭素星");
+  });
+
+  it("保存された記録を読み、記録タブに完結の回数と最速、メダルの目安を出す。金を取れていなければ作戦の目安も", async () => {
     const user = userEvent.setup();
     const storage = memoryStorage({ [HALL_KEY]: { completions: 2, best: 150 * 60 } });
     render(<GameScreen ticker={manualTicker().ticker} storage={storage} now={() => 0} />);

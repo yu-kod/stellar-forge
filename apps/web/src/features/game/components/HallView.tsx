@@ -25,22 +25,27 @@ export function HallView({ hall, galaxy }: { hall: Hall; galaxy: Galaxy }) {
           ? "まだ完結していない"
           : [`完結 ${hall.completions}回`, ...bests].join("・")}
       </p>
-      <MedalTargets galaxy={galaxy} />
+      <MedalTargets galaxy={galaxy} hall={hall} />
     </section>
   );
 }
 
-/** その銀河のメダルの目安（金・銀は判断で届く時間） */
-export function MedalTargets({ galaxy }: { galaxy: Galaxy }) {
+/**
+ * その銀河のメダルの目安（金・銀は判断で届く時間）。作戦の目安は、その銀河で完結して金を取れなかった後にだけ出す
+ * （はじめから答えを書かず、気づいた人の得にする）
+ */
+export function MedalTargets({ galaxy, hall }: { galaxy: Galaxy; hall: Hall }) {
   const { name, par } = GALAXIES[galaxy];
+  const best = bestOf(hall, galaxy);
+  const tips = best !== null && medalOf(best.complete, galaxy) !== "金";
   return (
     <p className="text-muted-foreground">
       {galaxy !== "milkyWay" && `${name}：`}
       {MEDALS.filter((medal) => medal.within < Infinity)
         .map((medal) => `${medal.name}：${formatDuration(medal.within * par)}以内`)
         .join("・")}
-      。{FASTER_MOVES[galaxy].join("・")}
-      と速くなる（両方で金に届く）。最初からやり直しても記録は残る
+      。{tips && `${FASTER_MOVES[galaxy].join("・")}と速くなる（両方で金に届く）。`}
+      最初からやり直しても記録は残る
     </p>
   );
 }
