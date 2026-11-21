@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,8 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { GALAXIES } from "@/game/balance";
-import { GALAXY_IDS, type Galaxy } from "@/game/types";
+import type { Galaxy } from "@/game/types";
+import { GalaxyPicker } from "./GalaxyPicker";
 
 type Props = {
   onReset: (galaxy: Galaxy) => void;
@@ -23,7 +23,6 @@ type Props = {
 export function ResetDialog({ onReset, chooseGalaxy }: Props) {
   const [open, setOpen] = useState(false);
   const [galaxy, setGalaxy] = useState<Galaxy>("milkyWay");
-  const labelId = useId();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -38,33 +37,7 @@ export function ResetDialog({ onReset, chooseGalaxy }: Props) {
             星屑・発見した元素・超新星の記録が消えます。記録への挑戦（完結の回数と最速）は残ります。元には戻せません。
           </DialogDescription>
         </DialogHeader>
-        {chooseGalaxy && (
-          <fieldset className="grid gap-2">
-            <legend id={labelId} className="mb-1 text-sm font-medium">
-              次の周の銀河
-            </legend>
-            <div role="radiogroup" aria-labelledby={labelId} className="grid gap-2">
-              {GALAXY_IDS.map((id) => (
-                <label
-                  key={id}
-                  className="has-focus-visible:ring-ring/50 has-checked:border-foreground/40 has-checked:bg-accent flex min-h-11 cursor-pointer items-start gap-2 rounded-md border p-3 text-sm has-focus-visible:ring-[3px]"
-                >
-                  <input
-                    type="radio"
-                    name="galaxy"
-                    className="accent-ignite mt-1"
-                    checked={galaxy === id}
-                    onChange={() => setGalaxy(id)}
-                  />
-                  <span>
-                    <b>{GALAXIES[id].name}</b>
-                    <span className="text-muted-foreground block">{GALAXIES[id].description}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        )}
+        {chooseGalaxy && <GalaxyPicker value={galaxy} onChange={setGalaxy} />}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" className="h-11">

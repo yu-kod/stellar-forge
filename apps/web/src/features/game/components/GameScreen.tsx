@@ -300,6 +300,7 @@ export function GameScreen({
         hall={model.hall}
         open={model.ending && game.star.end === null}
         onClose={() => dispatchAndSave({ type: "closeEnding" })}
+        onNextRun={reset}
       />
     </main>
   );

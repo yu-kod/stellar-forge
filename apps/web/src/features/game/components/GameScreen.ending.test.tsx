@@ -254,6 +254,27 @@ describe("記録への挑戦", () => {
   });
 });
 
+describe("エンディングから次の周へ", () => {
+  it("銀河を選んで、そのまま次の周を始められる（記録は残る）", async () => {
+    const user = userEvent.setup();
+    const storage = memoryStorage({});
+    const clock = manualTicker();
+    render(
+      <GameScreen initial={almostDone()} ticker={clock.ticker} storage={storage} now={() => 0} />
+    );
+    clock.tick(0.25);
+    const dialog = await screen.findByRole("dialog", { name: "周期表が埋まった" });
+    const galaxies = within(dialog).getByRole("radiogroup", { name: "次の周の銀河" });
+    await user.click(within(galaxies).getByRole("radio", { name: /金属の多い銀河の中心/ }));
+    await user.click(within(dialog).getByRole("button", { name: "この銀河で次の周を始める" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("timer", { name: "通算の時間" })).toHaveTextContent(
+      "金属の多い銀河の中心・通算 0分"
+    );
+    expect(storage.get(HALL_KEY)).toMatchObject({ completions: 1 });
+  });
+});
+
 describe("EndingDialog", () => {
   it("まだ埋まっていなければ時間は 0分（記録からは開けない）", async () => {
     const { EndingDialog } = await import("./EndingDialog");
