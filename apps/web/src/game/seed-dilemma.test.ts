@@ -21,11 +21,22 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
   let one: IdleReport;
   let oneThen30: IdleReport;
   let thirty: IdleReport;
+  let shifting: IdleReport;
   beforeAll(() => {
     standard = playIdle(HOURS * 3600, { stopAt: "complete" });
     one = playIdle(HOURS * 3600, { seedTarget: 1, stopAt: "loop" });
     oneThen30 = playIdle(HOURS * 3600, { seedTarget: switchTo30(1), stopAt: "complete" });
     thirty = playIdle(HOURS * 3600, { seedTarget: 30, stopAt: "complete" });
+    // 局面で変える：ストロンチウムまでは30（重元素の星屑で強化を買う）、その先は1（遠くまで）、そろったら30
+    shifting = playIdle(HOURS * 3600, {
+      seedTarget: (s) =>
+        s.meta.sProcess.discovered.length === S_DISCOVERABLE
+          ? 30
+          : s.meta.sProcess.discovered.includes(38)
+            ? 1
+            : 30,
+      stopAt: "complete",
+    });
   }, 1_200_000);
 
   it("初期設定は種10", () => {
@@ -44,6 +55,12 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
   it("種30は重元素の星屑を2倍以上稼ぐが、83マスが埋まるのは初期設定と5分も変わらない（増やすだけでは速くならない）", () => {
     expect(thirty.heavyEarned).toBeGreaterThan(2 * standard.heavyEarned);
     expect(thirty.marks.complete!).toBeGreaterThanOrEqual(standard.marks.complete! - 5 * MINUTE);
+  });
+
+  it("最善の種は層の中で入れ替わる：30 → 1 → 30 と変えると、初期設定・種30のままより8%以上速い", () => {
+    const faster = (r: IdleReport) => r.marks.complete! <= 0.92 * standard.marks.complete!;
+    expect(faster(shifting)).toBe(true);
+    expect(shifting.marks.complete!).toBeLessThanOrEqual(0.95 * thirty.marks.complete!);
   });
 
   it("初期設定では第3層の強化を10回以上買う（強化に意味がある）", () => {

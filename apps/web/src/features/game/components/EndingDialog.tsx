@@ -11,8 +11,10 @@ import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatDuration, formatNumber } from "../format";
 import { PERIODIC_TABLE } from "../periodicTable";
+import { medalOf, type Hall } from "../hall";
+import { MedalTargets } from "./HallView";
 
-type Props = { game: GameState; open: boolean; onClose: () => void };
+type Props = { game: GameState; hall: Hall; open: boolean; onClose: () => void };
 
 const ORIGIN_COLOR: Record<Origin, string> = {
   bigBang: "bg-el-h",
@@ -24,7 +26,7 @@ const ORIGIN_COLOR: Record<Origin, string> = {
 };
 
 /** 83マスが埋まったときの画面。元素ごとの起源で塗り分けた周期表を見せる */
-export function EndingDialog({ game, open, onClose }: Props) {
+export function EndingDialog({ game, hall, open, onClose }: Props) {
   const { meta, star } = game;
   const stats: [string, number][] = [
     ["星", star.generation],
@@ -46,6 +48,14 @@ export function EndingDialog({ game, open, onClose }: Props) {
             宇宙の元素は、ビッグバンのあと、こうしていくつもの世代の星が少しずつ作ってきた。
           </DialogDescription>
         </DialogHeader>
+        <div className="grid gap-1 text-sm">
+          <p>
+            今回のメダル：<b className="text-ignite">{medalOf(game.meta.completedAt ?? 0)}</b>
+            {hall.best !== null &&
+              `（最速 ${formatDuration(hall.best)}・完結 ${hall.completions}回）`}
+          </p>
+          <MedalTargets />
+        </div>
         <ul aria-label="ここまでの星" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {stats.map(([label, value]) => (
             <li key={label}>

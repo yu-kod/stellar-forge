@@ -37,6 +37,7 @@ import type { Meta } from "@/game/types";
 import { formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
+import { HALL_KEY, parseHall } from "../hall";
 import { animationFrameTicker, type Ticker } from "../ticker";
 import { EndingDialog } from "./EndingDialog";
 import { Notices } from "./Notices";
@@ -78,10 +79,14 @@ function initialModel(
   storage: JsonStorage,
   now: () => number
 ): Model {
-  if (initial) return createModel(initial);
+  const hall = parseHall(storage.get(HALL_KEY));
+  if (initial) return createModel(initial, [], hall);
   const restored = restoreSave(storage.get(SAVE_KEY), now());
-  if (!restored) return createModel(createGame());
-  return gameReducer(createModel(restored.game), { type: "away", seconds: restored.awaySeconds });
+  if (!restored) return createModel(createGame(), [], hall);
+  return gameReducer(createModel(restored.game, [], hall), {
+    type: "away",
+    seconds: restored.awaySeconds,
+  });
 }
 
 export function GameScreen({
@@ -100,6 +105,14 @@ export function GameScreen({
   const lastSaved = useRef(-Infinity);
 
   useEffect(() => ticker((seconds) => dispatch({ type: "tick", seconds })), [ticker]);
+
+  // 記録（完結の回数と最速）は進行とは別に、変わったときに保存する
+  const savedHall = useRef(model.hall);
+  useEffect(() => {
+    if (model.hall === savedHall.current) return;
+    savedHall.current = model.hall;
+    storage.set(HALL_KEY, model.hall);
+  }, [model.hall, storage]);
   const dismiss = useCallback((id: number) => dispatch({ type: "dismiss", id }), []);
 
   // 5秒ごとに保存する。星屑の交換や次の星など大事な操作の直後は待たずに保存する
@@ -249,7 +262,11 @@ export function GameScreen({
           <PeriodicTableView meta={game.meta} />
         </TabsContent>
         <TabsContent value="records" className="bg-card rounded-xl border p-4">
-          <RecordsView meta={game.meta} onEnding={() => dispatch({ type: "openEnding" })} />
+          <RecordsView
+            meta={game.meta}
+            hall={model.hall}
+            onEnding={() => dispatch({ type: "openEnding" })}
+          />
         </TabsContent>
       </Tabs>
       <footer className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-3 pb-6 text-sm">
@@ -259,6 +276,7 @@ export function GameScreen({
       <SupernovaDialog game={game} onRebirth={startNextStar} dispatch={dispatch} />
       <EndingDialog
         game={game}
+        hall={model.hall}
         open={model.ending && game.star.end === null}
         onClose={() => dispatchAndSave({ type: "closeEnding" })}
       />
