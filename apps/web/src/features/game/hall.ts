@@ -42,7 +42,7 @@ export const MEDALS: readonly { name: MedalName; within: number }[] = [
 /** 記録タブで挙げる、単独でも速くなる手（銀河ごと。それぞれ初期設定より3分以上速い。medals.test.ts・galaxy-strategy.test.ts） */
 export const FASTER_MOVES: Record<Galaxy, readonly string[]> = {
   milkyWay: ["鉄の種を局面で変える", "第3層で主星を炭素星にする"],
-  metalRich: ["第3層で主星を炭素星にする", "鉄の種を30のまま保つ"],
+  metalRich: ["第3層で主星を炭素星にする", "鉄の種を局面で変える（減らしすぎない）"],
 };
 
 /** 完結までの時間のメダル。基準には銀河の目安の倍率を掛ける */
