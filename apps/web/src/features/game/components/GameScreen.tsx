@@ -34,10 +34,10 @@ import { currencyName, targetHint } from "../elements";
 import { shopCost } from "@/game/actions";
 import { funds } from "@/game/shop";
 import type { Galaxy, Meta } from "@/game/types";
-import { formatDuration, formatMass, formatNumber } from "../format";
+import { formatDiff, formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
-import { HALL_KEY, parseHall } from "../hall";
+import { HALL_KEY, paceAgainstBest, parseHall, type Hall } from "../hall";
 import { animationFrameTicker, type Ticker } from "../ticker";
 import { EndingDialog } from "./EndingDialog";
 import { Notices } from "./Notices";
@@ -178,10 +178,11 @@ export function GameScreen({
       )}
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="font-display text-2xl tracking-wider sm:text-3xl">星の炉</h1>
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+        <div className="text-muted-foreground flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-sm">
           <p className="font-mono tabular-nums">
             第{game.star.generation}世代の星・{Math.floor(game.star.time)}秒
           </p>
+          <Pace meta={game.meta} hall={model.hall} />
           {showSpeed && (
             <div role="group" aria-label="進める速さ" className="flex rounded-full border">
               {SPEEDS.map((speed) => (
@@ -314,6 +315,17 @@ function LowMassText({ star }: { star: GameState["star"] }) {
       <b className="text-ignite">{formatMass(WHITE_DWARF_HYDROGEN * star.initialMass)}</b>{" "}
       を下回ると白色矮星になる。それまでにヘリウムを炭素・酸素に変えよう
     </>
+  );
+}
+
+/** 通算の時間と、最速の周の同じ層との差 */
+function Pace({ meta, hall }: { meta: Meta; hall: Hall }) {
+  const pace = paceAgainstBest(meta.milestones, hall.bestSplits);
+  return (
+    <p role="timer" aria-label="通算の時間" className="font-mono tabular-nums">
+      通算 {formatDuration(meta.elapsed)}
+      {pace && `・最速の周より 第${pace.layer}層 ${formatDiff(pace.diff)}`}
+    </p>
   );
 }
 

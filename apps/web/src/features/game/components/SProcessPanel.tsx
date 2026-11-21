@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   S_DISCOVERABLE,
@@ -5,13 +6,16 @@ import {
   isMagic,
   heavyRate,
   neutronMultiplier,
+  nextSDiscovery,
   seedsPerIa,
 } from "@/game/sprocess";
 import type { Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { seedPreview } from "@/game/sprocess";
-import { formatNumber } from "../format";
+import { etaSeconds, trackProgress, type ProgressTrack } from "../eta";
+import { formatDuration, formatNumber } from "../format";
 import type { Action } from "../model";
+import { elementOf } from "../periodicTable";
 
 type Props = { meta: Meta; dispatch: (action: Action) => void };
 
@@ -137,6 +141,23 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
 const SEED_TARGETS = [1, 3, 10, 30];
 
 /** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど重元素の星屑を稼ぐ */
+/** いまの種で、次の発見までのおよその時間（進み具合の伸びから見積もる） */
+function NextDiscoveryEta({ meta }: { meta: Meta }) {
+  const [track, setTrack] = useState<ProgressTrack | null>(null);
+  const next = nextSDiscovery(meta.sProcess);
+  const updated = next && trackProgress(track, { ...next, t: meta.elapsed });
+  // 前の描画からの伸びを覚えておく（同じ時刻なら同じものが返り、描き直しは止まる）
+  if (updated !== track) setTrack(updated);
+  const eta = etaSeconds(updated);
+  if (!next || eta === null) return null;
+  const element = elementOf(next.z);
+  return (
+    <p className="text-sm">
+      いまの種で、次の発見 {element.name}（{element.symbol}）まで約{formatDuration(eta)}
+    </p>
+  );
+}
+
 function SeedTargetPicker({ meta, dispatch }: Props) {
   return (
     <fieldset className="grid gap-2">
@@ -176,6 +197,7 @@ function SeedTargetPicker({ meta, dispatch }: Props) {
           );
         })}
       </ul>
+      <NextDiscoveryEta meta={meta} />
       <p className="text-muted-foreground text-sm">
         少ないほど1つの種が多くの中性子を捕まえて遠く（鉛・ビスマス）まで進む。多いほど恒星風で重元素の星屑を多く稼ぎ、白色矮星を多く使う。
       </p>

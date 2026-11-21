@@ -1,5 +1,5 @@
 import { GALAXIES } from "@/game/balance";
-import type { Galaxy } from "@/game/types";
+import type { Galaxy, Milestones } from "@/game/types";
 
 /** やり直しても残る記録（完結の回数と最速）。進行のセーブとは別に保存する */
 export const HALL_KEY = "stellar-forge/hall";
@@ -15,11 +15,19 @@ export type Splits = {
 export type Hall = {
   completions: number;
   best: number | null;
+  /** 最速の周の層ごとの時刻（遊んでいる間に比べる） */
+  bestSplits: Splits | null;
   /** 今回（一番最近の完結）と、その前の周の層ごとの時刻 */
   last: Splits | null;
   previous: Splits | null;
 };
-export const EMPTY_HALL: Hall = { completions: 0, best: null, last: null, previous: null };
+export const EMPTY_HALL: Hall = {
+  completions: 0,
+  best: null,
+  bestSplits: null,
+  last: null,
+  previous: null,
+};
 
 export type MedalName = "金" | "銀" | "銅";
 /** 完結までの時間 [秒] のメダル（画面の初期設定で案内に従うと銅、種の切り替えで銀、炭素星を組み合わせると金。medals.test.ts） */
@@ -42,9 +50,11 @@ export function medalOf(seconds: number, galaxy: Galaxy = "milkyWay"): MedalName
 }
 
 export function recordCompletion(hall: Hall, splits: Splits): Hall {
+  const faster = hall.best === null || splits.complete < hall.best;
   return {
     completions: hall.completions + 1,
-    best: hall.best === null ? splits.complete : Math.min(hall.best, splits.complete),
+    best: faster ? splits.complete : hall.best,
+    bestSplits: faster ? splits : hall.bestSplits,
     last: splits,
     previous: hall.last,
   };
@@ -52,11 +62,20 @@ export function recordCompletion(hall: Hall, splits: Splits): Hall {
 
 export function parseHall(raw: unknown): Hall {
   if (typeof raw !== "object" || raw === null) return EMPTY_HALL;
-  const { completions, best, last, previous } = raw as Record<string, unknown>;
+  const { completions, best, bestSplits, last, previous } = raw as Record<string, unknown>;
   if (typeof completions !== "number" || completions < 1 || typeof best !== "number") {
     return EMPTY_HALL;
   }
-  return { completions, best, last: parseSplits(last), previous: parseSplits(previous) };
+  const lastSplits = parseSplits(last);
+  // 古い記録には最速の周の時刻がない。今回が最速なら、それを使う
+  const fallback = lastSplits?.complete === best ? lastSplits : null;
+  return {
+    completions,
+    best,
+    bestSplits: bestSplits === undefined ? fallback : parseSplits(bestSplits),
+    last: lastSplits,
+    previous: parseSplits(previous),
+  };
 }
 
 function parseSplits(raw: unknown): Splits | null {
@@ -75,4 +94,18 @@ function parseSplits(raw: unknown): Splits | null {
     layer4: layer4 as number | null,
     complete,
   };
+}
+
+const LAYERS = [4, 3, 2] as const;
+
+/** 遊んでいる周の、最後に解放した層の時刻と、最速の周の同じ層との差 [秒]（最速の周にその層の時刻がなければ null） */
+export function paceAgainstBest(
+  milestones: Milestones,
+  best: Splits | null
+): { layer: 2 | 3 | 4; diff: number } | null {
+  const layer = LAYERS.find((n) => milestones[`layer${n}`] !== null);
+  if (layer === undefined || best === null) return null;
+  const mine = milestones[`layer${layer}`]!;
+  const theirs = best[`layer${layer}`];
+  return theirs === null ? null : { layer, diff: mine - theirs };
 }
