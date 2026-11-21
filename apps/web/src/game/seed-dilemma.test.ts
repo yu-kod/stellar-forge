@@ -22,6 +22,7 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
   let oneThen30: IdleReport;
   let thirty: IdleReport;
   let shifting: IdleReport;
+  let shiftingTen: IdleReport;
   beforeAll(() => {
     standard = playIdle(HOURS * 3600, { stopAt: "complete" });
     one = playIdle(HOURS * 3600, { seedTarget: 1, stopAt: "loop" });
@@ -37,14 +38,23 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
             : 30,
       stopAt: "complete",
     });
+    // ストロンチウムの後に 1 ではなく 10 にする（目標を下げた分だけ早く軽くなる）
+    shiftingTen = playIdle(HOURS * 3600, {
+      seedTarget: (s) =>
+        s.meta.sProcess.discovered.length === S_DISCOVERABLE
+          ? 30
+          : s.meta.sProcess.discovered.includes(38)
+            ? 10
+            : 30,
+      stopAt: "loop",
+    });
   }, 1_200_000);
 
   it("初期設定は種10", () => {
     expect(DEFAULT_SEED_TARGET).toBe(10);
   });
 
-  it("種1は最初のピーク（ストロンチウム）には早いが、循環には10分以上遅れる", () => {
-    expect(one.marks.strontium!).toBeLessThan(standard.marks.strontium!);
+  it("種1のままでは、中性子を毒に取られて循環に10分以上遅れる", () => {
     expect(one.marks.loop! - standard.marks.loop!).toBeGreaterThanOrEqual(10 * MINUTE);
   });
 
@@ -52,15 +62,21 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
     expect(oneThen30.marks.complete!).toBeGreaterThanOrEqual(standard.marks.complete!);
   });
 
-  it("種30は重元素の星屑を2倍以上稼ぐが、83マスが埋まるのは初期設定と5分も変わらない（増やすだけでは速くならない）", () => {
-    expect(thirty.heavyEarned).toBeGreaterThan(2 * standard.heavyEarned);
+  it("種30は重元素の星屑を2割以上多く稼ぐが、83マスが埋まるのは初期設定と5分も変わらない（増やすだけでは速くならない）", () => {
+    expect(thirty.heavyEarned).toBeGreaterThan(1.25 * standard.heavyEarned);
     expect(thirty.marks.complete!).toBeGreaterThanOrEqual(standard.marks.complete! - 5 * MINUTE);
   });
 
-  it("最善の種は層の中で入れ替わる：30 → 1 → 30 と変えると、初期設定・種30のままより8%以上速い", () => {
-    const faster = (r: IdleReport) => r.marks.complete! <= 0.92 * standard.marks.complete!;
+  it("最善の種は層の中で入れ替わる：30 → 1 → 30 と変えると、初期設定・種30のままより5%以上速い", () => {
+    // 循環には2割近く早く届き、第4層は重元素の星屑が少ないぶん長くなるが、完結でも5%以上速い
+    expect(shifting.marks.loop!).toBeLessThanOrEqual(0.85 * standard.marks.loop!);
+    const faster = (r: IdleReport) => r.marks.complete! <= 0.95 * standard.marks.complete!;
     expect(faster(shifting)).toBe(true);
     expect(shifting.marks.complete!).toBeLessThanOrEqual(0.95 * thirty.marks.complete!);
+  });
+
+  it("ストロンチウムの後にどこまで下げるかで、循環の時刻が10分以上変わる（1 と 10）", () => {
+    expect(shiftingTen.marks.loop! - shifting.marks.loop!).toBeGreaterThanOrEqual(10 * MINUTE);
   });
 
   it("初期設定では第3層の強化を10回以上買う（強化に意味がある）", () => {
@@ -69,6 +85,6 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
   });
 
   it("種が多いほど白色矮星を使う（たまるだけにならない）", () => {
-    expect(thirty.state.meta.iaSupernovae).toBeGreaterThan(1.5 * standard.state.meta.iaSupernovae);
+    expect(thirty.state.meta.iaSupernovae).toBeGreaterThan(1.1 * standard.state.meta.iaSupernovae);
   });
 });

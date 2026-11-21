@@ -28,6 +28,22 @@ describe("s過程の原子核は恒星風で星の外へ出て、重元素の星
     expect(next.heavy / (out * (4 * 6 + 2 * 12))).toBeCloseTo(1, 10);
   });
 
+  it("鉄の種の目標より多い分は、恒星風で早く外へ出て重元素の星屑になる（目標を下げると効く）", () => {
+    const many = createSProcess();
+    many.amounts[index(40)] = 30;
+    many.seedTarget = 1;
+    const kept = createSProcess();
+    kept.amounts[index(40)] = 30;
+    kept.seedTarget = 30;
+    const fast = blowWinds(many, 60);
+    const slow = blowWinds(kept, 60);
+    const total = (sp: typeof fast) => sp.amounts.reduce((a, b) => a + b, 0);
+    expect(total(fast)).toBeLessThan(total(slow) * 0.5);
+    expect(fast.heavy).toBeGreaterThan(slow.heavy * 5);
+    // 余りがなくなると目標の量に落ち着き、あとはふつうの恒星風だけ
+    expect(total(blowWinds(fast, 600))).toBeCloseTo(1, 1);
+  });
+
   it("時間を分けて進めても、まとめて進めても同じ", () => {
     const sp = createSProcess();
     sp.amounts[index(40)] = 3;

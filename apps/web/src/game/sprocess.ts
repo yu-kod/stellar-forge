@@ -183,12 +183,23 @@ export function blowWinds(
 ): SProcess {
   const out = 1 - Math.exp(-S_WIND_RATE * seconds);
   let heavy = sProcess.heavy;
-  const amounts = sProcess.amounts.map((amount, i) => {
+  const blown = sProcess.amounts.map((amount, i) => {
     heavy += amount * out * heavyValue(i + S_PATH_START) * valueMultiplier;
     return amount * (1 - out * (1 - kept));
   });
+  // 目標より多い分は早く外へ出す（目標を下げたら、余りを重元素の星屑にして道を軽くする）
+  const total = blown.reduce((sum, amount) => sum + amount, 0);
+  const excess = Math.max(0, total - sProcess.seedTarget);
+  const extra = excess > 0 ? (excess * (1 - Math.exp(-EXCESS_WIND_RATE * seconds))) / total : 0;
+  const amounts = blown.map((amount, i) => {
+    heavy += amount * extra * heavyValue(i + S_PATH_START) * valueMultiplier;
+    return amount * (1 - extra);
+  });
   return { ...sProcess, amounts, heavy };
 }
+
+/** 鉄の種の目標より多い分が、恒星風で外へ出る速さ [1/秒] */
+export const EXCESS_WIND_RATE = 0.03;
 
 /** 今の道の組成で、恒星風から毎秒得る重元素の星屑 */
 export function heavyRate(meta: Meta): number {
