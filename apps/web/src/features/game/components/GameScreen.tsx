@@ -326,12 +326,12 @@ function LowMassText({ star }: { star: GameState["star"] }) {
 
 /** 通算の時間と、最速の周の同じ層との差 */
 function Pace({ meta, hall }: { meta: Meta; hall: Hall }) {
-  const pace = paceAgainstBest(meta.milestones, bestOf(hall, meta.galaxy));
+  const pace = paceAgainstBest(meta, bestOf(hall, meta.galaxy));
   return (
     <p role="timer" aria-label="通算の時間" className="font-mono tabular-nums">
       {meta.galaxy !== "milkyWay" && `${GALAXIES[meta.galaxy].name}・`}
       通算 {formatDuration(meta.elapsed)}
-      {pace && `・最速の周より 第${pace.layer}層 ${formatDiff(pace.diff)}`}
+      {pace && `・最速の周より ${pace.label} ${formatDiff(pace.diff)}`}
     </p>
   );
 }

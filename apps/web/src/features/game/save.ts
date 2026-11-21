@@ -241,6 +241,7 @@ function parseMeta(value: unknown): Meta {
     iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
     lightFound: parseNumbers(raw.lightFound),
     galaxy: parseGalaxy(raw.galaxy),
+    foundTimes: raw.foundTimes === undefined ? [] : parseNumbers(raw.foundTimes),
   };
   // 星団を買ったのに星が無ければ作り直す
   while (meta.cluster.length < meta.shop.cluster) meta.cluster.push(createSlot(meta));

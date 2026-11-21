@@ -105,6 +105,24 @@ describe("記録への挑戦", () => {
     expect(pace).toHaveTextContent("最速の周より 第2層 −5分");
   });
 
+  it("最速の周の発見ごとの時刻があれば、いま見つけた数の元素に着いた時刻で比べる", () => {
+    const game = createGame();
+    game.meta.elapsed = 10 * 60;
+    game.meta.foundTimes = [0, 3 * 60];
+    const best = {
+      layer2: 25 * 60,
+      layer3: 55 * 60,
+      layer4: 120 * 60,
+      complete: 160 * 60,
+      found: [0, 2 * 60, 4 * 60],
+    };
+    const storage = memoryStorage({ [HALL_KEY]: { completions: 1, bests: { milkyWay: best } } });
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} storage={storage} />);
+    expect(screen.getByRole("timer", { name: "通算の時間" })).toHaveTextContent(
+      "最速の周より 2元素目 +1分"
+    );
+  });
+
   it("天の川でない周では、銀河の名前を出し、同じ銀河の最速の周と比べる", () => {
     const game = createGame("metalRich");
     game.meta.elapsed = 62 * 60;
@@ -183,6 +201,7 @@ describe("記録への挑戦", () => {
             layer4: 140 * 60,
             complete: 4 * 3600,
             galaxy: "milkyWay",
+            found: [],
           },
         }}
         open

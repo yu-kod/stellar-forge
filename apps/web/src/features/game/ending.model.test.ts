@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { foundElements } from "@/game/progress";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { createModel, gameReducer } from "./model";
@@ -43,6 +44,17 @@ describe("gameReducer：層の解放の時刻", () => {
     expect(model.game.meta.milestones.layer3).toBeNull();
     model = gameReducer(model, { type: "tick", seconds: 0.1 });
     expect(model.game.meta.milestones.layer2).toBeCloseTo(1500.1);
+  });
+
+  it("見つけた元素の数が増えた時刻を残す（最速の周と元素ごとに比べる）", () => {
+    const game = createGame();
+    expect(game.meta.foundTimes).toEqual([0]);
+    game.meta.elapsed = 100;
+    game.meta.lightFound = [3];
+    const model = gameReducer(createModel(game), { type: "tick", seconds: 0.1 });
+    expect(foundElements(model.game.meta)).toHaveLength(2);
+    expect(model.game.meta.foundTimes).toEqual([0, model.game.meta.elapsed]);
+    expect(gameReducer(model, { type: "tick", seconds: 0.1 }).game.meta.foundTimes).toHaveLength(2);
   });
 });
 

@@ -135,6 +135,15 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.meta.sProcess).toEqual(game.meta.sProcess);
   });
 
+  it("元素の数が増えた時刻を読む。古いセーブに無ければ空", () => {
+    const game = createGame();
+    game.meta.foundTimes = [0, 12, 30];
+    const save = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(save, NOW)?.game.meta.foundTimes).toEqual([0, 12, 30]);
+    delete save.game.meta.foundTimes;
+    expect(restoreSave(save, NOW)?.game.meta.foundTimes).toEqual([]);
+  });
+
   it("層の解放の時刻を読む。古いセーブに無ければ null", () => {
     const game = createGame();
     game.meta.milestones = { layer2: 1500, layer3: null, layer4: null };
