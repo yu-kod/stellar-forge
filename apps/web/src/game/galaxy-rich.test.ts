@@ -65,6 +65,19 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
     expect(late.reduce((sum, n) => sum + n, 0) / late.length).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("最善の流れの第3層の間、10分ごとに恒久強化の買い物と発見が合わせて4回以上ある（一番長い層で手を止めない）", () => {
+    const found = [...Object.values(best.sAt), ...Object.values(best.lightAt)];
+    const windows = best.purchasesPer10Min
+      .map((bought, i) => ({ from: i * 10 * MINUTE, to: (i + 1) * 10 * MINUTE, bought }))
+      // 第4層の買い物でかさ上げしないよう、第3層の中に収まる10分だけを数える
+      .filter(({ from, to }) => from >= best.marks.layer3! && to <= best.marks.layer4!);
+    expect(windows.length).toBeGreaterThanOrEqual(5);
+    for (const { from, to, bought } of windows) {
+      const events = bought + found.filter((t) => t > from && t <= to).length;
+      expect(events, `${from / MINUTE}〜${to / MINUTE}分`).toBeGreaterThanOrEqual(4);
+    }
+  });
+
   it("星が密集していて連星の枠が多いので、第4層も天の川より3分以上短い（2周目をなぞり直しにしない）", () => {
     const layer4 = best.marks.complete! - best.marks.layer4!;
     expect(milkyLayer4 - layer4).toBeGreaterThanOrEqual(3 * MINUTE);
