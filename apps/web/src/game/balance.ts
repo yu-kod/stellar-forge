@@ -466,18 +466,21 @@ export const LOG_LIMIT = 20;
  */
 export const GALAXIES: Record<
   Galaxy,
-  { name: string; description: string; poison: number; par: number }
+  { name: string; description: string; poison: number; whiteDwarfs: number; par: number }
 > = {
   milkyWay: {
     name: "天の川",
     description: "いつもの銀河",
     poison: 1,
+    whiteDwarfs: 0,
     par: 1,
   },
   metalRich: {
     name: "金属の多い銀河の中心",
-    description: "金属の多い星ほど、中性子を吸う軽い原子核（中性子の毒）も多い。中性子の毒 ×4",
+    description:
+      "古い星が多く、はじめから白色矮星が20個ある。金属の多い星ほど、中性子を吸う軽い原子核（中性子の毒）も多い。中性子の毒 ×4",
     poison: 4,
-    par: 1.37,
+    whiteDwarfs: 20,
+    par: 1.28,
   },
 };

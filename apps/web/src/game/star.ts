@@ -8,6 +8,7 @@ import {
   MASS_PER_SHOP_LEVEL,
   PRE_MAIN_SEQUENCE_TEMPERATURE,
   REFERENCE_MASS,
+  GALAXIES,
 } from "./balance";
 import { createSProcess } from "./sprocess";
 import {
@@ -42,7 +43,8 @@ export function createMeta(galaxy: Galaxy = "milkyWay"): Meta {
     supernovae: 0,
     neutronStars: 0,
     blackHoles: 0,
-    whiteDwarfs: 0,
+    // 銀河によっては、はじめから白色矮星がある（古い星の名残）
+    whiteDwarfs: GALAXIES[galaxy].whiteDwarfs,
     nextMass: null,
     discovered: {},
     shop: {
@@ -87,7 +89,7 @@ export function createMeta(galaxy: Galaxy = "milkyWay"): Meta {
 
 /** これまでに作った白色矮星の数（Ia型超新星で使った分も含める。Ia型超新星1回で1つ使う） */
 export function whiteDwarfsMade(meta: Meta): number {
-  return meta.whiteDwarfs + meta.iaSupernovae;
+  return meta.whiteDwarfs + meta.iaSupernovae - GALAXIES[meta.galaxy].whiteDwarfs;
 }
 
 export function createStar(meta: Meta): Star {
