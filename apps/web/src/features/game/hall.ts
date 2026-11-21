@@ -12,6 +12,8 @@ export type Splits = {
   complete: number;
   /** その周の銀河 */
   galaxy: Galaxy;
+  /** 見つけた元素の数が i + 1 になった時刻（古い記録では空） */
+  found: number[];
 };
 
 export type Hall = {
@@ -84,6 +86,7 @@ export function parseHall(raw: unknown): Hall {
         layer4: null,
         complete,
         galaxy: "milkyWay",
+        found: [],
       }
     );
   }
@@ -91,9 +94,18 @@ export function parseHall(raw: unknown): Hall {
 
 function parseSplits(raw: unknown): Splits | null {
   if (typeof raw !== "object" || raw === null) return null;
-  const { layer2, layer3, layer4, complete, galaxy = "milkyWay" } = raw as Record<string, unknown>;
+  const {
+    layer2,
+    layer3,
+    layer4,
+    complete,
+    galaxy = "milkyWay",
+    found = [],
+  } = raw as Record<string, unknown>;
   if (
     typeof complete !== "number" ||
+    !Array.isArray(found) ||
+    found.some((t) => typeof t !== "number") ||
     [layer2, layer3, layer4].some((v) => v !== null && typeof v !== "number") ||
     !GALAXY_IDS.includes(galaxy as Galaxy)
   ) {
@@ -106,19 +118,33 @@ function parseSplits(raw: unknown): Splits | null {
     layer4: layer4 as number | null,
     complete,
     galaxy: galaxy as Galaxy,
+    found: found as number[],
   };
 }
 
 const LAYERS = [4, 3, 2] as const;
 
-/** 遊んでいる周の、最後に解放した層の時刻と、最速の周の同じ層との差 [秒]（最速の周にその層の時刻がなければ null） */
+/**
+ * 遊んでいる周と、最速の周との差 [秒]。最速の周の発見ごとの時刻があれば、いま見つけた数の元素に着いた時刻で比べる（層の中でも動く）。
+ * なければ最後に解放した層の時刻で比べる（最速の周にその層の時刻がなければ null）
+ */
 export function paceAgainstBest(
-  milestones: Milestones,
+  progress: { milestones: Milestones; foundTimes: readonly number[] },
   best: Splits | null
-): { layer: 2 | 3 | 4; diff: number } | null {
+): { label: string; diff: number } | null {
+  if (best === null) return null;
+  const count = progress.foundTimes.length;
+  if (count > 0 && best.found.length >= count) {
+    return {
+      label: `${count}元素目`,
+      diff: progress.foundTimes[count - 1]! - best.found[count - 1]!,
+    };
+  }
+  const { milestones } = progress;
   const layer = LAYERS.find((n) => milestones[`layer${n}`] !== null);
-  if (layer === undefined || best === null) return null;
-  const mine = milestones[`layer${layer}`]!;
+  if (layer === undefined) return null;
   const theirs = best[`layer${layer}`];
-  return theirs === null ? null : { layer, diff: mine - theirs };
+  return theirs === null
+    ? null
+    : { label: `第${layer}層`, diff: milestones[`layer${layer}`]! - theirs };
 }

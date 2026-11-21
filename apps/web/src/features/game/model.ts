@@ -232,6 +232,7 @@ function checkComplete(model: Model): Model {
       ...meta.milestones,
       complete: meta.elapsed,
       galaxy: meta.galaxy,
+      found: meta.foundTimes,
     }),
     game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
   };
@@ -258,7 +259,18 @@ function markMilestones(model: Model): Model {
 }
 
 export function gameReducer(model: Model, action: Action): Model {
-  return checkComplete(markMilestones(reduce(model, action)));
+  return checkComplete(markFound(model, markMilestones(reduce(model, action))));
+}
+
+/** 見つけた元素の数が増えたら、その時刻を残す（足りない分は今の時刻で埋める） */
+function markFound(before: Model, after: Model): Model {
+  const { meta } = after.game;
+  if (before.game.meta === meta) return after;
+  const count = foundElements(meta).length;
+  if (count <= meta.foundTimes.length) return after;
+  const added = Array.from({ length: count - meta.foundTimes.length }, () => meta.elapsed);
+  const foundTimes = [...meta.foundTimes, ...added];
+  return { ...after, game: { ...after.game, meta: { ...meta, foundTimes } } };
 }
 
 function reduce(model: Model, action: Action): Model {

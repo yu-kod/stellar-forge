@@ -29,6 +29,7 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     layer4: 140 * MINUTE,
     complete,
     galaxy,
+    found: [],
   });
 
   it("完結の回数を数え、銀河ごとの最速の周と、今回・前回の層ごとの時刻を残す", () => {
@@ -76,7 +77,14 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     expect(parseHall({ completions: 2, best: 100 })).toEqual({
       completions: 2,
       bests: {
-        milkyWay: { layer2: null, layer3: null, layer4: null, complete: 100, galaxy: "milkyWay" },
+        milkyWay: {
+          layer2: null,
+          layer3: null,
+          layer4: null,
+          complete: 100,
+          galaxy: "milkyWay",
+          found: [],
+        },
       },
       last: null,
       previous: null,
@@ -106,19 +114,38 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
   });
 
   it("遊んでいる周の、最後に解放した層の時刻と、最速の周の同じ層との差", () => {
-    const best = splits(170 * MINUTE);
-    const none = { layer2: null, layer3: null, layer4: null };
-    expect(paceAgainstBest(none, best)).toBeNull();
-    expect(paceAgainstBest({ ...none, layer2: 22 * MINUTE }, null)).toBeNull();
-    expect(paceAgainstBest({ ...none, layer2: 22 * MINUTE }, best)).toEqual({
-      layer: 2,
-      diff: -3 * MINUTE,
+    const best = { ...splits(170 * MINUTE), found: [] };
+    const none = { milestones: { layer2: null, layer3: null, layer4: null }, foundTimes: [] };
+    const at = (
+      layer2: number | null,
+      layer3: number | null = null,
+      layer4: number | null = null
+    ) => ({
+      ...none,
+      milestones: { layer2, layer3, layer4 },
     });
-    expect(
-      paceAgainstBest({ layer2: 22 * MINUTE, layer3: 60 * MINUTE, layer4: null }, best)
-    ).toEqual({ layer: 3, diff: 5 * MINUTE });
-    expect(
-      paceAgainstBest({ layer2: 1, layer3: 2, layer4: 3 }, { ...best, layer4: null })
-    ).toBeNull();
+    expect(paceAgainstBest(none, best)).toBeNull();
+    expect(paceAgainstBest(at(22 * MINUTE), null)).toBeNull();
+    expect(paceAgainstBest(at(22 * MINUTE), best)).toEqual({ label: "第2層", diff: -3 * MINUTE });
+    expect(paceAgainstBest(at(22 * MINUTE, 60 * MINUTE), best)).toEqual({
+      label: "第3層",
+      diff: 5 * MINUTE,
+    });
+    expect(paceAgainstBest(at(1, 2, 3), { ...best, layer4: null })).toBeNull();
+  });
+
+  it("最速の周の発見ごとの時刻があれば、いま見つけた数の元素に着いた時刻で比べる（層の中でも動く）", () => {
+    const best = { ...splits(170 * MINUTE), found: [0, 60, 600, 1200] };
+    const progress = {
+      milestones: { layer2: null, layer3: null, layer4: null },
+      foundTimes: [0, 50, 700],
+    };
+    expect(paceAgainstBest(progress, best)).toEqual({ label: "3元素目", diff: 100 });
+    expect(paceAgainstBest({ ...progress, foundTimes: [0, 50, 700, 1100] }, best)).toEqual({
+      label: "4元素目",
+      diff: -100,
+    });
+    // 最速の周より多く見つけていれば、層で比べる
+    expect(paceAgainstBest({ ...progress, foundTimes: [0, 1, 2, 3, 4] }, best)).toBeNull();
   });
 });
