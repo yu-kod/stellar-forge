@@ -370,6 +370,9 @@ function reduce(model: Model, action: Action): Model {
     case "setSpeed":
       return { ...model, speed: action.speed };
     case "reset":
-      return { ...createModel(createGame(action.galaxy), [], model.hall), speed: model.speed };
+      return {
+        ...createModel(createGame(action.galaxy, model.hall.completions), [], model.hall),
+        speed: model.speed,
+      };
   }
 }

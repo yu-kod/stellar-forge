@@ -1,8 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { FASTER_MOVES, medalOf } from "@/features/game/hall";
-import { playIdle, type IdleReport } from "@/test-utils/simulate";
+import type { IdleReport } from "@/test-utils/simulate";
 import { playFlow, reduceAfterStrontium } from "@/test-utils/strategies";
-import { createGame } from "./star";
 
 const MINUTE = 60;
 const REDUCE_TO = [1, 3, 10, 30] as const;
@@ -15,6 +14,7 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
   let carbonOnly: number;
   let seedsOnly: number;
   let milkyLayer3: number;
+  let milkyLayer4: number;
   beforeAll(() => {
     for (const to of REDUCE_TO) {
       const report = playFlow("metalRich", {
@@ -30,12 +30,9 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
       seedTarget: reduceAfterStrontium(10),
       carbonStar: false,
     }).marks.complete!;
-    milkyLayer3 = playIdle(120 * MINUTE, {
-      start: createGame("milkyWay"),
-      keepCluster: true,
-      layer3MainMass: 2,
-      stopAt: "layer3",
-    }).marks.layer3!;
+    const milky = playFlow("milkyWay", { seedTarget: reduceAfterStrontium(1), carbonStar: true });
+    milkyLayer3 = milky.marks.layer3!;
+    milkyLayer4 = milky.marks.complete! - milky.marks.layer4!;
   }, 1_500_000);
 
   it("ストロンチウムの後は種を10まで減らすのが一番速い（1まで減らすと中性子が毒に取られ、30のままより遅い）", () => {
@@ -66,5 +63,10 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
   it("最善の流れでも、90分以降は10分ごとに平均4.5回以上恒久強化を買う（長いだけにしない）", () => {
     const late = best.purchasesPer10Min.slice(9);
     expect(late.reduce((sum, n) => sum + n, 0) / late.length).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("星が密集していて連星の枠が多いので、第4層も天の川より3分以上短い（2周目をなぞり直しにしない）", () => {
+    const layer4 = best.marks.complete! - best.marks.layer4!;
+    expect(milkyLayer4 - layer4).toBeGreaterThanOrEqual(3 * MINUTE);
   });
 });
