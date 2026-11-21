@@ -64,6 +64,8 @@ describe("第3層の強化", () => {
     const game = layer3();
     expect(seedsPerIa(game.meta)).toBe(1);
     expect(triggerIa(game).meta.sProcess.amounts[0]).toBe(1);
+    // 白色矮星を使っても、次の星の世代は戻らない
+    expect(createStar(triggerIa(game).meta).generation).toBe(createStar(game.meta).generation);
   });
 });
 

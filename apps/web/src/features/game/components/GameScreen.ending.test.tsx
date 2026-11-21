@@ -60,7 +60,8 @@ describe("GameScreen：エンディング", () => {
     const stats = within(dialog).getByRole("list", { name: "ここまでの星" });
     expect(stats).toHaveTextContent("星900世代");
     expect(stats).toHaveTextContent("超新星520");
-    expect(stats).toHaveTextContent("白色矮星380");
+    // 白色矮星は Ia型超新星で使った分も含め、これまでに作った数（手持ち 380 + 使った 210）
+    expect(stats).toHaveTextContent("白色矮星590");
     expect(stats).toHaveTextContent("Ia型超新星210");
     expect(stats).toHaveTextContent("中性子星合体150");
     const legend = within(dialog).getByRole("list", { name: "元素の起源" });

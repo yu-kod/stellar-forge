@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ORIGINS, originOf, type Origin } from "@/game/progress";
+import { whiteDwarfsMade } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatDuration, formatNumber } from "../format";
@@ -69,7 +70,7 @@ export function EndingDialog({ game, hall, open, onClose }: Props) {
   const stats: [string, number][] = [
     ["星", star.generation],
     ["超新星", meta.supernovae],
-    ["白色矮星", meta.whiteDwarfs],
+    ["白色矮星", whiteDwarfsMade(meta)],
     ["Ia型超新星", meta.iaSupernovae],
     ["中性子星合体", meta.rProcess.mergers],
   ];
