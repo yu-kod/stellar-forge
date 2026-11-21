@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AGB_SECONDS,
   AUTO_REBIRTH_AFTER,
+  GALAXIES,
   LAYER2_AFTER,
   LAYER3_AFTER,
   SHOP,
@@ -33,11 +34,11 @@ import { SHOP_IDS, STAGE_IDS, type GameState } from "@/game/types";
 import { currencyName, targetHint } from "../elements";
 import { shopCost } from "@/game/actions";
 import { funds } from "@/game/shop";
-import type { Meta } from "@/game/types";
+import type { Galaxy, Meta } from "@/game/types";
 import { formatDiff, formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
-import { HALL_KEY, paceAgainstBest, parseHall, type Hall } from "../hall";
+import { HALL_KEY, bestOf, paceAgainstBest, parseHall, type Hall } from "../hall";
 import { animationFrameTicker, type Ticker } from "../ticker";
 import { EndingDialog } from "./EndingDialog";
 import { Notices } from "./Notices";
@@ -159,8 +160,8 @@ export function GameScreen({
     if (SHOP_IDS.some((item) => canBuyShopItem(rebirth(game).meta, item))) setTab("shop");
   }
 
-  function reset() {
-    dispatchAndSave({ type: "reset" });
+  function reset(galaxy: Galaxy) {
+    dispatchAndSave({ type: "reset", galaxy });
     setTab("star");
   }
 
@@ -286,7 +287,7 @@ export function GameScreen({
       </Tabs>
       <footer className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-3 pb-6 text-sm">
         <p>進行はこのブラウザに保存されます。</p>
-        <ResetDialog onReset={reset} />
+        <ResetDialog onReset={reset} chooseGalaxy={model.hall.completions > 0} />
       </footer>
       <SupernovaDialog game={game} onRebirth={startNextStar} dispatch={dispatch} />
       <EndingDialog
@@ -320,9 +321,10 @@ function LowMassText({ star }: { star: GameState["star"] }) {
 
 /** 通算の時間と、最速の周の同じ層との差 */
 function Pace({ meta, hall }: { meta: Meta; hall: Hall }) {
-  const pace = paceAgainstBest(meta.milestones, hall.bestSplits);
+  const pace = paceAgainstBest(meta.milestones, bestOf(hall, meta.galaxy));
   return (
     <p role="timer" aria-label="通算の時間" className="font-mono tabular-nums">
+      {meta.galaxy !== "milkyWay" && `${GALAXIES[meta.galaxy].name}・`}
       通算 {formatDuration(meta.elapsed)}
       {pace && `・最速の周より 第${pace.layer}層 ${formatDiff(pace.diff)}`}
     </p>

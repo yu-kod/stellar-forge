@@ -22,7 +22,7 @@ import { formBinary, type MergerEvent } from "@/game/merger";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
-import type { GameState, ShopId, StageId, Target } from "@/game/types";
+import type { Galaxy, GameState, ShopId, StageId, Target } from "@/game/types";
 
 export type Speed = 1 | 3;
 
@@ -86,7 +86,7 @@ export type Action =
   | { type: "setSpeed"; speed: Speed }
   | { type: "openEnding" }
   | { type: "closeEnding" }
-  | { type: "reset" };
+  | { type: "reset"; galaxy?: Galaxy };
 
 const NOTICE_LIMIT = 4;
 
@@ -183,7 +183,11 @@ function checkComplete(model: Model): Model {
   return {
     ...model,
     ending: true,
-    hall: recordCompletion(model.hall, { ...meta.milestones, complete: meta.elapsed }),
+    hall: recordCompletion(model.hall, {
+      ...meta.milestones,
+      complete: meta.elapsed,
+      galaxy: meta.galaxy,
+    }),
     game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
   };
 }
@@ -296,6 +300,6 @@ function reduce(model: Model, action: Action): Model {
     case "setSpeed":
       return { ...model, speed: action.speed };
     case "reset":
-      return { ...createModel(createGame(), [], model.hall), speed: model.speed };
+      return { ...createModel(createGame(action.galaxy), [], model.hall), speed: model.speed };
   }
 }

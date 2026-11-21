@@ -6,6 +6,8 @@ import { createMeta } from "@/game/star";
 import {
   ELEMENT_IDS,
   type ClusterSlot,
+  GALAXY_IDS,
+  type Galaxy,
   STAGE_IDS,
   type GameState,
   type Meta,
@@ -238,10 +240,17 @@ function parseMeta(value: unknown): Meta {
     milestones: parseMilestones(raw.milestones),
     iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
     lightFound: parseNumbers(raw.lightFound),
+    galaxy: parseGalaxy(raw.galaxy),
   };
   // 星団を買ったのに星が無ければ作り直す
   while (meta.cluster.length < meta.shop.cluster) meta.cluster.push(createSlot(meta));
   return meta;
+}
+
+function parseGalaxy(value: unknown): Galaxy {
+  if (value === undefined) return "milkyWay";
+  if (!GALAXY_IDS.includes(value as Galaxy)) throw new InvalidSave();
+  return value as Galaxy;
 }
 
 function parseGame(value: unknown): GameState {

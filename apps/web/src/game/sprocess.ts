@@ -1,6 +1,7 @@
 import {
   DEFAULT_SEED_TARGET,
   BARIUM_STAR_KEPT,
+  GALAXIES,
   HEAVY_PER_DREDGE_UP,
   NEUTRONS_PER_POCKET,
   S_WIND_RATE,
@@ -117,12 +118,13 @@ export function discoveryThreshold(sProcess: SProcess): number {
  */
 export function captureNeutrons(
   sProcess: SProcess,
-  neutrons: number
+  neutrons: number,
+  poison = NEUTRON_POISON
 ): { sProcess: SProcess; discovered: number[]; looped: boolean } {
   const { amounts } = sProcess;
   const onPath = amounts.reduce((sum, a, i) => sum + a * crossSection(i + S_PATH_START), 0);
   if (onPath === 0 || neutrons <= 0) return { sProcess, discovered: [], looped: false };
-  const weight = onPath + NEUTRON_POISON;
+  const weight = onPath + poison;
   const threshold = discoveryThreshold(sProcess);
   const next = [...amounts];
   const produced = [...sProcess.produced];
@@ -232,6 +234,11 @@ export function nextSDiscovery(sProcess: SProcess): { z: number; progress: numbe
   return candidates.reduce((a, b) => (b.progress > a.progress ? b : a));
 }
 
+/** 道の外で中性子を吸う軽い原子核（中性子の毒）。銀河で変わる */
+export function neutronPoison(meta: Meta): number {
+  return NEUTRON_POISON * GALAXIES[meta.galaxy].poison;
+}
+
 /** 中性子の倍率（発見した s元素1つにつき +5%、鉛で ×2） */
 export function neutronMultiplier(meta: Meta): number {
   const { discovered } = meta.sProcess;
@@ -270,7 +277,7 @@ export function seedPreview(
       ? f(S_PATH_START)
       : amounts.reduce((sum, a, i) => sum + a * f(i + S_PATH_START), 0) / total;
   const sigma = average(crossSection);
-  const share = (seeds: number) => (seeds * sigma) / (seeds * sigma + NEUTRON_POISON);
+  const share = (seeds: number) => (seeds * sigma) / (seeds * sigma + neutronPoison(meta));
   const current = meta.sProcess.seedTarget;
   return {
     share: share(target),

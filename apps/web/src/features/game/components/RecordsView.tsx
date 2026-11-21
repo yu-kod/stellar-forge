@@ -59,7 +59,7 @@ export function RecordsView({
 }) {
   return (
     <div className="grid gap-4">
-      <HallView hall={hall} />
+      <HallView hall={hall} galaxy={meta.galaxy} />
       {meta.completedAt !== null && (
         <Button variant="outline" className="h-11 justify-self-start" onClick={onEnding}>
           エンディングを見る

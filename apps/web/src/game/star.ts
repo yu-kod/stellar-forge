@@ -10,7 +10,14 @@ import {
   REFERENCE_MASS,
 } from "./balance";
 import { createSProcess } from "./sprocess";
-import { ELEMENT_IDS, type Composition, type GameState, type Meta, type Star } from "./types";
+import {
+  ELEMENT_IDS,
+  type Composition,
+  type Galaxy,
+  type GameState,
+  type Meta,
+  type Star,
+} from "./types";
 
 export const emptyComposition = (): Composition =>
   Object.fromEntries(ELEMENT_IDS.map((id) => [id, 0])) as Composition;
@@ -29,7 +36,7 @@ function birthMass(meta: Meta): number {
   return Math.min(max, meta.nextMass);
 }
 
-export function createMeta(): Meta {
+export function createMeta(galaxy: Galaxy = "milkyWay"): Meta {
   return {
     dust: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
     supernovae: 0,
@@ -72,6 +79,7 @@ export function createMeta(): Meta {
     elapsed: 0,
     completedAt: null,
     milestones: { layer2: null, layer3: null, layer4: null },
+    galaxy,
     bestRate: { C: 0, N: 0, O: 0, Ne: 0, Mg: 0, Si: 0, S: 0 },
     lightFound: [],
   };
@@ -101,7 +109,7 @@ export function createStar(meta: Meta): Star {
   };
 }
 
-export function createGame(): GameState {
-  const meta = createMeta();
+export function createGame(galaxy: Galaxy = "milkyWay"): GameState {
+  const meta = createMeta(galaxy);
   return { meta, star: createStar(meta) };
 }

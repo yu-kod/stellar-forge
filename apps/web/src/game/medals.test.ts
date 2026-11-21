@@ -55,7 +55,7 @@ describe("記録への挑戦のメダル", () => {
       鉄の種を局面で変える: shiftOnly,
       第3層で主星を炭素星にする: carbonOnly,
     };
-    expect([...FASTER_MOVES]).toEqual(Object.keys(alone));
+    expect([...FASTER_MOVES.milkyWay]).toEqual(Object.keys(alone));
     for (const report of Object.values(alone)) {
       expect(standard.marks.complete! - report.marks.complete!).toBeGreaterThanOrEqual(3 * 60);
     }

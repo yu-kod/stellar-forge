@@ -127,6 +127,14 @@ describe("gameReducer：reset", () => {
     expect(model.game).toEqual(createGame());
     expect(model.notices).toEqual([]);
   });
+
+  it("銀河を選んでやり直せる（選ばなければ天の川）", () => {
+    const start = createModel(createGame("metalRich"));
+    expect(gameReducer(start, { type: "reset", galaxy: "metalRich" }).game).toEqual(
+      createGame("metalRich")
+    );
+    expect(gameReducer(start, { type: "reset" }).game.meta.galaxy).toBe("milkyWay");
+  });
 });
 
 describe("gameReducer：星団", () => {

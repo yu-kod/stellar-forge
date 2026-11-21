@@ -22,7 +22,7 @@ import {
   STAGES,
 } from "./balance";
 import { burnRate, energyMultiplier, isIgnited, stageCost } from "./rates";
-import { captureNeutrons, neutronMultiplier } from "./sprocess";
+import { captureNeutrons, neutronMultiplier, neutronPoison } from "./sprocess";
 import { coreWeight, temperatureFromWeight } from "./temperature";
 import {
   ELEMENT_IDS,
@@ -146,7 +146,7 @@ export function step(state: GameState, dt: number): StepResult {
   if (meta.sProcess.unlocked && state.star.agbStartedAt !== null && heliumBurned > 0) {
     const carbonStar = isCarbonStar(state.star) ? CARBON_STAR_NEUTRONS : 1;
     const neutrons = heliumBurned * NEUTRONS_PER_HELIUM * carbonStar * neutronMultiplier(meta);
-    const captured = captureNeutrons(meta.sProcess, neutrons);
+    const captured = captureNeutrons(meta.sProcess, neutrons, neutronPoison(meta));
     meta.sProcess = captured.sProcess;
     for (const z of captured.discovered) events.push({ type: "sDiscover", z });
     if (captured.looped) events.push({ type: "sLoop" });

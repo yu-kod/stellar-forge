@@ -1,18 +1,20 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createJsonStorage } from "@app/web-core";
 import { describe, expect, it } from "vitest";
 import { createGame } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { aboutToCollapse, manualTicker } from "@/test-utils/game";
+import { HALL_KEY } from "../hall";
 import { SAVE_KEY, toSave, type SaveData } from "../save";
 import { GameScreen } from "./GameScreen";
 
 const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
 
-function setup({ saved, now = NOW }: { saved?: unknown; now?: number } = {}) {
+function setup({ saved, now = NOW, hall }: { saved?: unknown; now?: number; hall?: unknown } = {}) {
   const storage = createJsonStorage();
   if (saved !== undefined) storage.set(SAVE_KEY, saved);
+  if (hall !== undefined) storage.set(HALL_KEY, hall);
   const clock = { now };
   const ticker = manualTicker();
   render(<GameScreen storage={storage} now={() => clock.now} ticker={ticker.ticker} />);
@@ -144,12 +146,36 @@ describe("GameScreen：保存と再開", () => {
 
     await user.click(screen.getByRole("button", { name: "最初からやり直す" }));
     const dialog = screen.getByRole("dialog", { name: "最初からやり直しますか？" });
-    expect(dialog).toHaveTextContent("星屑・発見した元素・記録がすべて消えます");
+    expect(dialog).toHaveTextContent(
+      "星屑・発見した元素・超新星の記録が消えます。記録への挑戦（完結の回数と最速）は残ります"
+    );
     await user.click(screen.getByRole("button", { name: "消してやり直す" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText("第1世代の星・0秒")).toBeInTheDocument();
     expect(saved()?.game.meta.dust.C).toBe(0);
+  });
+
+  it("1回完結した後は、やり直すときに次の周の銀河を選べる", async () => {
+    const { user, saved } = setup({
+      saved: toSave(thirdGeneration(), NOW),
+      hall: { completions: 1, best: 150 * 60 },
+    });
+    await user.click(screen.getByRole("button", { name: "最初からやり直す" }));
+    const dialog = screen.getByRole("dialog", { name: "最初からやり直しますか？" });
+    const galaxies = within(dialog).getByRole("radiogroup", { name: "次の周の銀河" });
+    expect(within(galaxies).getByRole("radio", { name: /天の川/ })).toBeChecked();
+    const rich = within(galaxies).getByRole("radio", { name: /金属の多い銀河の中心/ });
+    expect(galaxies).toHaveTextContent("中性子の毒 ×4");
+    await user.click(rich);
+    await user.click(screen.getByRole("button", { name: "消してやり直す" }));
+    expect(saved()?.game.meta.galaxy).toBe("metalRich");
+  });
+
+  it("まだ完結していなければ、銀河は選べない（天の川）", async () => {
+    const { user } = setup({ saved: toSave(thirdGeneration(), NOW) });
+    await user.click(screen.getByRole("button", { name: "最初からやり直す" }));
+    expect(screen.queryByRole("radiogroup", { name: "次の周の銀河" })).not.toBeInTheDocument();
   });
 
   it("やめればそのまま続ける", async () => {

@@ -224,6 +224,16 @@ describe("restoreSave", () => {
     });
   });
 
+  it("銀河を戻す。古いセーブに無ければ天の川、知らない銀河なら壊れたセーブ", () => {
+    const game = createGame("metalRich");
+    const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(raw, NOW)?.game.meta.galaxy).toBe("metalRich");
+    delete raw.game.meta.galaxy;
+    expect(restoreSave(raw, NOW)?.game.meta.galaxy).toBe("milkyWay");
+    raw.game.meta.galaxy = "andromeda";
+    expect(restoreSave(raw, NOW)).toBeNull();
+  });
+
   it("遊んだ時間と、83マスが埋まった時を戻す。古いセーブに無ければ 0 と null", () => {
     const game = createGame();
     game.meta.elapsed = 5000;

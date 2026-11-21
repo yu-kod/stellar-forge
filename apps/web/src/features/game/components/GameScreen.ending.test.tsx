@@ -97,12 +97,26 @@ describe("記録への挑戦", () => {
     game.meta.milestones = { layer2: 20 * 60, layer3: null, layer4: null };
     const best = { layer2: 25 * 60, layer3: 55 * 60, layer4: 120 * 60, complete: 160 * 60 };
     const storage = memoryStorage({
-      [HALL_KEY]: { completions: 1, best: 160 * 60, bestSplits: best, last: best },
+      [HALL_KEY]: { completions: 1, bests: { milkyWay: best }, last: best },
     });
     render(<GameScreen initial={game} ticker={manualTicker().ticker} storage={storage} />);
     const pace = screen.getByRole("timer", { name: "通算の時間" });
     expect(pace).toHaveTextContent("通算 1時間2分");
     expect(pace).toHaveTextContent("最速の周より 第2層 −5分");
+  });
+
+  it("天の川でない周では、銀河の名前を出し、同じ銀河の最速の周と比べる", () => {
+    const game = createGame("metalRich");
+    game.meta.elapsed = 62 * 60;
+    game.meta.milestones = { layer2: 20 * 60, layer3: null, layer4: null };
+    const best = { layer2: 25 * 60, layer3: 55 * 60, layer4: 120 * 60, complete: 160 * 60 };
+    const storage = memoryStorage({
+      [HALL_KEY]: { completions: 1, bests: { milkyWay: best }, last: best },
+    });
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} storage={storage} />);
+    const pace = screen.getByRole("timer", { name: "通算の時間" });
+    expect(pace).toHaveTextContent("金属の多い銀河の中心・通算 1時間2分");
+    expect(pace).not.toHaveTextContent("最速");
   });
 
   it("最速の記録がなければ、通算の時間だけ出す", () => {
@@ -120,7 +134,7 @@ describe("記録への挑戦", () => {
     render(<GameScreen ticker={manualTicker().ticker} storage={storage} now={() => 0} />);
     await user.click(screen.getByRole("tab", { name: "記録" }));
     const hall = screen.getByRole("region", { name: "記録への挑戦" });
-    expect(hall).toHaveTextContent("完結 2回・最速 2時間30分（銀）");
+    expect(hall).toHaveTextContent("完結 2回・天の川 最速 2時間30分（銀）");
     expect(hall).toHaveTextContent("金：2時間15分以内");
     expect(hall).toHaveTextContent("第3層で主星を炭素星にする");
   });
@@ -130,7 +144,7 @@ describe("記録への挑戦", () => {
     render(
       <EndingDialog
         game={completed()}
-        hall={{ ...EMPTY_HALL, completions: 1, best: 4 * 3600 + 30 * 60 }}
+        hall={{ ...EMPTY_HALL, completions: 1 }}
         open
         onClose={() => {}}
       />
@@ -138,6 +152,19 @@ describe("記録への挑戦", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：銅");
     expect(dialog).toHaveTextContent("金：2時間15分以内");
+  });
+
+  it("天の川でない周のエンディングは、その銀河の基準でメダルを決め、銀河の名前を出す", async () => {
+    const { EndingDialog } = await import("./EndingDialog");
+    const game = completed();
+    game.meta.galaxy = "metalRich";
+    game.meta.completedAt = 3 * 3600;
+    render(
+      <EndingDialog game={game} hall={{ ...EMPTY_HALL, completions: 1 }} open onClose={() => {}} />
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("今回のメダル：金（金属の多い銀河の中心）");
+    expect(dialog).toHaveTextContent("金：3時間5分以内");
   });
 
   it("エンディングに層ごとの時刻と、前回との差を出す", async () => {
@@ -150,8 +177,13 @@ describe("記録への挑戦", () => {
         hall={{
           ...EMPTY_HALL,
           completions: 2,
-          best: 4 * 3600,
-          previous: { layer2: 30 * 60, layer3: 50 * 60, layer4: 140 * 60, complete: 4 * 3600 },
+          previous: {
+            layer2: 30 * 60,
+            layer3: 50 * 60,
+            layer4: 140 * 60,
+            complete: 4 * 3600,
+            galaxy: "milkyWay",
+          },
         }}
         open
         onClose={() => {}}
@@ -175,7 +207,10 @@ describe("記録への挑戦", () => {
       return clock;
     })();
     tick(0.25);
-    expect(storage.get(HALL_KEY)).toMatchObject({ completions: 1, best: expect.any(Number) });
+    expect(storage.get(HALL_KEY)).toMatchObject({
+      completions: 1,
+      bests: { milkyWay: { complete: expect.any(Number) } },
+    });
   });
 });
 
