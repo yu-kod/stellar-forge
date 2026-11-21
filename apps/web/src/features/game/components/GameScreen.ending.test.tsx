@@ -90,6 +90,30 @@ describe("GameScreen：エンディング", () => {
 });
 
 describe("記録への挑戦", () => {
+  it("遊んでいる間、上部に通算の時間と、最速の周の同じ層との差を出す", () => {
+    const game = createGame();
+    game.meta.elapsed = 62 * 60;
+    game.meta.supernovae = 30;
+    game.meta.milestones = { layer2: 20 * 60, layer3: null, layer4: null };
+    const best = { layer2: 25 * 60, layer3: 55 * 60, layer4: 120 * 60, complete: 160 * 60 };
+    const storage = memoryStorage({
+      [HALL_KEY]: { completions: 1, best: 160 * 60, bestSplits: best, last: best },
+    });
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} storage={storage} />);
+    const pace = screen.getByRole("timer", { name: "通算の時間" });
+    expect(pace).toHaveTextContent("通算 1時間2分");
+    expect(pace).toHaveTextContent("最速の周より 第2層 −5分");
+  });
+
+  it("最速の記録がなければ、通算の時間だけ出す", () => {
+    const game = createGame();
+    game.meta.elapsed = 5 * 60;
+    render(<GameScreen initial={game} ticker={manualTicker().ticker} />);
+    const pace = screen.getByRole("timer", { name: "通算の時間" });
+    expect(pace).toHaveTextContent("通算 5分");
+    expect(pace).not.toHaveTextContent("最速");
+  });
+
   it("保存された記録を読み、記録タブに完結の回数と最速、メダルの目安を出す", async () => {
     const user = userEvent.setup();
     const storage = memoryStorage({ [HALL_KEY]: { completions: 2, best: 150 * 60 } });
@@ -106,7 +130,7 @@ describe("記録への挑戦", () => {
     render(
       <EndingDialog
         game={completed()}
-        hall={{ completions: 1, best: 4 * 3600 + 30 * 60, last: null, previous: null }}
+        hall={{ ...EMPTY_HALL, completions: 1, best: 4 * 3600 + 30 * 60 }}
         open
         onClose={() => {}}
       />
@@ -124,9 +148,9 @@ describe("記録への挑戦", () => {
       <EndingDialog
         game={game}
         hall={{
+          ...EMPTY_HALL,
           completions: 2,
           best: 4 * 3600,
-          last: null,
           previous: { layer2: 30 * 60, layer3: 50 * 60, layer4: 140 * 60, complete: 4 * 3600 },
         }}
         open

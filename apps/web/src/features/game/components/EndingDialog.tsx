@@ -10,7 +10,7 @@ import { ORIGINS, originOf, type Origin } from "@/game/progress";
 import { whiteDwarfsMade } from "@/game/star";
 import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
-import { formatDuration, formatNumber } from "../format";
+import { formatDiff, formatDuration, formatNumber } from "../format";
 import { PERIODIC_TABLE } from "../periodicTable";
 import { medalOf, type Hall, type Splits } from "../hall";
 import { MedalTargets } from "./HallView";
@@ -27,11 +27,7 @@ const ORIGIN_COLOR: Record<Origin, string> = {
 };
 
 /** 前回との差（「+5分」「−5分」「±0分」） */
-function diff(now: number, before: number): string {
-  const minutes = Math.round((now - before) / 60);
-  if (minutes === 0) return "±0分";
-  return `${minutes > 0 ? "+" : "−"}${Math.abs(minutes)}分`;
-}
+const diff = (now: number, before: number) => formatDiff(now - before);
 
 /** 層ごとの解放と完結の時刻と、前回との差 */
 function SplitsTable({ game, previous }: { game: GameState; previous: Splits | null }) {

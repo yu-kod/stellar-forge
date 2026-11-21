@@ -42,3 +42,10 @@ export function formatDuration(seconds: number): string {
   const hours = Math.floor(minutes / 60);
   return hours > 0 ? `${hours}時間${minutes % 60}分` : `${minutes}分`;
 }
+
+/** 時刻の差（「+5分」「−5分」「±0分」） */
+export function formatDiff(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  if (minutes === 0) return "±0分";
+  return `${minutes > 0 ? "+" : "−"}${Math.abs(minutes)}分`;
+}
