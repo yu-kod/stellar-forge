@@ -58,9 +58,7 @@ export function ResetDialog({ onReset, chooseGalaxy }: Props) {
                   />
                   <span>
                     <b>{GALAXIES[id].name}</b>
-                    <span className="text-muted-foreground block">
-                      {GALAXIES[id].description}
-                    </span>
+                    <span className="text-muted-foreground block">{GALAXIES[id].description}</span>
                   </span>
                 </label>
               ))}

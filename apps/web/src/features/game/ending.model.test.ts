@@ -55,7 +55,8 @@ describe("gameReducer：エンディング", () => {
 
   it("完結したら、やり直しても残る記録（回数と最速）に足す。やり直しても記録は残る", () => {
     const model = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
-    expect(model.hall).toMatchObject({ completions: 1, best: 4 * 3600 + 1 });
+    expect(model.hall.completions).toBe(1);
+    expect(model.hall.bests.milkyWay).toMatchObject({ complete: 4 * 3600 + 1, galaxy: "milkyWay" });
     expect(model.hall.last?.complete).toBe(4 * 3600 + 1);
     expect(gameReducer(model, { type: "reset" }).hall).toEqual(model.hall);
   });

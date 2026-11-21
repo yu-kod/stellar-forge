@@ -12,7 +12,8 @@ import type { GameState } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { formatDiff, formatDuration, formatNumber } from "../format";
 import { PERIODIC_TABLE } from "../periodicTable";
-import { medalOf, type Hall, type Splits } from "../hall";
+import { GALAXIES } from "@/game/balance";
+import { bestOf, medalOf, type Hall, type Splits } from "../hall";
 import { MedalTargets } from "./HallView";
 
 type Props = { game: GameState; hall: Hall; open: boolean; onClose: () => void };
@@ -63,6 +64,7 @@ function SplitsTable({ game, previous }: { game: GameState; previous: Splits | n
 /** 83マスが埋まったときの画面。元素ごとの起源で塗り分けた周期表を見せる */
 export function EndingDialog({ game, hall, open, onClose }: Props) {
   const { meta, star } = game;
+  const best = bestOf(hall, meta.galaxy);
   const stats: [string, number][] = [
     ["星", star.generation],
     ["超新星", meta.supernovae],
@@ -85,13 +87,17 @@ export function EndingDialog({ game, hall, open, onClose }: Props) {
         </DialogHeader>
         <div className="grid gap-1 text-sm">
           <p>
-            今回のメダル：<b className="text-ignite">{medalOf(game.meta.completedAt ?? 0)}</b>
-            {hall.best !== null &&
-              `（最速 ${formatDuration(hall.best)}・完結 ${hall.completions}回）`}
+            今回のメダル：
+            <b className="text-ignite">{medalOf(meta.completedAt ?? 0, meta.galaxy)}</b>
+            {meta.galaxy !== "milkyWay" && `（${GALAXIES[meta.galaxy].name}）`}
+            {best && `（最速 ${formatDuration(best.complete)}・完結 ${hall.completions}回）`}
           </p>
-          <MedalTargets />
+          <MedalTargets galaxy={meta.galaxy} />
         </div>
-        <SplitsTable game={game} previous={hall.previous} />
+        <SplitsTable
+          game={game}
+          previous={hall.previous?.galaxy === meta.galaxy ? hall.previous : null}
+        />
         <ul aria-label="ここまでの星" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {stats.map(([label, value]) => (
             <li key={label}>

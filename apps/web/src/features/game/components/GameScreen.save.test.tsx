@@ -11,11 +11,7 @@ import { GameScreen } from "./GameScreen";
 
 const NOW = Date.UTC(2026, 10, 20, 12, 0, 0);
 
-function setup({
-  saved,
-  now = NOW,
-  hall,
-}: { saved?: unknown; now?: number; hall?: unknown } = {}) {
+function setup({ saved, now = NOW, hall }: { saved?: unknown; now?: number; hall?: unknown } = {}) {
   const storage = createJsonStorage();
   if (saved !== undefined) storage.set(SAVE_KEY, saved);
   if (hall !== undefined) storage.set(HALL_KEY, hall);

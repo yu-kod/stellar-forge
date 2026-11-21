@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { medalOf } from "@/features/game/hall";
-import { playIdle } from "@/test-utils/simulate";
+import { FASTER_MOVES, medalOf } from "@/features/game/hall";
+import { playIdle, type SeedPlan } from "@/test-utils/simulate";
 import { S_DISCOVERABLE } from "./sprocess";
 import { createGame } from "./star";
 import type { Galaxy, GameState } from "./types";
@@ -16,12 +16,12 @@ const shifting = (s: GameState) =>
       ? 1
       : 30;
 
-/** 第3層で主星を炭素星にし、種の決め方だけを変えて完結までの時間を測る（画面の初期設定の流れ） */
-function complete(galaxy: Galaxy, seedTarget: number | ((s: GameState) => number)): number {
+/** 第3層で主星を炭素星にするか・種の決め方（省略すると初期値）を変えて、完結までの時間を測る（画面の初期設定の流れ） */
+function complete(galaxy: Galaxy, seedTarget: SeedPlan | undefined, carbonStar = true): number {
   const report = playIdle(LIMIT, {
     start: createGame(galaxy),
     keepCluster: true,
-    layer3MainMass: 2,
+    layer3MainMass: carbonStar ? 2 : undefined,
     seedTarget,
     stopAt: "complete",
   });
@@ -36,7 +36,11 @@ describe("銀河ごとの最善の作戦", () => {
     minutes.milkyKeep = complete("milkyWay", 30);
     minutes.richShift = complete("metalRich", shifting);
     minutes.richKeep = complete("metalRich", 30);
-  }, 1_200_000);
+    // 金属の多い銀河で、判断を1つだけした流れと、何もしない流れ
+    minutes.richDefault = complete("metalRich", undefined, false);
+    minutes.richCarbonOnly = complete("metalRich", undefined);
+    minutes.richKeepOnly = complete("metalRich", 30, false);
+  }, 1_500_000);
 
   it("天の川では、種を局面で変える（30→1→30）ほうが30のままより10分以上速い", () => {
     expect(minutes.milkyKeep! - minutes.milkyShift!).toBeGreaterThanOrEqual(10 * MINUTE);
@@ -51,5 +55,15 @@ describe("銀河ごとの最善の作戦", () => {
     expect(medalOf(minutes.milkyKeep!, "milkyWay")).not.toBe("金");
     expect(medalOf(minutes.richKeep!, "metalRich")).toBe("金");
     expect(medalOf(minutes.richShift!, "metalRich")).not.toBe("金");
+  });
+
+  it("金属の多い銀河の記録タブで挙げる手は、それぞれ単独で何もしない流れより3分以上速い", () => {
+    expect([...FASTER_MOVES.metalRich]).toEqual([
+      "第3層で主星を炭素星にする",
+      "鉄の種を30のまま保つ",
+    ]);
+    for (const alone of [minutes.richCarbonOnly!, minutes.richKeepOnly!]) {
+      expect(minutes.richDefault! - alone).toBeGreaterThanOrEqual(3 * MINUTE);
+    }
   });
 });

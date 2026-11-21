@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AGB_SECONDS,
   AUTO_REBIRTH_AFTER,
+  GALAXIES,
   LAYER2_AFTER,
   LAYER3_AFTER,
   SHOP,
@@ -37,7 +38,7 @@ import type { Galaxy, Meta } from "@/game/types";
 import { formatDiff, formatDuration, formatMass, formatNumber } from "../format";
 import { createModel, gameReducer, type Action, type Model, type Speed } from "../model";
 import { restoreSave, SAVE_KEY, toSave } from "../save";
-import { HALL_KEY, paceAgainstBest, parseHall, type Hall } from "../hall";
+import { HALL_KEY, bestOf, paceAgainstBest, parseHall, type Hall } from "../hall";
 import { animationFrameTicker, type Ticker } from "../ticker";
 import { EndingDialog } from "./EndingDialog";
 import { Notices } from "./Notices";
@@ -320,9 +321,10 @@ function LowMassText({ star }: { star: GameState["star"] }) {
 
 /** 通算の時間と、最速の周の同じ層との差 */
 function Pace({ meta, hall }: { meta: Meta; hall: Hall }) {
-  const pace = paceAgainstBest(meta.milestones, hall.bestSplits);
+  const pace = paceAgainstBest(meta.milestones, bestOf(hall, meta.galaxy));
   return (
     <p role="timer" aria-label="通算の時間" className="font-mono tabular-nums">
+      {meta.galaxy !== "milkyWay" && `${GALAXIES[meta.galaxy].name}・`}
       通算 {formatDuration(meta.elapsed)}
       {pace && `・最速の周より 第${pace.layer}層 ${formatDiff(pace.diff)}`}
     </p>

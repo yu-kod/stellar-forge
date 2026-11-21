@@ -1,6 +1,16 @@
 import { GALAXIES } from "@/game/balance";
 import { describe, expect, it } from "vitest";
-import { EMPTY_HALL, MEDALS, medalOf, paceAgainstBest, parseHall, recordCompletion } from "./hall";
+import type { Galaxy } from "@/game/types";
+import {
+  EMPTY_HALL,
+  MEDALS,
+  bestOf,
+  medalOf,
+  paceAgainstBest,
+  parseHall,
+  recordCompletion,
+  type Splits,
+} from "./hall";
 
 const MINUTE = 60;
 
@@ -13,55 +23,77 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
     expect(medalOf(158 * MINUTE + 1)).toBe("銅");
   });
 
-  const splits = (complete: number) => ({
+  const splits = (complete: number, galaxy: Galaxy = "milkyWay"): Splits => ({
     layer2: 25 * MINUTE,
     layer3: 55 * MINUTE,
     layer4: 140 * MINUTE,
     complete,
+    galaxy,
   });
 
-  it("完結の回数を数え、一番速い時間と、今回・前回の層ごとの時刻を残す", () => {
+  it("完結の回数を数え、銀河ごとの最速の周と、今回・前回の層ごとの時刻を残す", () => {
     const once = recordCompletion(EMPTY_HALL, splits(190 * MINUTE));
     expect(once).toEqual({
       completions: 1,
-      best: 190 * MINUTE,
-      bestSplits: splits(190 * MINUTE),
+      bests: { milkyWay: splits(190 * MINUTE) },
       last: splits(190 * MINUTE),
       previous: null,
     });
     const twice = recordCompletion(once, splits(170 * MINUTE));
-    expect(twice).toMatchObject({ completions: 2, best: 170 * MINUTE });
+    expect(twice.completions).toBe(2);
+    expect(bestOf(twice, "milkyWay")).toEqual(splits(170 * MINUTE));
     expect(twice.previous).toEqual(splits(190 * MINUTE));
+    // 最速の周は、同じ銀河で最速を更新したときだけ入れ替える
     const slower = recordCompletion(twice, splits(200 * MINUTE));
-    expect(slower.best).toBe(170 * MINUTE);
-    // 最速の周の層ごとの時刻は、最速を更新したときだけ入れ替える
-    expect(slower.bestSplits).toEqual(splits(170 * MINUTE));
+    expect(bestOf(slower, "milkyWay")).toEqual(splits(170 * MINUTE));
+    const rich = recordCompletion(slower, splits(240 * MINUTE, "metalRich"));
+    expect(bestOf(rich, "metalRich")).toEqual(splits(240 * MINUTE, "metalRich"));
+    expect(bestOf(rich, "milkyWay")).toEqual(splits(170 * MINUTE));
+    expect(bestOf(EMPTY_HALL, "milkyWay")).toBeNull();
   });
 
   it("保存されたものを読む。形が合わなければ空", () => {
     expect(parseHall(null)).toEqual(EMPTY_HALL);
     expect(parseHall({ completions: "x" })).toEqual(EMPTY_HALL);
+    expect(parseHall({ completions: 0, bests: {} })).toEqual(EMPTY_HALL);
+    const saved = {
+      completions: 2,
+      bests: { milkyWay: splits(100), metalRich: splits(150, "metalRich") },
+      last: splits(150, "metalRich"),
+      previous: splits(100),
+    };
+    expect(parseHall(saved)).toEqual(saved);
+    expect(parseHall({ ...saved, last: { layer2: "x" } }).last).toBeNull();
+    expect(parseHall({ ...saved, last: { ...splits(100), layer3: "x" } }).last).toBeNull();
+    expect(parseHall({ ...saved, last: { ...splits(100), galaxy: "andromeda" } }).last).toBeNull();
+    expect(parseHall({ ...saved, bests: { milkyWay: { layer2: "x" } } }).bests).toEqual({});
+  });
+
+  it("古い記録（最速の時間だけ）は天の川の記録として読む", () => {
+    const { galaxy: _, ...plain } = splits(100);
     expect(parseHall({ completions: 2, best: 100 })).toEqual({
       completions: 2,
-      best: 100,
-      bestSplits: null,
+      bests: {
+        milkyWay: { layer2: null, layer3: null, layer4: null, complete: 100, galaxy: "milkyWay" },
+      },
       last: null,
       previous: null,
     });
-    const withSplits = {
-      completions: 2,
-      best: 100,
-      bestSplits: splits(100),
-      last: splits(100),
-      previous: null,
-    };
-    expect(parseHall(withSplits)).toEqual(withSplits);
-    // 古い記録：最速の周の時刻がなければ、今回が最速ならそれを使う
-    const { bestSplits: _, ...old } = withSplits;
-    expect(parseHall(old).bestSplits).toEqual(splits(100));
-    expect(parseHall({ ...old, last: splits(120) }).bestSplits).toBeNull();
-    expect(parseHall({ ...withSplits, last: { layer2: "x" } }).last).toBeNull();
-    expect(parseHall({ ...withSplits, last: { ...splits(100), layer3: "x" } }).last).toBeNull();
+    // 今回が最速なら、その層ごとの時刻を使う。最速の周の時刻があればそれを使う
+    expect(bestOf(parseHall({ completions: 2, best: 100, last: plain }), "milkyWay")).toEqual(
+      splits(100)
+    );
+    expect(
+      bestOf(
+        parseHall({
+          completions: 2,
+          best: 100,
+          bestSplits: plain,
+          last: { ...plain, complete: 120 },
+        }),
+        "milkyWay"
+      )
+    ).toEqual(splits(100));
     expect(parseHall({ completions: 0, best: null })).toEqual(EMPTY_HALL);
   });
 

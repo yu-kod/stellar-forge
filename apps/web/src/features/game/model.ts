@@ -183,7 +183,11 @@ function checkComplete(model: Model): Model {
   return {
     ...model,
     ending: true,
-    hall: recordCompletion(model.hall, { ...meta.milestones, complete: meta.elapsed }),
+    hall: recordCompletion(model.hall, {
+      ...meta.milestones,
+      complete: meta.elapsed,
+      galaxy: meta.galaxy,
+    }),
     game: { ...model.game, meta: { ...meta, completedAt: meta.elapsed } },
   };
 }
