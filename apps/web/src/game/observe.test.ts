@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { OBSERVE_RATE, observe, rGoal, rThreshold, rWeight } from "./merger";
+import {
+  MERGER_SECONDS,
+  OBSERVE_RATE,
+  advanceBinaries,
+  formBinary,
+  observe,
+  predictMerger,
+  rGoal,
+  rThreshold,
+  rWeight,
+  setObserving,
+} from "./merger";
 import { R_PATH_START } from "./rprocess";
 import { createGame } from "./star";
 import type { GameState } from "./types";
@@ -38,5 +49,31 @@ describe("追観測：放出物を強化に使わず、いま作りたい元素�
     const before = layer4(5);
     before.meta.rProcess.unlocked = false;
     expect(observe(before).state).toBe(before);
+  });
+
+  it("使い道を追観測にすると、貯めた分をすぐ回し、以後は合体のたびに放出物を発見に回す（貯めない）", () => {
+    const game = layer4(0.05);
+    const z = rGoal(game.meta);
+    const on = setObserving(game, true).state;
+    expect(on.meta.rProcess.observing).toBe(true);
+    expect(on.meta.rProcess.ejecta).toBe(0);
+    const formed = formBinary(on, 2, 2);
+    const { meta } = advanceBinaries(formed.meta, MERGER_SECONDS);
+    const e = predictMerger(formed.meta, 2, 2).ejecta;
+    expect(meta.rProcess.ejecta).toBe(0);
+    expect(meta.rProcess.amounts[z - R_PATH_START]).toBeGreaterThan(
+      0.05 * OBSERVE_RATE * rWeight(z) + e * rWeight(z)
+    );
+    // 強化に戻すと、また貯まる
+    const off = setObserving({ ...formed, meta }, false).state;
+    expect(off.meta.rProcess.observing).toBe(false);
+    const again = advanceBinaries(formBinary(off, 2, 2).meta, MERGER_SECONDS).meta;
+    expect(again.rProcess.ejecta).toBeCloseTo(predictMerger(off.meta, 2, 2).ejecta);
+  });
+
+  it("はじめは強化に使う。第4層の前は切り替えられない", () => {
+    expect(createGame().meta.rProcess.observing).toBe(false);
+    const before = createGame();
+    expect(setObserving(before, true).state).toBe(before);
   });
 });

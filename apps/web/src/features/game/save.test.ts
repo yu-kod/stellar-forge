@@ -210,6 +210,7 @@ describe("restoreSave", () => {
       discovered: [63],
       mergers: 4,
       ejecta: 12.5,
+      observing: true,
     };
     game.meta.rProcess.amounts[3] = 2.5;
     const raw = JSON.parse(JSON.stringify(toSave(game, NOW)));

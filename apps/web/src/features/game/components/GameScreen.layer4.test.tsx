@@ -85,17 +85,17 @@ describe("GameScreen：第4層 中性子星合体", () => {
     );
   });
 
-  it("追観測：放出物を強化に使わず、いま作りたい元素の発見に回せる（なければ押せない）", async () => {
+  it("放出物の使い道を、強化と追観測で切り替えられる（追観測なら合体のたびに発見に回る）", async () => {
     const game = layer4();
-    game.meta.rProcess.ejecta = 100;
+    game.meta.rProcess.ejecta = 0.05;
     const { user } = renderGame(game);
-    const button = within(panel()).getByRole("button", {
-      name: "追観測：放出物 100 をテルル（Te）の発見に回す",
-    });
-    expect(panel()).toHaveTextContent("放出物 1 につき 6 ぶん");
-    await user.click(button);
+    const use = within(panel()).getByRole("radiogroup", { name: "放出物の使い道" });
+    expect(within(use).getByRole("radio", { name: /強化に使う/ })).toBeChecked();
+    expect(use).toHaveTextContent("放出物 1 につき 6 ぶん");
+    await user.click(within(use).getByRole("radio", { name: /追観測に回す/ }));
+    expect(within(use).getByRole("radio", { name: /追観測に回す/ })).toBeChecked();
     expect(panel()).toHaveTextContent("放出物 0");
-    expect(within(panel()).getByRole("button", { name: /追観測/ })).toBeDisabled();
+    expect(use).toHaveTextContent("いまはテルル（Te）");
   });
 
   it("第4層では、星屑タブの第1・2層の強化を畳む（まとめて交換で買える）", async () => {
