@@ -22,7 +22,7 @@ const explosive =
 
 export const LIGHT_ELEMENTS: readonly LightElement[] = [
   { z: 3, site: "宇宙線の核破砕（超新星30回）", found: (meta) => meta.supernovae >= 30 },
-  { z: 4, site: "宇宙線の核破砕（超新星60回）", found: (meta) => meta.supernovae >= 60 },
+  { z: 4, site: "宇宙線の核破砕（超新星45回）", found: (meta) => meta.supernovae >= 45 },
   { z: 5, site: "宇宙線の核破砕（超新星120回）", found: (meta) => meta.supernovae >= 120 },
   {
     z: 9,
@@ -64,8 +64,8 @@ export const LIGHT_ELEMENTS: readonly LightElement[] = [
   },
   {
     z: 22,
-    site: "α過程の凍結の ⁴⁴Ti（爆発エネルギー Lv7 で崩壊）",
-    found: (meta, star) => collapsed(star) && meta.shop.boom >= 7,
+    site: "α過程の凍結の ⁴⁴Ti（爆発エネルギー Lv8 で崩壊）",
+    found: (meta, star) => collapsed(star) && meta.shop.boom >= 8,
   },
   { z: 23, site: "Ia型超新星（5回）", found: (meta) => meta.iaSupernovae >= 5 },
   { z: 24, site: "Ia型超新星（20回）", found: (meta) => meta.iaSupernovae >= 20 },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rebirth, setNextMass } from "./actions";
-import { LAYER2_AFTER } from "./balance";
+import { LAYER2_AFTER, PACE } from "./balance";
 import { dustPreview } from "./dust";
 import { createGame, createMeta, createStar, maxMass } from "./star";
 import { step } from "./step";
@@ -9,7 +9,7 @@ import { RATE_CAP } from "./balance";
 import { effectiveRate, isIgnited } from "./rates";
 
 /** Lv1 の段階の速度定数（上限を掛けたもの） */
-const K1 = effectiveRate(0.4 * 0.004, RATE_CAP.H);
+const K1 = effectiveRate(PACE * 0.004, RATE_CAP.H);
 
 function layer2Meta(overrides: Partial<Meta> = {}): Meta {
   return { ...createMeta(), supernovae: LAYER2_AFTER, ...overrides };

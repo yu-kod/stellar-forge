@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "./star";
 import { energyRate, finalStageSeconds, secondsToCollapse, step } from "./step";
-import { RATE_CAP } from "./balance";
+import { FINAL_STAGE_SECONDS, PACE, RATE_CAP } from "./balance";
 import { effectiveRate } from "./rates";
 
 /** Lv1 の段階の速度定数（上限を掛けたもの） */
-const K1 = effectiveRate(0.4 * 0.004, RATE_CAP.H);
+const K1 = effectiveRate(PACE * 0.004, RATE_CAP.H);
 
 describe("step：燃焼", () => {
   it("燃焼量 = k × 燃料 × dt だけ燃料が生成物に変わり、エネルギーが入る", () => {
@@ -34,7 +34,7 @@ describe("step：燃焼", () => {
     game.star.mass.H = 0;
     game.star.mass.He = 10;
     // ヘリウムの燃焼量は更新前の He から決まり、同じ更新で生まれた He は燃えない
-    const burned = effectiveRate(0.4 * 0.004, RATE_CAP.He) * 10 * 1;
+    const burned = effectiveRate(PACE * 0.004, RATE_CAP.He) * 10 * 1;
 
     const { state } = step(game, 1);
 
@@ -53,9 +53,9 @@ describe("step：燃焼", () => {
     game.star.temperature = 2.7e9; // ケイ素燃焼も点火済み
     const { state } = step(game, 0.1);
     // ケイ素燃焼は 1.4/30 M☉/s で Si と S を 3:1 で減らす（O 燃焼の生成分は更新後に加わる）
-    const fe = (1.4 / 30) * 0.1;
+    const fe = (1.4 / FINAL_STAGE_SECONDS) * 0.1;
     expect(state.star.mass.Fe).toBeCloseTo(fe);
-    const oBurned = effectiveRate(0.4 * 0.004, RATE_CAP.O) * 4 * 0.1;
+    const oBurned = effectiveRate(PACE * 0.004, RATE_CAP.O) * 4 * 0.1;
     expect(state.star.mass.Si).toBeCloseTo(3 - fe * 0.75 + oBurned * 0.8);
     expect(state.star.mass.S).toBeCloseTo(1 - fe * 0.25 + oBurned * 0.2);
   });
@@ -186,7 +186,7 @@ describe("step：ケイ素燃焼と崩壊", () => {
     const game = finalStage();
     game.star.mass.O = 3;
     game.star.mass.He = 1;
-    const fe = (1.4 / 30) * 1;
+    const fe = (1.4 / FINAL_STAGE_SECONDS) * 1;
     const { state } = step(game, 1);
     expect(state.star.mass.Fe).toBeCloseTo(fe);
     expect(state.star.mass.O + state.star.mass.He).toBeCloseTo(4 - fe);
@@ -271,7 +271,7 @@ describe("energyRate：いま毎秒入るエネルギー", () => {
     game.star.mass.H = 0;
     game.star.mass.Si = 5;
     game.star.temperature = 2.7e9;
-    expect(energyRate(game) / ((1.4 / 30) * 6.5e43)).toBeCloseTo(1);
+    expect(energyRate(game) / ((1.4 / FINAL_STAGE_SECONDS) * 6.5e43)).toBeCloseTo(1);
   });
 
   it("燃料が残っていなければ 0", () => {
@@ -285,7 +285,7 @@ describe("secondsToCollapse：鉄のコアが限界に達するまでの秒数",
   it("残りの鉄を一定の速さで作る時間", () => {
     const game = createGame();
     game.star.mass.Fe = 0.7;
-    expect(secondsToCollapse(game.meta, game.star)).toBeCloseTo(15);
+    expect(secondsToCollapse(game.meta, game.star)).toBeCloseTo(FINAL_STAGE_SECONDS / 2);
   });
 
   it("限界を超えていれば 0", () => {
@@ -299,7 +299,7 @@ describe("ケイ素燃焼の加速（硫黄の星屑の強化）", () => {
   it("Lv ごとに崩壊までの時間が 0.85 倍になる", () => {
     const game = createGame();
     game.meta.shop.accel = 2;
-    expect(finalStageSeconds(game.meta)).toBeCloseTo(30 * 0.85 ** 2);
+    expect(finalStageSeconds(game.meta)).toBeCloseTo(FINAL_STAGE_SECONDS * 0.85 ** 2);
   });
 
   it("8秒より短くはならない", () => {
@@ -315,6 +315,6 @@ describe("ケイ素燃焼の加速（硫黄の星屑の強化）", () => {
     game.star.mass.Si = 5;
     game.star.temperature = 2.7e9;
     const { state } = step(game, 1);
-    expect(state.star.mass.Fe).toBeCloseTo(1.4 / (30 * 0.85 ** 2));
+    expect(state.star.mass.Fe).toBeCloseTo(1.4 / (FINAL_STAGE_SECONDS * 0.85 ** 2));
   });
 });

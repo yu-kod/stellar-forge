@@ -144,7 +144,7 @@ export const STAGES: Record<StageId, StageSpec> = {
 };
 
 /** 全段階の速度に掛かるゲームの速さ */
-export const PACE = 0.4;
+export const PACE = 0.75;
 /** この Lv ごとに速度が2倍 */
 export const MILESTONE_EVERY = 10;
 /** 反応断面積の1 Lv ごとの上乗せ（足し算） */
@@ -169,7 +169,7 @@ export const FINAL_PHASE_COST = 0.25;
 /** 鉄のコアがこの質量 [M☉] に達すると崩壊する（チャンドラセカール質量） */
 export const CHANDRASEKHAR_MASS = 1.4;
 /** ケイ素燃焼の点火から崩壊までの秒数（実際の星では約1日。ゲーム用に圧縮） */
-export const FINAL_STAGE_SECONDS = 30;
+export const FINAL_STAGE_SECONDS = 20;
 /** ケイ素燃焼の加速の1 Lv ごとの倍率と、崩壊までの時間の下限 [秒] */
 export const ACCEL_PER_LEVEL = 0.85;
 export const MIN_FINAL_STAGE_SECONDS = 8;
@@ -309,7 +309,7 @@ export const SHOP: Record<ShopId, ShopSpec> = {
     name: "燃焼の自動制御",
     currency: "S",
     description: "燃焼強化を自動で買う。段階ごとに ON/OFF",
-    baseCost: 4,
+    baseCost: 2,
     costGrowth: 1,
     maxLevel: 1,
   },
