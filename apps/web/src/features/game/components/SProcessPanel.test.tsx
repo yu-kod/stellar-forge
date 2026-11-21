@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { PROJECTION_HORIZON } from "@/game/projection";
 import { S_DISCOVERY_THRESHOLD, S_PATH_START } from "@/game/sprocess";
 import { createGame } from "@/game/star";
 import type { Meta } from "@/game/types";
@@ -24,7 +25,9 @@ describe("SProcessPanel：次の発見までの見込み", () => {
     for (let t = 0; t <= 20; t++)
       track = trackProgress(track, { z: 40, progress: 0.1 + 0.005 * t, t });
     // 残り 80% ÷ 毎秒 0.5% = 160秒。描き直した直後（タブを移って戻った）でもすぐ出る
-    render(<SProcessPanel meta={at(20, 0.2)} track={track} dispatch={dispatch} />);
+    render(
+      <SProcessPanel meta={at(20, 0.2)} track={track} projection={null} dispatch={dispatch} />
+    );
     expect(screen.getByText(/次の発見/)).toHaveTextContent(
       "いまの種で、次の発見 ジルコニウム（Zr）まで約3分"
     );
@@ -32,7 +35,30 @@ describe("SProcessPanel：次の発見までの見込み", () => {
 
   it("追い始めたばかりなら出さない", () => {
     const track = trackProgress(null, { z: 40, progress: 0.1, t: 0 });
-    render(<SProcessPanel meta={at(0, 0.1)} track={track} dispatch={() => {}} />);
+    render(<SProcessPanel meta={at(0, 0.1)} track={track} projection={null} dispatch={() => {}} />);
     expect(screen.queryByText(/次の発見/)).not.toBeInTheDocument();
+  });
+
+  it("種ごとに、自動交換で進めたときの循環（ビスマス → 鉛）までの見込みを出す", () => {
+    const meta = at(0, 0.1);
+    const job = (seeds: number, loopAt: number | null, elapsed: number) => ({
+      seeds,
+      state: { meta, star: createGame().star },
+      elapsed,
+      loopAt,
+    });
+    const projection = [
+      job(1, null, PROJECTION_HORIZON),
+      job(3, 40 * 60, 40 * 60),
+      job(10, 34 * 60, 34 * 60),
+      job(30, null, 20 * 60),
+    ];
+    render(<SProcessPanel meta={meta} track={null} projection={projection} dispatch={() => {}} />);
+    const list = screen.getByRole("list", { name: "種の見込み" });
+    const rows = within(list).getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent("循環まで 90分より先");
+    expect(rows[1]).toHaveTextContent("循環まで約40分");
+    expect(rows[2]).toHaveTextContent("循環まで約34分（一番速い）");
+    expect(rows[3]).toHaveTextContent("循環まで 計算中");
   });
 });
