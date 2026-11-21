@@ -49,6 +49,9 @@ describe("中性子星の質量（親の星の初期質量で決まる9段階）
 describe("40 M☉ より重い星は、崩壊してもブラックホールになる", () => {
   it("中性子星の段はなく、ブラックホールの数を数える", () => {
     expect(neutronStarBin(41)).toBeNull();
+    // 8 M☉ 未満は白色矮星になり、中性子星を残さない
+    expect(neutronStarBin(7)).toBeNull();
+    expect(neutronStarBin(2)).toBeNull();
     const next = rebirth(ended(createMeta(), 108, "collapse"));
     expect(next.meta.blackHoles).toBe(1);
     expect(next.meta.neutronStars).toBe(0);

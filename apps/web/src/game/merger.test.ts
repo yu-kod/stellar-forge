@@ -217,6 +217,13 @@ describe("届く組がないときの案内", () => {
       expect(pairAdvice(meta, 52).type).toBe("masses");
     });
 
+    it("白色矮星になる軽い星団の星は、中性子星が来るとは数えない", () => {
+      const meta = layer4({ [5]: 1 }); // 1.7 M☉ が1つ。1.2 M☉ が来れば 1.2 + 1.7 でランタノイド
+      meta.rProcess.discovered = [52, 53, 54];
+      meta.cluster = [slotOf(meta, 2), slotOf(meta, 2)];
+      expect(pairAdvice(meta, 64).type).toBe("masses");
+    });
+
     it("作っている中性子星では届かなければ、星団の星の質量を出す", () => {
       const meta = layer4({ [LIGHT]: 5, [6]: 5 });
       meta.cluster = [slotOf(meta, 10), slotOf(meta, 32)];

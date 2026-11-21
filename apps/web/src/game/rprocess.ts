@@ -45,11 +45,11 @@ export function createRProcess(): RProcess {
 /** これより重い星は、崩壊するとブラックホールになる [M☉] */
 export const HEAVIEST_PROGENITOR = 40;
 
-/** 親の星の初期質量から、残す中性子星の段。40 M☉ より重い星はブラックホールになる（null） */
+/** 親の星の初期質量から、残す中性子星の段。40 M☉ より重い星はブラックホール、8 M☉ 未満は白色矮星になる（null） */
 export function neutronStarBin(initialMass: number): number | null {
-  if (initialMass > HEAVIEST_PROGENITOR) return null;
+  if (initialMass > HEAVIEST_PROGENITOR || initialMass < LIGHTEST_PROGENITOR) return null;
   const bin = Math.floor((initialMass - LIGHTEST_PROGENITOR) / MASS_PER_BIN);
-  return Math.min(NEUTRON_STAR_MASSES.length - 1, Math.max(0, bin));
+  return Math.min(NEUTRON_STAR_MASSES.length - 1, bin);
 }
 
 /** その段の中性子星を残す親の星の質量（段の真ん中。2.0 M☉ は 40 M☉） [M☉] */
