@@ -67,6 +67,11 @@ export function RProcessPanel({ meta, dispatch }: Props) {
           が低いので重い元素まで届く。赤いキロノバ）と、合体後に残る星の円盤風（合計が軽い組ほど多く、Ye
           が高く第2ピークまで。青いキロノバ）。重い組ほど重力波で早く合体する。金は中性子星合体で作る。
         </p>
+        <p className="mt-2">
+          ゲーム用の簡略化：実際の潮汐の放出物は対称な組でも Ye 0.1〜0.3 ほどで、Ye
+          によって作る元素はなだらかに移る。すぐブラックホールになっても、その周りの円盤から風が吹く。ここでは2つの成分と
+          Ye の帯をはっきり分けた。
+        </p>
       </details>
       <ul aria-label="中性子星の在庫" className="grid grid-cols-3 gap-1.5 font-mono text-sm">
         {pool.map((n, bin) => (
