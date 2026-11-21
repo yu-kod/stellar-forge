@@ -54,6 +54,14 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(details).toHaveTextContent("ゲーム用の簡略化");
   });
 
+  it("星屑タブに、重元素の星屑の手持ちも出す", async () => {
+    const game = layer4();
+    game.meta.sProcess.heavy = 1234;
+    const { user } = renderGame(game);
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    expect(screen.getByRole("list", { name: "手持ちの星屑" })).toHaveTextContent("重元素1,234");
+  });
+
   it("第4層では、星屑タブの第1・2層の強化を畳む（まとめて交換で買える）", async () => {
     const { user } = renderGame(layer4());
     await user.click(screen.getByRole("tab", { name: "星屑" }));
