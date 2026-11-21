@@ -40,6 +40,17 @@ export function ShopView({ meta, dispatch }: Props) {
       >
         まとめて交換
       </Button>
+      {meta.shop.auto > 0 && (
+        <label className="text-muted-foreground flex h-11 items-center gap-2 px-1 text-sm">
+          <input
+            type="checkbox"
+            className="accent-ignite size-4"
+            checked={meta.autoShop}
+            onChange={(e) => dispatch({ type: "setAutoShop", on: e.target.checked })}
+          />
+          交換できるものを自動で交換する
+        </label>
+      )}
       <Fold folded={meta.rProcess.unlocked} summary="第1・2層の強化（まとめて交換で買える）">
         <p className="text-muted-foreground text-sm">
           欲しい星屑に合わせて、どの燃焼を強化するかを変えよう。例：炭素が欲しいなら炭素燃焼を強化しない。ケイ素が欲しいなら酸素燃焼まで強化する。

@@ -54,6 +54,17 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(details).toHaveTextContent("ゲーム用の簡略化");
   });
 
+  it("燃焼の自動制御を持っていれば、星屑タブで自動交換を切り替えられる", async () => {
+    const game = layer4();
+    game.meta.shop.auto = 1;
+    const { user } = renderGame(game);
+    await user.click(screen.getByRole("tab", { name: "星屑" }));
+    const toggle = screen.getByRole("checkbox", { name: "交換できるものを自動で交換する" });
+    expect(toggle).not.toBeChecked();
+    await user.click(toggle);
+    expect(toggle).toBeChecked();
+  });
+
   it("星屑タブに、重元素の星屑の手持ちも出す", async () => {
     const game = layer4();
     game.meta.sProcess.heavy = 1234;

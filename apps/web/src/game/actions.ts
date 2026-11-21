@@ -84,6 +84,12 @@ export function setAutoRebirth(state: GameState, on: boolean): GameState {
   return { ...state, meta: { ...state.meta, autoRebirth: on } };
 }
 
+/** 星屑の自動交換を切り替える（燃焼の自動制御を持っていれば） */
+export function setAutoShop(state: GameState, on: boolean): GameState {
+  if (!state.meta.shop.auto) return state;
+  return { ...state, meta: { ...state.meta, autoShop: on } };
+}
+
 /** 自動で次の星を生めるか（設定が ON で、超新星の回数が足りている） */
 export function canAutoRebirth(meta: Meta): boolean {
   return meta.autoRebirth && meta.supernovae >= AUTO_REBIRTH_AFTER;

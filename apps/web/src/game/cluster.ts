@@ -1,4 +1,4 @@
-import { autoIa, rebirth, setNextMass, setTarget } from "./actions";
+import { autoIa, buyAllShopItems, rebirth, setNextMass, setTarget } from "./actions";
 export { createSlot } from "./actions";
 import { advance, advanceRuns, type RunsResult } from "./advance";
 import { MAX_STEP_SECONDS } from "./balance";
@@ -78,8 +78,12 @@ export function advanceAll(
   const mergers = advanceBinaries(meta, seconds);
   clusterEvents.push(...mergers.events);
   meta = mergers.meta;
+  const next = autoBinary(
+    unlockLayer4(autoIa({ meta: winds(meta, seconds), star: main.state.star }))
+  );
   return {
-    state: autoBinary(unlockLayer4(autoIa({ meta: winds(meta, seconds), star: main.state.star }))),
+    // 自動交換が ON なら、まとめて交換と同じく買えるものを買う
+    state: next.meta.autoShop ? buyAllShopItems(next) : next,
     events: main.events,
     clusterEvents,
   };
