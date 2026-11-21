@@ -19,7 +19,7 @@ import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { canAutoRebirth } from "@/game/actions";
 import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { AWAY_CHUNK_SECONDS, AWAY_LIMIT_SECONDS, advanceAway, isStopped } from "@/game/away";
-import { formBinary, type MergerEvent } from "@/game/merger";
+import { formBinary, observe, type MergerEvent } from "@/game/merger";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import {
   projectionDone,
@@ -97,6 +97,7 @@ export type Action =
   | { type: "buyAllShopItems" }
   | { type: "triggerIa"; count: number }
   | { type: "formBinary"; a: number; b: number }
+  | { type: "observe" }
   | { type: "setSeedTarget"; target: number }
   | { type: "rebirth" }
   | { type: "dismiss"; id: number }
@@ -340,6 +341,10 @@ function reduce(model: Model, action: Action): Model {
     }
     case "formBinary":
       return { ...model, game: formBinary(model.game, action.a, action.b) };
+    case "observe": {
+      const { state, events } = observe(model.game);
+      return notify({ ...model, game: state }, events);
+    }
     case "setSeedTarget":
       return { ...model, game: setSeedTarget(model.game, action.target) };
     case "buyAllShopItems":

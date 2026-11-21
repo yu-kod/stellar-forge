@@ -355,9 +355,7 @@ function merge(meta: Meta, binary: Binary): { meta: Meta; events: MergerEvent[] 
   const amounts = meta.rProcess.amounts.map(
     (amount, i) => amount + deposit(preview, i + R_PATH_START)
   );
-  const found = [...R_ELEMENTS, ...ACTINIDES].filter(
-    (z) => !has(meta.rProcess, z) && amounts[z - R_PATH_START]! >= rThreshold(z)
-  );
+  const found = reached(meta.rProcess, amounts);
   const rProcess: RProcess = {
     ...meta.rProcess,
     amounts,
@@ -371,6 +369,39 @@ function merge(meta: Meta, binary: Binary): { meta: Meta; events: MergerEvent[] 
       { type: "merger", ye, ejecta, reach, blackHole },
       ...found.map((z) => ({ type: "rDiscover" as const, z })),
     ],
+  };
+}
+
+/** 作った量が発見の量に届いた、まだの元素 */
+function reached(rProcess: RProcess, amounts: readonly number[]): number[] {
+  return [...R_ELEMENTS, ...ACTINIDES].filter(
+    (z) => !has(rProcess, z) && amounts[z - R_PATH_START]! >= rThreshold(z)
+  );
+}
+
+/** 追観測で、放出物 1 が発見に回る量（届いた放出物に直した値） */
+export const OBSERVE_RATE = 6;
+
+/**
+ * 追観測：貯めた放出物をすべて強化に使わず、いま作りたい元素の発見に回す（放出物 × 倍率 × 重み を足す）。
+ * 強化に使えば合体が速く多くなる。どこで切り替えるかが第4層の判断
+ */
+export function observe(state: GameState): { state: GameState; events: MergerEvent[] } {
+  const { rProcess } = state.meta;
+  if (!rProcess.unlocked || rProcess.ejecta <= 0) return { state, events: [] };
+  const z = rGoal(state.meta);
+  const amounts = [...rProcess.amounts];
+  amounts[z - R_PATH_START]! += rProcess.ejecta * OBSERVE_RATE * rWeight(z);
+  const found = reached(rProcess, amounts);
+  const next: RProcess = {
+    ...rProcess,
+    amounts,
+    ejecta: 0,
+    discovered: [...rProcess.discovered, ...found],
+  };
+  return {
+    state: { ...state, meta: { ...state.meta, rProcess: next } },
+    events: found.map((found) => ({ type: "rDiscover" as const, z: found })),
   };
 }
 
