@@ -45,6 +45,20 @@ describe("記録への挑戦のメダル", () => {
     expect(medalOf(best.marks.complete!)).toBe("金");
   });
 
+  it("手1つの流れは銀の基準より2分以上内側・金の基準より2分以上外側、最善は金の基準より2分以上内側（色を誤差で決めない）", () => {
+    for (const report of [shiftOnly, carbonOnly]) {
+      expect(medalLimit("銀", "milkyWay", false) - report.marks.complete!).toBeGreaterThanOrEqual(
+        2 * MINUTE
+      );
+      expect(report.marks.complete! - medalLimit("金", "milkyWay", false)).toBeGreaterThanOrEqual(
+        2 * MINUTE
+      );
+    }
+    expect(medalLimit("金", "milkyWay", false) - best.marks.complete!).toBeGreaterThanOrEqual(
+      2 * MINUTE
+    );
+  });
+
   it("第4層に早く着いた分は、ほとんど（85% 以上）完結まで残る（第4層の強化は第4層で稼ぐ）", () => {
     const earlier = standard.marks.layer4! - best.marks.layer4!;
     const kept = standard.marks.complete! - best.marks.complete!;
@@ -89,6 +103,17 @@ describe("2周目のメダル", () => {
     expect(medal("shiftOnly")).toBe("銀");
     expect(medal("carbonOnly")).toBe("銀");
     expect(medal("best")).toBe("金");
+  });
+
+  it("2周目も、手1つの流れは銀の基準より2分以上内側・金の基準より2分以上外側、最善は金の基準より2分以上内側", () => {
+    for (const name of ["shiftOnly", "carbonOnly"]) {
+      const at = flows[name]!.marks.complete!;
+      expect(medalLimit("銀", "milkyWay", true) - at).toBeGreaterThanOrEqual(2 * MINUTE);
+      expect(at - medalLimit("金", "milkyWay", true)).toBeGreaterThanOrEqual(2 * MINUTE);
+    }
+    expect(medalLimit("金", "milkyWay", true) - flows.best!.marks.complete!).toBeGreaterThanOrEqual(
+      2 * MINUTE
+    );
   });
 
   it("何もしない流れは、1周目も2周目も銀の基準から5分以上外にある（色を誤差で決めない）", () => {

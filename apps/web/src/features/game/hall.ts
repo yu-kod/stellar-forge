@@ -36,7 +36,7 @@ export function bestOf(hall: Hall, galaxy: Galaxy): Splits | null {
 export type MedalName = "金" | "銀" | "銅";
 /** 完結までの時間 [秒] のメダル（画面の初期設定のままでは銅、手を1つ打つと銀、2つで金。medals.test.ts） */
 export const MEDALS: readonly { name: MedalName; within: number }[] = [
-  { name: "金", within: 135 * 60 },
+  { name: "金", within: 133 * 60 },
   { name: "銀", within: 155 * 60 },
   { name: "銅", within: Infinity },
 ];

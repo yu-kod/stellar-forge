@@ -16,10 +16,10 @@ import {
 const MINUTE = 60;
 
 describe("記録への挑戦（やり直しても残る記録）", () => {
-  it("完結までの時間でメダル：金 2時間15分以内、銀 2時間38分以内、それ以外は銅", () => {
+  it("完結までの時間でメダル：金 2時間13分以内、銀 2時間35分以内、それ以外は銅", () => {
     expect(MEDALS.map((m) => m.name)).toEqual(["金", "銀", "銅"]);
-    expect(medalOf(135 * MINUTE)).toBe("金");
-    expect(medalOf(135 * MINUTE + 1)).toBe("銀");
+    expect(medalOf(133 * MINUTE)).toBe("金");
+    expect(medalOf(133 * MINUTE + 1)).toBe("銀");
     expect(medalOf(155 * MINUTE)).toBe("銀");
     expect(medalOf(155 * MINUTE + 1)).toBe("銅");
   });
@@ -112,13 +112,13 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
 
   it("2周目から（前の周の星屑を持って始めた周）は、メダルの基準に HERITAGE_PAR を掛けて厳しくする", () => {
     expect(HERITAGE_PAR).toBeLessThan(1);
-    expect(medalOf(135 * MINUTE * HERITAGE_PAR, "milkyWay", true)).toBe("金");
-    expect(medalOf(135 * MINUTE * HERITAGE_PAR + 1, "milkyWay", true)).toBe("銀");
-    expect(medalOf(135 * MINUTE * HERITAGE_PAR + 1, "milkyWay")).toBe("金");
+    expect(medalOf(133 * MINUTE * HERITAGE_PAR, "milkyWay", true)).toBe("金");
+    expect(medalOf(133 * MINUTE * HERITAGE_PAR + 1, "milkyWay", true)).toBe("銀");
+    expect(medalOf(133 * MINUTE * HERITAGE_PAR + 1, "milkyWay")).toBe("金");
     const rich = GALAXIES.metalRich.par * HERITAGE_PAR;
     expect(medalOf(155 * MINUTE * rich, "metalRich", true)).toBe("銀");
     expect(medalOf(155 * MINUTE * rich + 1, "metalRich", true)).toBe("銅");
-    expect(medalLimit("金", "milkyWay", true)).toBe(135 * MINUTE * HERITAGE_PAR);
+    expect(medalLimit("金", "milkyWay", true)).toBe(133 * MINUTE * HERITAGE_PAR);
     expect(medalLimit("銀", "metalRich", false)).toBe(155 * MINUTE * GALAXIES.metalRich.par);
   });
 
@@ -142,9 +142,9 @@ describe("記録への挑戦（やり直しても残る記録）", () => {
   });
 
   it("メダルの基準には銀河の目安の倍率を掛ける", () => {
-    expect(medalOf(135 * MINUTE * GALAXIES.metalRich.par, "metalRich")).toBe("金");
-    expect(medalOf(135 * MINUTE * GALAXIES.metalRich.par + 1, "metalRich")).toBe("銀");
-    expect(medalOf(135 * MINUTE + 1)).toBe("銀");
+    expect(medalOf(133 * MINUTE * GALAXIES.metalRich.par, "metalRich")).toBe("金");
+    expect(medalOf(133 * MINUTE * GALAXIES.metalRich.par + 1, "metalRich")).toBe("銀");
+    expect(medalOf(133 * MINUTE + 1)).toBe("銀");
   });
 
   it("遊んでいる周の、最後に解放した層の時刻と、最速の周の同じ層との差", () => {
