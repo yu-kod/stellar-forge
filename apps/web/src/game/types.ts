@@ -112,6 +112,8 @@ export type Meta = {
   lightFound: number[];
   /** この周の銀河（周の初めに選ぶ） */
   galaxy: Galaxy;
+  /** 前の周の星屑を持って始めた周か（2周目から。メダルの基準を厳しくする） */
+  heritage: boolean;
   /** 見つけた元素の数が i + 1 になった時刻（遊んだ時間 [秒]）。最速の周と元素ごとに比べる */
   foundTimes: number[];
 };

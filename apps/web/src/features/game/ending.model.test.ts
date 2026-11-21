@@ -73,6 +73,15 @@ describe("gameReducer：エンディング", () => {
     expect(gameReducer(model, { type: "reset" }).hall).toEqual(model.hall);
   });
 
+  it("前の周の星屑を持って始めた周かを記録に残す（メダルの基準が変わる）", () => {
+    const first = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
+    expect(first.hall.last?.heritage).toBe(false);
+    const game = almostComplete();
+    game.meta.heritage = true;
+    const later = gameReducer(createModel(game), { type: "tick", seconds: 1 });
+    expect(later.hall.last?.heritage).toBe(true);
+  });
+
   it("閉じたら遊び続けられ、もう自分では開かない。記録からは開ける", () => {
     let model = gameReducer(createModel(almostComplete()), { type: "tick", seconds: 1 });
     model = gameReducer(model, { type: "closeEnding" });

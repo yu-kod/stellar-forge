@@ -60,6 +60,12 @@ describe("周の初めに選ぶ銀河", () => {
     expect(createGame("metalRich", 2).meta.sProcess.heavy).toBe(HERITAGE_HEAVY);
   });
 
+  it("前の周の星屑を持って始めた周かを覚えておく（メダルの基準を変える）", () => {
+    expect(createGame().meta.heritage).toBe(false);
+    expect(createGame("milkyWay", 1).meta.heritage).toBe(true);
+    expect(createGame("metalRich", 2).meta.heritage).toBe(true);
+  });
+
   it("ケイ素と硫黄は残さない（はじめに使い切ると、爆発的ケイ素燃焼の元素を見つける機会がなくなる）", () => {
     expect(HERITAGE_DUST.Si).toBe(0);
     expect(HERITAGE_DUST.S).toBe(0);

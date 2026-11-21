@@ -491,7 +491,7 @@ export const GALAXIES: Record<
     poison: 4,
     whiteDwarfs: 20,
     binarySlots: 1,
-    par: 1.02,
+    par: 1.12,
   },
 };
 
@@ -512,3 +512,6 @@ export const HERITAGE_DUST: Readonly<Record<DustId, number>> = {
 
 /** 2周目から、前の周の s元素が星間物質に残り、はじめから持っている重元素の星屑 */
 export const HERITAGE_HEAVY = 100;
+
+/** 前の周の星屑を持って始めた周のメダルの基準の倍率（持っている分だけ速いので、同じ判断を求めるよう厳しくする。medals.test.ts） */
+export const HERITAGE_PAR = 0.915;
