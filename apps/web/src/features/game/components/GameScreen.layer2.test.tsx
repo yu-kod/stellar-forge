@@ -71,6 +71,22 @@ describe("GameScreen：第2層 星の質量を選ぶ", () => {
 
     expect(within(picker).getByRole("slider")).toHaveValue("3");
     expect(picker).toHaveTextContent("3 M☉：白色矮星になる（超新星にならない）");
+    expect(picker).toHaveTextContent("炭素星：白色矮星になると炭素の星屑 ×2");
+    expect(picker).not.toHaveTextContent("中性子");
+  });
+
+  it("第3層からは、質量の欄に炭素星の s過程の中性子 ×3 を書く（4〜8 M☉ は ×1）", async () => {
+    const game = layer2();
+    game.meta.sProcess = { ...game.meta.sProcess, unlocked: true };
+    const { user } = renderGame(game);
+    const picker = screen.getByRole("group", { name: "次に生む星の質量" });
+    await user.click(within(picker).getByRole("button", { name: "3 M☉" }));
+    expect(picker).toHaveTextContent("s過程の中性子 ×3（¹³C ポケット）");
+    fireEvent.change(within(picker).getByRole("slider"), { target: { value: "6" } });
+    expect(picker).toHaveTextContent(
+      "6 M☉：白色矮星になる（超新星にならない）。外層の底で水素が燃え（高温底部燃焼）"
+    );
+    expect(picker).toHaveTextContent("s過程の中性子は ×1");
   });
 
   it("8 M☉ からは超新星になる", async () => {

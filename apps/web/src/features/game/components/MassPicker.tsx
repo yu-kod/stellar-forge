@@ -4,6 +4,7 @@ import { LOW_MASS_LIMIT } from "@/game/balance";
 import { HEAVIEST_PROGENITOR } from "@/game/rprocess";
 import { maxMass } from "@/game/star";
 import type { Meta } from "@/game/types";
+import { lowMassNote } from "../lowMass";
 import type { Action } from "../model";
 
 type Props = { meta: Meta; dispatch: (action: Action) => void };
@@ -49,6 +50,7 @@ export function MassPicker({ meta, dispatch }: Props) {
       <p className="text-sm">
         <span className="font-mono">{mass} M☉</span>：
         {mass < LOW_MASS_LIMIT ? "白色矮星になる（超新星にならない）" : "超新星になる"}
+        {mass < LOW_MASS_LIMIT && `。${lowMassNote(mass, meta.sProcess.unlocked)}`}
         {mass > HEAVIEST_PROGENITOR &&
           `（${HEAVIEST_PROGENITOR} M☉ を超えるとブラックホールが残る）`}
         {mass >= PAIR_INSTABILITY &&
