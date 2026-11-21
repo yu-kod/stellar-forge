@@ -491,7 +491,7 @@ export const GALAXIES: Record<
     poison: 4,
     whiteDwarfs: 20,
     binarySlots: 1,
-    par: 1.28,
+    par: 1.2,
   },
 };
 
