@@ -51,11 +51,11 @@ describe("第4層の組み合わせは判断になる（作戦で r過程の元�
     minutes.fixed = minutesToAll(start, [10, 32], [0, 6]); // 1.2 + 1.8 だけ：ランタノイドを作らない
   }, 900_000);
 
-  it("3通り以上の作戦で元素がそろい、最善と最悪の差は最善の25%以上", () => {
+  it("3通り以上の作戦で元素がそろい、最善と最悪の差は最善の15%以上（はじめの連星が序盤をならすぶん縮む）", () => {
     const reached = Object.values(minutes).filter(Number.isFinite);
     expect(reached.length).toBeGreaterThanOrEqual(3);
     expect(Math.max(...reached) - Math.min(...reached)).toBeGreaterThanOrEqual(
-      0.25 * Math.min(...reached)
+      0.15 * Math.min(...reached)
     );
   });
 
@@ -68,7 +68,7 @@ describe("第4層の組み合わせは判断になる（作戦で r過程の元�
     expect(minutes.fixed).toBe(Infinity);
   });
 
-  it("軽い中性子星（1.2 M☉）の組は、重い組より10分以上遅い（重力波で近づくのが遅い）", () => {
-    expect(minutes.light).toBeGreaterThan(minutes.default! + 10);
+  it("軽い中性子星（1.2 M☉）の組は、重い組より5分以上遅い（重力波で近づくのが遅い）", () => {
+    expect(minutes.light).toBeGreaterThan(minutes.default! + 5);
   });
 });

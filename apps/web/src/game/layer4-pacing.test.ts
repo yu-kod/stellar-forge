@@ -22,6 +22,11 @@ describe("第4層とエンディングのペーシング（画面を開いたま
     expect(report.manualPairs).toBeLessThanOrEqual(10);
   });
 
+  it("解放から10分以内に、r過程の発見が2つ以上ある（始まりに空白を作らない）", () => {
+    const early = Object.values(report.rAt).filter((t) => t - report.marks.layer4! <= 10 * MINUTE);
+    expect(early.length).toBeGreaterThanOrEqual(2);
+  });
+
   it("第4層の最初の発見は、解放から5分以内", () => {
     expect(Math.min(...Object.values(report.rAt)) - report.marks.layer4!).toBeLessThanOrEqual(
       5 * MINUTE
