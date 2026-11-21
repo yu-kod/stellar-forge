@@ -19,9 +19,11 @@ describe("記録への挑戦のメダル", () => {
   let standard: IdleReport;
   let shiftOnly: IdleReport;
   let best: IdleReport;
+  let carbonOnly: IdleReport;
   beforeAll(() => {
     standard = playIdle(LIMIT, { keepCluster: true, stopAt: "complete" });
     shiftOnly = playIdle(LIMIT, { keepCluster: true, seedTarget: shifting, stopAt: "complete" });
+    carbonOnly = playIdle(LIMIT, { keepCluster: true, layer3MainMass: 2, stopAt: "complete" });
     // 第3層で主星を炭素星にし、種を局面で変える
     best = playIdle(LIMIT, {
       keepCluster: true,
@@ -31,9 +33,10 @@ describe("記録への挑戦のメダル", () => {
     });
   }, 900_000);
 
-  it("初期設定で案内に従うだけでは銅。種を局面で変えるだけでは銀（金には判断が2つ要る）", () => {
+  it("初期設定で案内に従うだけでは銅。種を局面で変えるだけ・炭素星だけでは銀（金には判断が2つ要る）", () => {
     expect(medalOf(standard.marks.complete!)).toBe("銅");
     expect(medalOf(shiftOnly.marks.complete!)).toBe("銀");
+    expect(medalOf(carbonOnly.marks.complete!)).toBe("銀");
   });
 
   it("炭素星と種の切り替えを組み合わせると金", () => {

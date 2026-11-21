@@ -6,6 +6,7 @@ import { maxMass } from "@/game/star";
 import { DUST_IDS, TARGET_IDS, type ClusterSlot, type Meta, type Target } from "@/game/types";
 import { TARGET_NAMES } from "../elements";
 import { formatMass, formatNumber } from "../format";
+import { lowMassKind } from "../lowMass";
 import type { Action } from "../model";
 import { ElementChip } from "./ElementChip";
 
@@ -72,7 +73,9 @@ function SlotCard({ meta, slot, index, dispatch }: Props & { slot: ClusterSlot; 
         </select>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm">次は {next} M☉</span>
+        <span className="text-sm">
+          次は {next} M☉{lowMassKind(next) && `（${lowMassKind(next)}）`}
+        </span>
         <Button variant="outline" className="h-11" onClick={() => setMass(3)}>
           3 M☉
         </Button>

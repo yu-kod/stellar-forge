@@ -35,6 +35,7 @@ describe("GameScreen：星団", () => {
     expect(slot).toHaveTextContent("7.00 M☉");
     expect(slot).toHaveTextContent("白色矮星になる");
     expect(slot).toHaveTextContent("0秒");
+    expect(slot).toHaveTextContent("次は 7 M☉（窒素の多い星）");
   });
 
   it("主星と一緒に時間が進む", () => {
