@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   S_DISCOVERABLE,
@@ -6,18 +5,22 @@ import {
   isMagic,
   heavyRate,
   neutronMultiplier,
-  nextSDiscovery,
   seedsPerIa,
 } from "@/game/sprocess";
 import type { Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { seedPreview } from "@/game/sprocess";
-import { etaSeconds, trackProgress, type ProgressTrack } from "../eta";
+import { etaSeconds, type ProgressTrack } from "../eta";
 import { formatDuration, formatNumber } from "../format";
 import type { Action } from "../model";
 import { elementOf } from "../periodicTable";
 
-type Props = { meta: Meta; dispatch: (action: Action) => void };
+type Props = {
+  meta: Meta;
+  /** s過程で次に見つける元素の進み具合の追跡（モデルが持つので、タブを移っても続く） */
+  track: ProgressTrack | null;
+  dispatch: (action: Action) => void;
+};
 
 /** 組成グラフで名前を出す元素（ピークと終点） */
 const LABELED = new Map([
@@ -28,7 +31,7 @@ const LABELED = new Map([
 ]);
 
 /** 第3層：Ia型超新星で鉄の種を入れ、軽い星の中性子で一歩ずつ重くする */
-export function SProcessPanel({ meta, dispatch }: Props) {
+export function SProcessPanel({ meta, track, dispatch }: Props) {
   const { amounts, discovered } = meta.sProcess;
   const total = amounts.reduce((sum, a) => sum + a, 0);
   return (
@@ -71,7 +74,7 @@ export function SProcessPanel({ meta, dispatch }: Props) {
           10回起こす
         </Button>
       </div>
-      <SeedTargetPicker meta={meta} dispatch={dispatch} />
+      <SeedTargetPicker meta={meta} track={track} dispatch={dispatch} />
       <p className="text-muted-foreground text-sm">
         白色矮星1つで鉄の種 +{seedsPerIa(meta)}。s過程で発見した元素{" "}
         <b className="text-foreground font-mono">{discovered.length}</b> / {S_DISCOVERABLE}
@@ -140,17 +143,11 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
 
 const SEED_TARGETS = [1, 3, 10, 30];
 
-/** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど重元素の星屑を稼ぐ */
-/** いまの種で、次の発見までのおよその時間（進み具合の伸びから見積もる） */
-function NextDiscoveryEta({ meta }: { meta: Meta }) {
-  const [track, setTrack] = useState<ProgressTrack | null>(null);
-  const next = nextSDiscovery(meta.sProcess);
-  const updated = next && trackProgress(track, { ...next, t: meta.elapsed });
-  // 前の描画からの伸びを覚えておく（同じ時刻なら同じものが返り、描き直しは止まる）
-  if (updated !== track) setTrack(updated);
-  const eta = etaSeconds(updated);
-  if (!next || eta === null) return null;
-  const element = elementOf(next.z);
+/** いまの種で、次の発見までのおよその時間（モデルが追う進み具合の伸びから見積もる） */
+function NextDiscoveryEta({ track }: { track: ProgressTrack | null }) {
+  const eta = etaSeconds(track);
+  if (track === null || eta === null) return null;
+  const element = elementOf(track.z);
   return (
     <p className="text-sm">
       いまの種で、次の発見 {element.name}（{element.symbol}）まで約{formatDuration(eta)}
@@ -158,7 +155,8 @@ function NextDiscoveryEta({ meta }: { meta: Meta }) {
   );
 }
 
-function SeedTargetPicker({ meta, dispatch }: Props) {
+/** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど重元素の星屑を稼ぐ */
+function SeedTargetPicker({ meta, track, dispatch }: Props) {
   return (
     <fieldset className="grid gap-2">
       <legend id="seed-target-label" className="mb-1 text-sm font-medium">
@@ -197,7 +195,7 @@ function SeedTargetPicker({ meta, dispatch }: Props) {
           );
         })}
       </ul>
-      <NextDiscoveryEta meta={meta} />
+      <NextDiscoveryEta track={track} />
       <p className="text-muted-foreground text-sm">
         少ないほど1つの種が多くの中性子を捕まえて遠く（鉛・ビスマス）まで進む。多いほど恒星風で重元素の星屑を多く稼ぎ、白色矮星を多く使う。
       </p>

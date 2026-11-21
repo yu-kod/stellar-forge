@@ -172,3 +172,22 @@ describe("gameReducer：自動で次の星を生む設定で、終わった星�
     expect(model.game.star.generation).toBeGreaterThan(game.star.generation);
   });
 });
+
+describe("gameReducer：s過程の次の発見の追跡", () => {
+  it("進めるたびに、次に見つける元素の進み具合を追う（画面のタブによらず続く）", () => {
+    const game = createGame();
+    game.meta.sProcess = { ...game.meta.sProcess, unlocked: true, discovered: [27] };
+    let model = createModel(game);
+    expect(model.sTrack).toBeNull();
+    model = gameReducer(model, { type: "tick", seconds: 1 });
+    expect(model.sTrack).toMatchObject({ z: 28, since: model.game.meta.elapsed });
+    model = gameReducer(model, { type: "tick", seconds: 1 });
+    expect(model.sTrack?.t).toBe(model.game.meta.elapsed);
+    expect(model.sTrack?.since).toBe(model.game.meta.elapsed - 1);
+  });
+
+  it("第3層の前は追わない", () => {
+    const model = gameReducer(createModel(createGame()), { type: "tick", seconds: 1 });
+    expect(model.sTrack).toBeNull();
+  });
+});

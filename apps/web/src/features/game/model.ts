@@ -1,4 +1,5 @@
 import { EMPTY_HALL, recordCompletion, type Hall } from "./hall";
+import { trackProgress, type ProgressTrack } from "./eta";
 import {
   buyAllShopItems,
   buyShopItem,
@@ -20,6 +21,7 @@ import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { AWAY_CHUNK_SECONDS, AWAY_LIMIT_SECONDS, advanceAway, isStopped } from "@/game/away";
 import { formBinary, type MergerEvent } from "@/game/merger";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
+import { nextSDiscovery } from "@/game/sprocess";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
 import type { Galaxy, GameState, ShopId, StageId, Target } from "@/game/types";
@@ -62,6 +64,8 @@ export type Model = {
   speed: Speed;
   notices: Notice[];
   nextNoticeId: number;
+  /** s過程で次に見つける元素の進み具合の追跡（次の発見までの見積もり。保存しない） */
+  sTrack: ProgressTrack | null;
 };
 
 export type Action =
@@ -90,13 +94,28 @@ export type Action =
 
 const NOTICE_LIMIT = 4;
 
+/** s過程で次に見つける元素の進み具合を追う（第3層の間だけ） */
+function trackS(track: ProgressTrack | null, meta: GameState["meta"]): ProgressTrack | null {
+  const next = meta.sProcess.unlocked ? nextSDiscovery(meta.sProcess) : null;
+  return next && trackProgress(track, { ...next, t: meta.elapsed });
+}
+
 export function createModel(
   game: GameState,
   events: NoticeEvent[] = [],
   hall: Hall = EMPTY_HALL
 ): Model {
   return notify(
-    { game, hall, away: null, ending: false, speed: 1, notices: [], nextNoticeId: 1 },
+    {
+      game,
+      hall,
+      away: null,
+      ending: false,
+      speed: 1,
+      notices: [],
+      nextNoticeId: 1,
+      sTrack: null,
+    },
     events
   );
 }
@@ -242,7 +261,7 @@ function reduce(model: Model, action: Action): Model {
       // 自動で次の星を生むようになったら、毎周の点火は知らせない
       const quiet = canAutoRebirth(state.meta);
       const notices = events.filter(isNotice).filter((e) => !quiet || e.type !== "ignite");
-      return notify({ ...model, game: state }, [
+      return notify({ ...model, game: state, sTrack: trackS(model.sTrack, state.meta) }, [
         ...notices,
         ...discoveries,
         ...lightNotice(model.game, state),

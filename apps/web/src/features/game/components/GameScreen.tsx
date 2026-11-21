@@ -266,7 +266,7 @@ export function GameScreen({
           <ClusterPanel meta={game.meta} dispatch={dispatch} />
         </TabsContent>
         <TabsContent value="sprocess">
-          <SProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
+          <SProcessPanel meta={game.meta} track={model.sTrack} dispatch={dispatchAndSave} />
         </TabsContent>
         <TabsContent value="rprocess">
           <RProcessPanel meta={game.meta} dispatch={dispatchAndSave} />
