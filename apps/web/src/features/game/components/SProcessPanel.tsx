@@ -7,6 +7,7 @@ import {
   neutronMultiplier,
   seedsPerIa,
 } from "@/game/sprocess";
+import { PROJECTION_HORIZON, SEED_TARGETS, type SeedProjection } from "@/game/projection";
 import type { Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
 import { seedPreview } from "@/game/sprocess";
@@ -19,6 +20,8 @@ type Props = {
   meta: Meta;
   /** s過程で次に見つける元素の進み具合の追跡（モデルが持つので、タブを移っても続く） */
   track: ProgressTrack | null;
+  /** 種ごとの循環までの見込み（モデルが少しずつ計算する） */
+  projection: readonly SeedProjection[] | null;
   dispatch: (action: Action) => void;
 };
 
@@ -31,7 +34,7 @@ const LABELED = new Map([
 ]);
 
 /** 第3層：Ia型超新星で鉄の種を入れ、軽い星の中性子で一歩ずつ重くする */
-export function SProcessPanel({ meta, track, dispatch }: Props) {
+export function SProcessPanel({ meta, track, projection, dispatch }: Props) {
   const { amounts, discovered } = meta.sProcess;
   const total = amounts.reduce((sum, a) => sum + a, 0);
   return (
@@ -74,7 +77,7 @@ export function SProcessPanel({ meta, track, dispatch }: Props) {
           10回起こす
         </Button>
       </div>
-      <SeedTargetPicker meta={meta} track={track} dispatch={dispatch} />
+      <SeedTargetPicker meta={meta} track={track} projection={projection} dispatch={dispatch} />
       <p className="text-muted-foreground text-sm">
         白色矮星1つで鉄の種 +{seedsPerIa(meta)}。s過程で発見した元素{" "}
         <b className="text-foreground font-mono">{discovered.length}</b> / {S_DISCOVERABLE}
@@ -141,8 +144,6 @@ function AbundanceChart({ amounts, discovered }: { amounts: number[]; discovered
   );
 }
 
-const SEED_TARGETS = [1, 3, 10, 30];
-
 /** いまの種で、次の発見までのおよその時間（モデルが追う進み具合の伸びから見積もる） */
 function NextDiscoveryEta({ track }: { track: ProgressTrack | null }) {
   const eta = etaSeconds(track);
@@ -155,8 +156,18 @@ function NextDiscoveryEta({ track }: { track: ProgressTrack | null }) {
   );
 }
 
+/** その種での循環までの見込みの文言（一番速いものに印） */
+function loopText(projection: readonly SeedProjection[], seeds: number): string {
+  const job = projection.find((j) => j.seeds === seeds)!;
+  if (job.loopAt !== null) {
+    const fastest = Math.min(...projection.map((j) => j.loopAt ?? Infinity));
+    return `約${formatDuration(job.loopAt)}${job.loopAt === fastest ? "（一番速い）" : ""}`;
+  }
+  return job.elapsed >= PROJECTION_HORIZON ? " 90分より先" : " 計算中";
+}
+
 /** 自動の Ia型超新星が保つ、道の上の原子核の量。少ないほど遠くまで、多いほど重元素の星屑を稼ぐ */
-function SeedTargetPicker({ meta, track, dispatch }: Props) {
+function SeedTargetPicker({ meta, track, projection, dispatch }: Props) {
   return (
     <fieldset className="grid gap-2">
       <legend id="seed-target-label" className="mb-1 text-sm font-medium">
@@ -191,6 +202,7 @@ function SeedTargetPicker({ meta, track, dispatch }: Props) {
             <li key={target}>
               {target}：中性子の{Math.round(preview.share * 100)}%が道に・1つの速さ ×
               {preview.speed.toFixed(2)}・重元素 毎秒 +{preview.heavyPerSecond.toFixed(2)}
+              {projection && `・循環まで${loopText(projection, target)}`}
             </li>
           );
         })}

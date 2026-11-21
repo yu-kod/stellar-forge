@@ -21,6 +21,12 @@ import { AUTO_REBIRTH_AFTER, LAYER2_AFTER } from "@/game/balance";
 import { AWAY_CHUNK_SECONDS, AWAY_LIMIT_SECONDS, advanceAway, isStopped } from "@/game/away";
 import { formBinary, type MergerEvent } from "@/game/merger";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
+import {
+  projectionDone,
+  startProjection,
+  stepProjection,
+  type SeedProjection,
+} from "@/game/projection";
 import { nextSDiscovery } from "@/game/sprocess";
 import { createGame } from "@/game/star";
 import type { GameEvent } from "@/game/step";
@@ -66,7 +72,14 @@ export type Model = {
   nextNoticeId: number;
   /** s過程で次に見つける元素の進み具合の追跡（次の発見までの見積もり。保存しない） */
   sTrack: ProgressTrack | null;
+  /** 種ごとの循環までの見込み（第3層の間だけ。少しずつ計算する。保存しない） */
+  seedProjection: { jobs: SeedProjection[]; startedAt: number } | null;
 };
+
+/** 1回の更新で見込みを進める時間 [秒]（画面を重くしない） */
+export const PROJECTION_SECONDS_PER_TICK = 3;
+/** 見込みが出てから、今の状態で出し直すまで [秒] */
+export const PROJECTION_REFRESH = 60;
 
 export type Action =
   | { type: "tick"; seconds: number }
@@ -100,6 +113,18 @@ function trackS(track: ProgressTrack | null, meta: GameState["meta"]): ProgressT
   return next && trackProgress(track, { ...next, t: meta.elapsed });
 }
 
+/** 第3層の間、種ごとの見込みを少しずつ進め、出たら1分ごとに今の状態から出し直す */
+function project(current: Model["seedProjection"], state: GameState): Model["seedProjection"] {
+  const { sProcess, elapsed } = state.meta;
+  if (!sProcess.unlocked || sProcess.looped) return null;
+  const stale =
+    current === null ||
+    (projectionDone(current.jobs) && elapsed - current.startedAt >= PROJECTION_REFRESH);
+  if (stale) return { jobs: startProjection(state), startedAt: elapsed };
+  const jobs = stepProjection(current.jobs, PROJECTION_SECONDS_PER_TICK);
+  return jobs === current.jobs ? current : { ...current, jobs };
+}
+
 export function createModel(
   game: GameState,
   events: NoticeEvent[] = [],
@@ -115,6 +140,7 @@ export function createModel(
       notices: [],
       nextNoticeId: 1,
       sTrack: null,
+      seedProjection: null,
     },
     events
   );
@@ -261,13 +287,21 @@ function reduce(model: Model, action: Action): Model {
       // 自動で次の星を生むようになったら、毎周の点火は知らせない
       const quiet = canAutoRebirth(state.meta);
       const notices = events.filter(isNotice).filter((e) => !quiet || e.type !== "ignite");
-      return notify({ ...model, game: state, sTrack: trackS(model.sTrack, state.meta) }, [
-        ...notices,
-        ...discoveries,
-        ...lightNotice(model.game, state),
-        ...layer3Notice(model.game, state),
-        ...layer4Notice(model.game, state),
-      ]);
+      return notify(
+        {
+          ...model,
+          game: state,
+          sTrack: trackS(model.sTrack, state.meta),
+          seedProjection: project(model.seedProjection, state),
+        },
+        [
+          ...notices,
+          ...discoveries,
+          ...lightNotice(model.game, state),
+          ...layer3Notice(model.game, state),
+          ...layer4Notice(model.game, state),
+        ]
+      );
     }
     case "buy":
       return { ...model, game: buyStage(model.game, action.stage) };
