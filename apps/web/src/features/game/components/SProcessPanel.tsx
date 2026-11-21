@@ -9,6 +9,7 @@ import {
 } from "@/game/sprocess";
 import type { Meta } from "@/game/types";
 import { cn } from "@/lib/utils";
+import { seedPreview } from "@/game/sprocess";
 import { formatNumber } from "../format";
 import type { Action } from "../model";
 
@@ -164,6 +165,17 @@ function SeedTargetPicker({ meta, dispatch }: Props) {
           </label>
         ))}
       </div>
+      <ul aria-label="種の見込み" className="text-muted-foreground grid gap-0.5 font-mono text-xs">
+        {SEED_TARGETS.map((target) => {
+          const preview = seedPreview(meta, target);
+          return (
+            <li key={target}>
+              {target}：中性子の{Math.round(preview.share * 100)}%が道に・1つの速さ ×
+              {preview.speed.toFixed(2)}・重元素 毎秒 +{preview.heavyPerSecond.toFixed(2)}
+            </li>
+          );
+        })}
+      </ul>
       <p className="text-muted-foreground text-sm">
         少ないほど1つの種が多くの中性子を捕まえて遠く（鉛・ビスマス）まで進む。多いほど恒星風で重元素の星屑を多く稼ぎ、白色矮星を多く使う。
       </p>

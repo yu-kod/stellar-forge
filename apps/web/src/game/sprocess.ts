@@ -253,3 +253,28 @@ export function sDustMultiplier(meta: Meta): number {
   const { discovered } = meta.sProcess;
   return (1 + DUST_PER_S_DISCOVERY * discovered.length) * (discovered.includes(BARIUM) ? 2 : 1);
 }
+
+/**
+ * 鉄の種の目標を target にしたときの見込み。道の組成はいまのまま（空なら鉄）とみなす。
+ * share：中性子のうち道に届く割合（残りは毒）、speed：1つの種の速さ（いまの目標を 1 とする）、
+ * heavyPerSecond：恒星風で毎秒得る重元素の星屑
+ */
+export function seedPreview(
+  meta: Meta,
+  target: number
+): { share: number; speed: number; heavyPerSecond: number } {
+  const { amounts } = meta.sProcess;
+  const total = amounts.reduce((sum, a) => sum + a, 0);
+  const average = (f: (z: number) => number) =>
+    total === 0
+      ? f(S_PATH_START)
+      : amounts.reduce((sum, a, i) => sum + a * f(i + S_PATH_START), 0) / total;
+  const sigma = average(crossSection);
+  const share = (seeds: number) => (seeds * sigma) / (seeds * sigma + NEUTRON_POISON);
+  const current = meta.sProcess.seedTarget;
+  return {
+    share: share(target),
+    speed: share(target) / target / (share(current) / current),
+    heavyPerSecond: target * average(heavyValue) * S_WIND_RATE * heavyMultiplier(meta),
+  };
+}

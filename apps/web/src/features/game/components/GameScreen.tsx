@@ -240,9 +240,23 @@ export function GameScreen({
                   超新星のあと自動で次の星を生む
                 </label>
               )}
-              {STAGE_IDS.map((stage) => (
-                <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
-              ))}
+              {game.meta.sProcess.unlocked ? (
+                // 第3層からは燃焼の段階を畳む（自動制御が強化する。第3層の操作を上に出す）
+                <details>
+                  <summary className="cursor-pointer py-2 text-base font-semibold">
+                    燃焼の段階（6つ）
+                  </summary>
+                  <div className="grid gap-3">
+                    {STAGE_IDS.map((stage) => (
+                      <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
+                    ))}
+                  </div>
+                </details>
+              ) : (
+                STAGE_IDS.map((stage) => (
+                  <StageCard key={stage} game={game} stage={stage} dispatch={dispatch} />
+                ))
+              )}
             </section>
           </div>
         </TabsContent>
