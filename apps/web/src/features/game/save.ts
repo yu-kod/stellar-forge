@@ -223,6 +223,7 @@ function parseMeta(value: unknown): Meta {
     autoOn: withDefaults(raw.autoOn, defaults.autoOn),
     target: parseTarget(raw.target),
     autoRebirth: withDefaults({ on: raw.autoRebirth }, { on: defaults.autoRebirth }).on,
+    autoShop: withDefaults({ on: raw.autoShop }, { on: defaults.autoShop }).on,
     log: ((raw.log as unknown[] | undefined) ?? []).map(parseRecord),
     cluster: ((raw.cluster as unknown[] | undefined) ?? []).map(parseSlot),
     sProcess: parseSProcess(raw.sProcess),

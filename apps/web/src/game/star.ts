@@ -63,6 +63,7 @@ export function createMeta(): Meta {
     autoOn: { H: true, He: true, C: true, Ne: true, O: true, Si: false },
     target: "Si",
     autoRebirth: true,
+    autoShop: false,
     log: [],
     cluster: [],
     sProcess: createSProcess(),

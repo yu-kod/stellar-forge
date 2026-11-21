@@ -89,6 +89,8 @@ export type Meta = {
   target: Target | null;
   /** 超新星のあと自動で次の星を生むか（超新星の回数が足りれば効く） */
   autoRebirth: boolean;
+  /** 毎回の更新の後に、交換できる星屑の強化を自動で交換する */
+  autoShop: boolean;
   log: SupernovaRecord[];
   /** 星団の星（主星のほかに最大2つ） */
   cluster: ClusterSlot[];

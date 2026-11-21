@@ -135,6 +135,14 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.meta.sProcess).toEqual(game.meta.sProcess);
   });
 
+  it("自動交換の設定が古いセーブに無ければ OFF", () => {
+    const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
+    delete save.game.meta.autoShop;
+    expect(restoreSave(save, NOW)?.game.meta.autoShop).toBe(false);
+    save.game.meta.autoShop = true;
+    expect(restoreSave(save, NOW)?.game.meta.autoShop).toBe(true);
+  });
+
   it("鉄の種の目標の量が古いセーブに無ければ初期値", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     delete save.game.meta.sProcess.seedTarget;

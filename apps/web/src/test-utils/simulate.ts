@@ -1,5 +1,6 @@
 import {
   buyAllShopItems,
+  setAutoShop,
   canAutoRebirth,
   buyShopItem,
   buyStage,
@@ -195,6 +196,10 @@ export function playIdle(
     start?: GameState;
     /** この印に届いたら止める */
     stopAt?: keyof IdleReport["marks"];
+    /** 燃焼の自動制御を手に入れた後は、この秒数ごとにしか触らない（狙い・質量・種・交換・組） */
+    touchEvery?: number;
+    /** 燃焼の自動制御を手に入れたら、星屑の自動交換を ON にする */
+    autoShop?: boolean;
     /** 狙いを固定する（省略すると次の目標に合わせる） */
     target?: Target | ((state: GameState) => Target);
     /** これが true になったら止める */
@@ -222,11 +227,13 @@ export function playIdle(
     if (options.stopAt && marks[options.stopAt] !== undefined) break;
     if (options.stopWhen?.(state)) break;
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
+    if (options.autoShop && !state.meta.autoShop) state = setAutoShop(state, true);
+    const touch = !options.touchEvery || !state.meta.shop.auto || t % options.touchEvery === 0;
     const currency = SHOP[nextShopGoal(state.meta).item].currency;
     const fixedTarget =
       typeof options.target === "function" ? options.target(state) : options.target;
     const target = fixedTarget ?? (steer ? targetOr(currency, state.meta.target ?? "C") : "Si");
-    if (steer) {
+    if (steer && touch) {
       state = setTarget(state, target);
       const light = currency === "N" && state.meta.supernovae >= LAYER2_AFTER;
       const layer3 =
@@ -256,13 +263,13 @@ export function playIdle(
     // 循環を見て s過程の元素がそろったら、重元素の星屑と Ia型超新星を稼ぐ
     const sComplete = state.meta.sProcess.discovered.length === S_DISCOVERABLE;
     const farm = sComplete && steer && options.seedTarget === undefined;
-    state = setSeedTarget(state, farm ? 30 : seeds);
+    if (touch) state = setSeedTarget(state, farm ? 30 : seeds);
     // 第4層：自動化がなければ、画面のはじめの選び方（いま作りたい元素を一番多く作る組）で手で組む
     // 組み方を指定したときは自動化を使わず、毎秒、枠が埋まるまで指定の組を組む
     if (options.pairing && state.meta.shop.rAuto) {
       state = { ...state, meta: { ...state.meta, shop: { ...state.meta.shop, rAuto: 0 } } };
     }
-    if (state.meta.rProcess.unlocked && !state.meta.shop.rAuto) {
+    if (touch && state.meta.rProcess.unlocked && !state.meta.shop.rAuto) {
       for (;;) {
         const pair = pairing(state);
         const formed = pair ? formBinary(state, pair[0], pair[1]) : state;
@@ -279,7 +286,7 @@ export function playIdle(
       if (!state.meta.shop.auto) state = buyCheapest(state, TARGET_STAGES[target]);
     }
     const before = levels(state);
-    state = buyAllShopItems(state);
+    if (touch) state = buyAllShopItems(state);
     purchases += levels(state) - before;
     if (t % 600 === 0) {
       purchasesPer10Min.push(purchases);

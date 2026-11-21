@@ -7,6 +7,7 @@ import {
   rebirth,
   setAuto,
   setAutoRebirth,
+  setAutoShop,
   setNextMass,
   setSeedTarget,
   setTarget,
@@ -71,6 +72,7 @@ export type Action =
   | { type: "setAuto"; stage: StageId; on: boolean }
   | { type: "setTarget"; target: Target }
   | { type: "setAutoRebirth"; on: boolean }
+  | { type: "setAutoShop"; on: boolean }
   | { type: "setNextMass"; mass: number | null }
   | { type: "setSlotMass"; slot: number; mass: number | null }
   | { type: "setSlotTarget"; slot: number; target: Target }
@@ -240,6 +242,8 @@ function reduce(model: Model, action: Action): Model {
       return { ...model, game: setNextMass(model.game, action.mass) };
     case "setAutoRebirth":
       return { ...model, game: setAutoRebirth(model.game, action.on) };
+    case "setAutoShop":
+      return { ...model, game: setAutoShop(model.game, action.on) };
     case "triggerIa": {
       let game = model.game;
       for (let i = 0; i < action.count; i++) game = triggerIa(game);
