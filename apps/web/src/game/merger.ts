@@ -391,7 +391,7 @@ function reached(rProcess: RProcess, amounts: readonly number[]): number[] {
 }
 
 /** 追観測で、放出物 1 が発見に回る量（届いた放出物に直した値） */
-export const OBSERVE_RATE = 6;
+export const OBSERVE_RATE = 12;
 
 /**
  * 追観測：貯めた放出物をすべて強化に使わず、いま作りたい元素の発見に回す（放出物 × 倍率 × 重み を足す）。

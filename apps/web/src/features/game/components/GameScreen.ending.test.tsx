@@ -154,6 +154,7 @@ describe("記録への挑戦", () => {
     expect(hall).toHaveTextContent("まだ完結していない");
     expect(hall).toHaveTextContent("金：2時間13分以内");
     expect(hall).not.toHaveTextContent("炭素星");
+    expect(hall).not.toHaveTextContent("追観測");
     expect(hall).not.toHaveTextContent("種");
   });
 
@@ -176,6 +177,7 @@ describe("記録への挑戦", () => {
     expect(hall).toHaveTextContent("完結 2回・天の川 最速 2時間30分（銀）");
     expect(hall).toHaveTextContent("金：2時間13分以内");
     expect(hall).toHaveTextContent("第3層で主星を炭素星にする");
+    expect(hall).toHaveTextContent("第4層では、放出物を追観測に回す時で完結が数分変わる");
   });
 
   it("エンディングに今回の時間のメダルと、次の挑戦を出す", async () => {

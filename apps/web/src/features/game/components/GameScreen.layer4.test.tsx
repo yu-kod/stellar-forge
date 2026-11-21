@@ -95,11 +95,11 @@ describe("GameScreen：第4層 中性子星合体", () => {
 
   it("放出物の使い道を、強化と追観測で切り替えられる（追観測なら合体のたびに発見に回る）", async () => {
     const game = layer4();
-    game.meta.rProcess.ejecta = 0.05;
+    game.meta.rProcess.ejecta = 0.01;
     const { user } = renderGame(game);
     const use = within(panel()).getByRole("radiogroup", { name: "放出物の使い道" });
     expect(within(use).getByRole("radio", { name: /強化に使う/ })).toBeChecked();
-    expect(use).toHaveTextContent("放出物 1 につき 6 ぶん");
+    expect(use).toHaveTextContent("放出物 1 につき 12 ぶん");
     await user.click(within(use).getByRole("radio", { name: /追観測に回す/ }));
     expect(within(use).getByRole("radio", { name: /追観測に回す/ })).toBeChecked();
     expect(panel()).toHaveTextContent("放出物 0");
