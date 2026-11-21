@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { LAYER2_AFTER, LAYER3_AFTER } from "@/game/balance";
@@ -105,6 +105,20 @@ describe("GameScreen：第3層 s過程", () => {
     game.meta.shop.auto = 1;
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent("s過程：次は 銅（Cu）を見つける（0%）");
+  });
+
+  it("フッ素がまだなら、第3層の目標に作り方を添える（終盤の後片付けにしない）", () => {
+    const game = layer3();
+    game.meta.sProcess.discovered = [27, 28];
+    game.meta.shop.auto = 1;
+    renderGame(game);
+    expect(screen.getByRole("note")).toHaveTextContent(
+      "s過程：次は 銅（Cu）を見つける（0%）。まだの元素 フッ素（F）：第3層で炭素星（4 M☉ 未満）を白色矮星にする（星団の星の質量を 2〜3 M☉ に）"
+    );
+    cleanup();
+    game.meta.lightFound = [...game.meta.lightFound, 9];
+    renderGame(game);
+    expect(screen.getByRole("note")).not.toHaveTextContent("フッ素");
   });
 
   it("s元素をすべて見つけて循環を待つ間は、そう書く", () => {

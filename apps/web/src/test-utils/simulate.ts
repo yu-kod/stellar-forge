@@ -13,7 +13,14 @@ import {
   shopCost,
 } from "@/game/actions";
 import { funds, isShopItemOpen } from "@/game/shop";
-import { DEFAULT_SEED_TARGET, LAYER2_AFTER, SHOP, TARGET_STAGES, bestTarget } from "@/game/balance";
+import {
+  CLUSTER_DEFAULT_MASS,
+  DEFAULT_SEED_TARGET,
+  LAYER2_AFTER,
+  SHOP,
+  TARGET_STAGES,
+  bestTarget,
+} from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
 import { bestPair, formBinary, nextRDiscovery, pairAdvice, rGoal } from "@/game/merger";
@@ -200,7 +207,7 @@ export function playIdle(
     touchEvery?: number;
     /** 燃焼の自動制御を手に入れたら、星屑の自動交換を ON にする */
     autoShop?: boolean;
-    /** 第4層の前も星団の星の質量を変えない（画面の初期値のまま） */
+    /** 第4層の前も星団の星の質量を変えない（画面の初期値のまま。第3層でフッ素の案内に従うときだけ1つ目を 2 M☉ にする） */
     keepCluster?: boolean;
     /** 狙いを固定する（省略すると次の目標に合わせる） */
     target?: Target | ((state: GameState) => Target);
@@ -250,6 +257,11 @@ export function playIdle(
           state.meta.cluster.forEach((_, i) => {
             state = setSlotTarget(setSlotMass(state, i, i === 0 ? 6 : 2), i, "C");
           });
+        else if (state.meta.sProcess.unlocked && state.meta.cluster.length > 0) {
+          // 第3層の目標の「まだの元素 フッ素：炭素星を白色矮星にする」に従い、見つけたら初期値に戻す
+          const fluorine = state.meta.lightFound.includes(9);
+          state = setSlotMass(state, 0, fluorine ? CLUSTER_DEFAULT_MASS : 2);
+        }
       } else if (
         !options.pairing &&
         !state.meta.lightFound.includes(9) &&

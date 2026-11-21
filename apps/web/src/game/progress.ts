@@ -62,7 +62,7 @@ export function originOf(z: number): Origin {
 
 /** Ia型超新星で作る軽い元素と、要る回数 */
 const IA_COUNTS: Readonly<Record<number, number>> = { 23: 5, 24: 20, 25: 50 };
-const F_HINT = "フッ素：第3層で炭素星（4 M☉ 未満）を白色矮星にする（星団の星の質量を 2〜3 M☉ に）";
+const F_HINT = "第3層で炭素星（4 M☉ 未満）を白色矮星にする（星団の星の質量を 2〜3 M☉ に）";
 
 /** まだ見つけていない元素の作り方 */
 export function missingHint(meta: Meta, z: number): string {
