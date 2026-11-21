@@ -24,12 +24,12 @@ function layer4(ejecta: number): GameState {
 
 describe("追観測：放出物を強化に使わず、いま作りたい元素の発見に回す", () => {
   it("放出物をすべて使い、いま作りたい元素に 放出物 × 倍率 × 重み を足す", () => {
-    const game = layer4(0.05);
+    const game = layer4(0.01);
     const z = rGoal(game.meta);
     const { state, events } = observe(game);
     expect(state.meta.rProcess.ejecta).toBe(0);
     expect(state.meta.rProcess.amounts[z - R_PATH_START]).toBeCloseTo(
-      0.05 * OBSERVE_RATE * rWeight(z)
+      0.01 * OBSERVE_RATE * rWeight(z)
     );
     expect(events).toEqual([]);
   });
@@ -52,7 +52,7 @@ describe("追観測：放出物を強化に使わず、いま作りたい元素�
   });
 
   it("使い道を追観測にすると、貯めた分をすぐ回し、以後は合体のたびに放出物を発見に回す（貯めない）", () => {
-    const game = layer4(0.05);
+    const game = layer4(0.01);
     const z = rGoal(game.meta);
     const on = setObserving(game, true).state;
     expect(on.meta.rProcess.observing).toBe(true);
@@ -62,7 +62,7 @@ describe("追観測：放出物を強化に使わず、いま作りたい元素�
     const e = predictMerger(formed.meta, 2, 2).ejecta;
     expect(meta.rProcess.ejecta).toBe(0);
     expect(meta.rProcess.amounts[z - R_PATH_START]).toBeGreaterThan(
-      0.05 * OBSERVE_RATE * rWeight(z) + e * rWeight(z)
+      0.01 * OBSERVE_RATE * rWeight(z) + e * rWeight(z)
     );
     // 強化に戻すと、また貯まる
     const off = setObserving({ ...formed, meta }, false).state;

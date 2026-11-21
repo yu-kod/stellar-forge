@@ -4,6 +4,9 @@ import { GALAXY_IDS, type Galaxy } from "@/game/types";
 import { FASTER_MOVES, MEDALS, bestOf, medalLimit, medalOf, type Hall } from "../hall";
 import { formatDuration } from "../format";
 
+/** どの銀河でも効く第4層の手（observe-timing.test.ts：解放から25分ごろの切り替えで第4層が8分以上短い） */
+const LAYER4_MOVE = "第4層では、放出物を追観測に回す時で完結が数分変わる";
+
 /** 記録への挑戦：完結の回数・銀河ごとの最速と、メダルの目安 */
 export function HallView({
   hall,
@@ -65,7 +68,7 @@ export function MedalTargets({
         )
         .join("・")}
       {heritage && "（前の周の星屑を持って始めた周は、その分だけ基準が厳しい）"}。
-      {tips && `${FASTER_MOVES[galaxy].join("・")}と速くなる（両方で金に届く）。`}
+      {tips && `${FASTER_MOVES[galaxy].join("・")}と速くなる（両方で金に届く）。${LAYER4_MOVE}。`}
       最初からやり直しても記録は残る
     </p>
   );
