@@ -26,11 +26,14 @@ function complete(galaxy: Galaxy, seedTarget: SeedPlan | undefined, carbonStar =
     stopAt: "complete",
   });
   layer3[`${galaxy}-${String(seedTarget)}-${carbonStar}`] = report.marks.layer3!;
+  purchases[`${galaxy}-${String(seedTarget)}-${carbonStar}`] = report.purchasesPer10Min;
   return report.marks.complete ?? Infinity;
 }
 
 /** 流れごとの第3層の解放の時刻 */
 const layer3: Record<string, number> = {};
+/** 流れごとの10分ごとの恒久強化の購入数 */
+const purchases: Record<string, number[]> = {};
 
 /** 銀河で最善の作戦が変わる */
 describe("銀河ごとの最善の作戦", () => {
@@ -75,5 +78,10 @@ describe("銀河ごとの最善の作戦", () => {
     const milky = layer3[`milkyWay-${String(shifting)}-true`]!;
     const rich = layer3["metalRich-30-true"]!;
     expect(milky - rich).toBeGreaterThanOrEqual(5 * MINUTE);
+  });
+
+  it("金属の多い銀河の最善の流れでも、90分以降は10分ごとに平均4.5回以上恒久強化を買う（長いだけにしない）", () => {
+    const late = purchases["metalRich-30-true"]!.slice(9);
+    expect(late.reduce((sum, n) => sum + n, 0) / late.length).toBeGreaterThanOrEqual(4.5);
   });
 });
