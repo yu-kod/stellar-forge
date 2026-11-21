@@ -48,7 +48,9 @@ export type NoticeEvent =
   | Extract<MergerEvent, { type: "merger" }>
   | { type: "rDiscover"; z: number }
   | { type: "layer4Unlocked" }
-  | { type: "layer2Unlocked" };
+  | { type: "layer2Unlocked" }
+  /** 続けて見つけた s過程（r過程）の元素をまとめた知らせ */
+  | { type: "burst"; process: "s" | "r"; zs: readonly number[] };
 export type Notice = { id: number; event: NoticeEvent };
 
 /** 留守の間の進行（長い留守はフレームごとに少しずつ進める） */
@@ -147,14 +149,38 @@ export function createModel(
   );
 }
 
-function notify(model: Model, events: NoticeEvent[]): Model {
+/** 元素の発見の知らせなら、その過程（s・r）と元素 */
+function discoveryOf(event: NoticeEvent): { process: "s" | "r"; zs: readonly number[] } | null {
+  if (event.type === "sDiscover") return { process: "s", zs: [event.z] };
+  if (event.type === "rDiscover") return { process: "r", zs: [event.z] };
+  if (event.type === "burst") return event;
+  return null;
+}
+
+/**
+ * 知らせを積む（新しいものから4件まで）。続けて見つけた s過程（r過程）の元素は1つの知らせにまとめ、
+ * 見つけるたびに番号を振り直して出し直す（雪崩で知らせがあふれない）
+ */
+export function notify(model: Model, events: NoticeEvent[]): Model {
   if (events.length === 0) return model;
-  const added = events.map((event, i) => ({ id: model.nextNoticeId + i, event }));
-  return {
-    ...model,
-    notices: [...model.notices, ...added].slice(-NOTICE_LIMIT),
-    nextNoticeId: model.nextNoticeId + events.length,
-  };
+  let notices = model.notices;
+  let id = model.nextNoticeId;
+  for (const event of events) {
+    const found = discoveryOf(event);
+    const last = notices.at(-1);
+    const before = last ? discoveryOf(last.event) : null;
+    if (found && before && before.process === found.process) {
+      const zs = [...before.zs, ...found.zs];
+      notices = [
+        ...notices.slice(0, -1),
+        { id, event: { type: "burst", process: found.process, zs } },
+      ];
+    } else {
+      notices = [...notices, { id, event }];
+    }
+    id += 1;
+  }
+  return { ...model, notices: notices.slice(-NOTICE_LIMIT), nextNoticeId: id };
 }
 
 type ShownEvent = Extract<GameEvent, { type: "ignite" | "discover" | "sDiscover" | "sLoop" }>;

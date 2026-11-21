@@ -7,6 +7,7 @@ import {
   PROJECTION_SECONDS_PER_TICK,
   createModel,
   gameReducer,
+  notify,
   type Model,
 } from "./model";
 import { HERITAGE_DUST, LAYER2_AFTER } from "@/game/balance";
@@ -47,6 +48,36 @@ describe("gameReducer", () => {
     const model = gameReducer(start, { type: "tick", seconds: 0.1 });
 
     expect(model.notices.map((n) => n.id)).toEqual([3, 4, 5, 6]);
+  });
+
+  it("続けて見つけた s過程の元素は1つの知らせにまとめ、見つけるたびに出し直す（雪崩で知らせがあふれない）", () => {
+    const once = notify(modelWith(), [
+      { type: "sDiscover", z: 40 },
+      { type: "sDiscover", z: 41 },
+    ]);
+    expect(once.notices).toEqual([{ id: 2, event: { type: "burst", process: "s", zs: [40, 41] } }]);
+    const twice = notify(once, [{ type: "sDiscover", z: 42 }]);
+    expect(twice.notices).toEqual([
+      { id: 3, event: { type: "burst", process: "s", zs: [40, 41, 42] } },
+    ]);
+    expect(twice.nextNoticeId).toBe(4);
+  });
+
+  it("1つだけならいつもの知らせ。r過程も同じにまとめ、s過程やほかの知らせとはまとめない", () => {
+    const single = notify(modelWith(), [{ type: "sDiscover", z: 43 }]);
+    expect(single.notices).toEqual([{ id: 1, event: { type: "sDiscover", z: 43 } }]);
+    const mixed = notify(single, [
+      { type: "rDiscover", z: 63 },
+      { type: "merger", ye: 0.2, ejecta: 1, reach: 72, blackHole: false },
+      { type: "rDiscover", z: 64 },
+      { type: "rDiscover", z: 65 },
+    ]);
+    expect(mixed.notices.map((n) => n.event)).toEqual([
+      { type: "sDiscover", z: 43 },
+      { type: "rDiscover", z: 63 },
+      { type: "merger", ye: 0.2, ejecta: 1, reach: 72, blackHole: false },
+      { type: "burst", process: "r", zs: [64, 65] },
+    ]);
   });
 
   it("崩壊は知らせに積まない（超新星の画面で見せる）", () => {

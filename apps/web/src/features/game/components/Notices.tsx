@@ -10,6 +10,14 @@ import { elementOf } from "../periodicTable";
 /** 安定な同位体のない元素（s過程の証拠） */
 const TECHNETIUM = 43;
 
+const TECHNETIUM_NOTE =
+  "。テクネチウムには安定な同位体がない。1952年に赤色巨星のスペクトルで見つかり、星の中でいまも元素が作られている証拠になった";
+
+/** トリウム・ウラン（年齢の時計） */
+const isClock = (z: number) => z === 90 || z === 92;
+const CLOCK_NOTE =
+  "。ウラン238（半減期45億年）とトリウム232（140億年）の比は、古い星の年齢を測る時計になる";
+
 const NOTICE_MS = 4200;
 
 type Props = { notices: Notice[]; onDismiss: (id: number) => void };
@@ -94,8 +102,7 @@ function NoticeText({ event }: { event: NoticeEvent }) {
             新元素 {element.name}（{element.symbol}）
           </b>{" "}
           s過程で作った
-          {event.z === TECHNETIUM &&
-            "。テクネチウムには安定な同位体がない。1952年に赤色巨星のスペクトルで見つかり、星の中でいまも元素が作られている証拠になった"}
+          {event.z === TECHNETIUM && TECHNETIUM_NOTE}
         </>
       );
     }
@@ -131,8 +138,23 @@ function NoticeText({ event }: { event: NoticeEvent }) {
             新元素 {element.name}（{element.symbol}）
           </b>{" "}
           中性子星合体で作った
-          {(event.z === 90 || event.z === 92) &&
-            "。ウラン238（半減期45億年）とトリウム232（140億年）の比は、古い星の年齢を測る時計になる"}
+          {isClock(event.z) && CLOCK_NOTE}
+        </>
+      );
+    }
+    case "burst": {
+      const names = event.zs.map((z) => {
+        const element = elementOf(z);
+        return `${element.name}（${element.symbol}）`;
+      });
+      return (
+        <>
+          <b className="text-ignite">
+            新元素 {event.zs.length}つ：{names.join("・")}
+          </b>{" "}
+          {event.process === "s" ? "s過程で作った" : "中性子星合体で作った"}
+          {event.process === "s" && event.zs.includes(TECHNETIUM) && TECHNETIUM_NOTE}
+          {event.process === "r" && event.zs.some(isClock) && CLOCK_NOTE}
         </>
       );
     }
