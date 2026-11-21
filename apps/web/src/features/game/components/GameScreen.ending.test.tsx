@@ -105,7 +105,7 @@ describe("記録への挑戦", () => {
     render(
       <EndingDialog
         game={completed()}
-        hall={{ completions: 1, best: 4 * 3600 + 30 * 60 }}
+        hall={{ completions: 1, best: 4 * 3600 + 30 * 60, last: null, previous: null }}
         open
         onClose={() => {}}
       />
@@ -113,6 +113,31 @@ describe("記録への挑戦", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：銅");
     expect(dialog).toHaveTextContent("金：2時間50分以内");
+  });
+
+  it("エンディングに層ごとの時刻と、前回との差を出す", async () => {
+    const { EndingDialog } = await import("./EndingDialog");
+    const game = completed();
+    game.meta.milestones = { layer2: 25 * 60, layer3: 55 * 60, layer4: 140 * 60 };
+    render(
+      <EndingDialog
+        game={game}
+        hall={{
+          completions: 2,
+          best: 4 * 3600,
+          last: null,
+          previous: { layer2: 30 * 60, layer3: 50 * 60, layer4: 140 * 60, complete: 4 * 3600 },
+        }}
+        open
+        onClose={() => {}}
+      />
+    );
+    const table = screen.getByRole("table", { name: "層ごとの時刻" });
+    const rows = within(table).getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("第2層25分−5分");
+    expect(rows[2]).toHaveTextContent("第3層55分+5分");
+    expect(rows[3]).toHaveTextContent("第4層2時間20分±0分");
+    expect(rows[4]).toHaveTextContent("完結4時間30分+30分");
   });
 
   it("完結したら記録を保存する", () => {
@@ -125,7 +150,7 @@ describe("記録への挑戦", () => {
       return clock;
     })();
     tick(0.25);
-    expect(storage.get(HALL_KEY)).toEqual({ completions: 1, best: expect.any(Number) });
+    expect(storage.get(HALL_KEY)).toMatchObject({ completions: 1, best: expect.any(Number) });
   });
 });
 

@@ -234,6 +234,7 @@ function parseMeta(value: unknown): Meta {
       raw.completedAt === undefined || raw.completedAt === null
         ? null
         : requireNumber(raw.completedAt),
+    milestones: parseMilestones(raw.milestones),
     iaSupernovae: raw.iaSupernovae === undefined ? 0 : requireNumber(raw.iaSupernovae),
     lightFound: parseNumbers(raw.lightFound),
   };
@@ -245,4 +246,10 @@ function parseMeta(value: unknown): Meta {
 function parseGame(value: unknown): GameState {
   const raw = requireObject(value);
   return { meta: parseMeta(raw.meta), star: parseStar(raw.star) };
+}
+
+function parseMilestones(value: unknown): Meta["milestones"] {
+  const raw = value === undefined ? {} : requireObject(value);
+  const time = (v: unknown) => (v === undefined || v === null ? null : requireNumber(v));
+  return { layer2: time(raw.layer2), layer3: time(raw.layer3), layer4: time(raw.layer4) };
 }

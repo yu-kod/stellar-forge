@@ -135,6 +135,19 @@ describe("restoreSave", () => {
     expect(restoreSave(raw, NOW)?.game.meta.sProcess).toEqual(game.meta.sProcess);
   });
 
+  it("層の解放の時刻を読む。古いセーブに無ければ null", () => {
+    const game = createGame();
+    game.meta.milestones = { layer2: 1500, layer3: null, layer4: null };
+    const save = JSON.parse(JSON.stringify(toSave(game, NOW)));
+    expect(restoreSave(save, NOW)?.game.meta.milestones).toEqual(game.meta.milestones);
+    delete save.game.meta.milestones;
+    expect(restoreSave(save, NOW)?.game.meta.milestones).toEqual({
+      layer2: null,
+      layer3: null,
+      layer4: null,
+    });
+  });
+
   it("自動交換の設定が古いセーブに無ければ OFF", () => {
     const save = JSON.parse(JSON.stringify(toSave(createGame(), NOW)));
     delete save.game.meta.autoShop;
