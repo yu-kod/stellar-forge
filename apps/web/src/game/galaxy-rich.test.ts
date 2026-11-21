@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { FASTER_MOVES, medalOf } from "@/features/game/hall";
+import { FASTER_MOVES, medalLimit, medalOf } from "@/features/game/hall";
 import type { IdleReport } from "@/test-utils/simulate";
 import { playFlow, reduceAfterStrontium } from "@/test-utils/strategies";
 
@@ -43,9 +43,18 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
     expect(minutes[1]!).toBeGreaterThan(minutes[30]!);
   });
 
-  it("金はその最善（炭素星＋種を10まで）だけ。ほかの減らし方は金に届かない", () => {
-    expect(medalOf(minutes[10]!, "metalRich", true)).toBe("金");
-    for (const to of [1, 3, 30]) expect(medalOf(minutes[to]!, "metalRich", true)).not.toBe("金");
+  it("金は炭素星にして種を減らしすぎない流れ（3〜10）だけ。1まで減らす・30のままでは金に届かない（どれも基準から2分以上離れる）", () => {
+    const gold = medalLimit("金", "metalRich", true);
+    for (const to of [3, 10]) expect(gold - minutes[to]!).toBeGreaterThanOrEqual(2 * MINUTE);
+    for (const to of [1, 30]) expect(minutes[to]! - gold).toBeGreaterThanOrEqual(2 * MINUTE);
+  });
+
+  it("記録タブで挙げる手は、それぞれ単独で銀の基準より2分以上内側・金の基準より2分以上外側", () => {
+    for (const alone of [carbonOnly, seedsOnly]) {
+      expect(medalLimit("銀", "metalRich", true) - alone).toBeGreaterThanOrEqual(2 * MINUTE);
+      expect(alone - medalLimit("金", "metalRich", true)).toBeGreaterThanOrEqual(2 * MINUTE);
+    }
+    expect(medalOf(none, "metalRich", true)).toBe("銅");
   });
 
   it("記録タブで挙げる手は、それぞれ単独で何もしない流れより3分以上速い", () => {

@@ -82,7 +82,10 @@ export const STARTER_SECONDS: readonly number[] = [120, 420];
 /** 2つ目のはじめの連星の中性子星の段（1.4 M☉） */
 const STARTER_BIN = 2;
 
-/** 在庫の一番軽い2つを近づいていた連星にし、銀河にあった 1.4 + 1.4 M☉ の連星を1つ足す */
+/**
+ * 在庫の一番軽い2つを近づいていた連星にし、銀河にあった 1.4 + 1.4 M☉ の連星を1つ足す。
+ * 在庫に中性子星が2つなければ（2周目は主星がブラックホールになりやすい）、1つ目も銀河にあった 1.4 + 1.4 M☉ にする
+ */
 function starterBinaries(rProcess: RProcess): RProcess {
   const pool = [...rProcess.pool];
   const take = () => {
@@ -90,12 +93,19 @@ function starterBinaries(rProcess: RProcess): RProcess {
     if (bin >= 0) pool[bin]! -= 1;
     return bin;
   };
-  const binaries = [...rProcess.binaries];
-  const a = take();
-  const b = take();
-  if (b >= 0) binaries.push({ a, b, remaining: STARTER_SECONDS[0]! });
-  else return rProcess;
-  binaries.push({ a: STARTER_BIN, b: STARTER_BIN, remaining: STARTER_SECONDS[1]! });
+  let a = take();
+  let b = take();
+  if (b < 0) {
+    // 在庫が足りなければ使わない
+    pool.splice(0, pool.length, ...rProcess.pool);
+    a = STARTER_BIN;
+    b = STARTER_BIN;
+  }
+  const binaries = [
+    ...rProcess.binaries,
+    { a, b, remaining: STARTER_SECONDS[0]! },
+    { a: STARTER_BIN, b: STARTER_BIN, remaining: STARTER_SECONDS[1]! },
+  ];
   return { ...rProcess, pool, binaries };
 }
 

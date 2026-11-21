@@ -115,13 +115,16 @@ describe("第4層の解放（s過程の循環を見たら）", () => {
     expect(next.meta.rProcess.pool[4]).toBe(1);
   });
 
-  it("在庫に中性子星が2つなければ、はじめの連星は作らない", () => {
+  it("在庫に中性子星が2つなければ、1つ目も銀河にあった 1.4 + 1.4 M☉ の連星にする（2周目は主星がブラックホールになり在庫が少ない）", () => {
     for (const count of [0, 1]) {
       const game = looped();
       game.meta.rProcess.pool[3] = count;
       const next = unlockLayer4(game);
       expect(next.meta.rProcess.unlocked).toBe(true);
-      expect(next.meta.rProcess.binaries).toEqual([]);
+      expect(next.meta.rProcess.binaries).toEqual([
+        { a: 2, b: 2, remaining: 120 },
+        { a: 2, b: 2, remaining: 420 },
+      ]);
       expect(next.meta.rProcess.pool[3]).toBe(count);
     }
   });

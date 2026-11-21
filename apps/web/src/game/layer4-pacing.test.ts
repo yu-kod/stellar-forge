@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { playIdle, type IdleReport } from "@/test-utils/simulate";
 import { R_ELEMENTS } from "./merger";
+import { createGame } from "./star";
 
 const MINUTE = 60;
 
@@ -58,4 +59,30 @@ describe("第4層とエンディングのペーシング（画面を開いたま
   it("何も触らなくても第4層で詰まらず、金まで届く", () => {
     expect(handsOff.marks.gold).toBeDefined();
   });
+});
+
+/** 2周目は主星が重くブラックホールになり、解放の時点で中性子星の在庫がほとんどない。それでも始まりに空白を作らない */
+describe("2周目の第4層の始まり", () => {
+  const runs: Record<string, IdleReport> = {};
+  beforeAll(() => {
+    for (const galaxy of ["milkyWay", "metalRich"] as const) {
+      runs[galaxy] = playIdle(270 * MINUTE, {
+        start: createGame(galaxy, 1),
+        keepCluster: true,
+        stopAt: "complete",
+      });
+    }
+  }, 900_000);
+
+  it.each(["milkyWay", "metalRich"])(
+    "%s：解放から5分以内に最初の発見、10分以内に2つ以上",
+    (galaxy) => {
+      const report = runs[galaxy]!;
+      const after = Object.values(report.rAt)
+        .map((t) => t - report.marks.layer4!)
+        .sort((a, b) => a - b);
+      expect(after[0]!).toBeLessThanOrEqual(5 * MINUTE);
+      expect(after.filter((t) => t <= 10 * MINUTE).length).toBeGreaterThanOrEqual(2);
+    }
+  );
 });
