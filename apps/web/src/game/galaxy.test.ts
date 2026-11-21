@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { GALAXIES } from "./balance";
 import { NEUTRON_POISON, captureNeutrons, neutronPoison, seedPreview } from "./sprocess";
-import { createGame } from "./star";
+import { createGame, whiteDwarfsMade } from "./star";
 import { GALAXY_IDS } from "./types";
 
 describe("周の初めに選ぶ銀河", () => {
@@ -13,6 +13,15 @@ describe("周の初めに選ぶ銀河", () => {
     expect(GALAXIES.metalRich.name).toBe("金属の多い銀河の中心");
     // 説明は物理だけ。作戦（種をどうするか）は書かない
     expect(GALAXIES.metalRich.description).not.toMatch(/種/);
+  });
+
+  it("金属の多い銀河の中心は古い星が多く、はじめから白色矮星が20個ある（作った数・星の世代には数えない）", () => {
+    const rich = createGame("metalRich");
+    expect(GALAXIES.metalRich.whiteDwarfs).toBe(20);
+    expect(rich.meta.whiteDwarfs).toBe(20);
+    expect(createGame().meta.whiteDwarfs).toBe(0);
+    expect(whiteDwarfsMade(rich.meta)).toBe(0);
+    expect(rich.star.generation).toBe(1);
   });
 
   it("金属の多い銀河では、中性子を吸う軽い原子核（中性子の毒）が4倍。道に届く中性子が減る", () => {

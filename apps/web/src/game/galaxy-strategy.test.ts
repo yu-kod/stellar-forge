@@ -25,8 +25,12 @@ function complete(galaxy: Galaxy, seedTarget: SeedPlan | undefined, carbonStar =
     seedTarget,
     stopAt: "complete",
   });
+  layer3[`${galaxy}-${String(seedTarget)}-${carbonStar}`] = report.marks.layer3!;
   return report.marks.complete ?? Infinity;
 }
+
+/** 流れごとの第3層の解放の時刻 */
+const layer3: Record<string, number> = {};
 
 /** 銀河で最善の作戦が変わる */
 describe("銀河ごとの最善の作戦", () => {
@@ -65,5 +69,11 @@ describe("銀河ごとの最善の作戦", () => {
     for (const alone of [minutes.richCarbonOnly!, minutes.richKeepOnly!]) {
       expect(minutes.richDefault! - alone).toBeGreaterThanOrEqual(3 * MINUTE);
     }
+  });
+
+  it("銀河で第1・2層も変わる：金属の多い銀河は白色矮星をはじめから持ち、最善の流れどうしで第3層の解放が5分以上早い", () => {
+    const milky = layer3[`milkyWay-${String(shifting)}-true`]!;
+    const rich = layer3["metalRich-30-true"]!;
+    expect(milky - rich).toBeGreaterThanOrEqual(5 * MINUTE);
   });
 });

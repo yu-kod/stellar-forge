@@ -179,13 +179,13 @@ describe("記録への挑戦", () => {
     const { EndingDialog } = await import("./EndingDialog");
     const game = completed();
     game.meta.galaxy = "metalRich";
-    game.meta.completedAt = 3 * 3600;
+    game.meta.completedAt = 2 * 3600 + 50 * 60;
     render(
       <EndingDialog game={game} hall={{ ...EMPTY_HALL, completions: 1 }} open onClose={() => {}} />
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：金（金属の多い銀河の中心）");
-    expect(dialog).toHaveTextContent("金：3時間5分以内");
+    expect(dialog).toHaveTextContent("金：2時間53分以内");
   });
 
   it("エンディングに層ごとの時刻と、前回との差を出す", async () => {
