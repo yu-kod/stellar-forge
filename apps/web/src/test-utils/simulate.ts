@@ -23,7 +23,7 @@ import {
 } from "@/game/balance";
 import { advanceAll, setSlotMass, setSlotTarget } from "@/game/cluster";
 import { nextShopGoal } from "@/game/goal";
-import { bestPair, formBinary, nextRDiscovery, pairAdvice, rGoal } from "@/game/merger";
+import { bestPair, formBinary, nextRDiscovery, observe, pairAdvice, rGoal } from "@/game/merger";
 import { S_DISCOVERABLE } from "@/game/sprocess";
 import { ALL_ELEMENTS, foundElements } from "@/game/progress";
 import { stageCost } from "@/game/rates";
@@ -211,6 +211,8 @@ export function playIdle(
     keepCluster?: boolean;
     /** 狙いを固定する（省略すると次の目標に合わせる） */
     target?: Target | ((state: GameState) => Target);
+    /** 第4層の解放からこの秒数がたったら、放出物を強化に使わず追観測に回し続ける */
+    observeAfter?: number;
     /** これが true になったら止める */
     stopWhen?: (state: GameState) => boolean;
     /** 第4層で手で組む組（省略すると画面のはじめの選び方）。null なら組まない */
@@ -237,6 +239,10 @@ export function playIdle(
     if (options.stopWhen?.(state)) break;
     if (state.star.end && !canAutoRebirth(state.meta)) state = rebirth(state);
     if (options.autoShop && !state.meta.autoShop) state = setAutoShop(state, true);
+    // 第4層の解放から observeAfter 秒たったら、放出物を追観測に回し続ける
+    if (options.observeAfter !== undefined && marks.layer4 !== undefined) {
+      if (t - marks.layer4 >= options.observeAfter) state = observe(state).state;
+    }
     const touch = !options.touchEvery || !state.meta.shop.auto || t % options.touchEvery === 0;
     const currency = SHOP[nextShopGoal(state.meta).item].currency;
     const fixedTarget =

@@ -237,3 +237,15 @@ describe("gameReducer：種ごとの見込み", () => {
     expect(later.seedProjection?.startedAt).toBe(later.game.meta.elapsed);
   });
 });
+
+describe("gameReducer：追観測", () => {
+  it("放出物をいま作りたい元素の発見に回し、見つけたら知らせる", () => {
+    const game = createGame();
+    game.meta.rProcess = { ...game.meta.rProcess, unlocked: true, ejecta: 100 };
+    game.meta.rProcess.pool[2] = 4;
+    const model = gameReducer(createModel(game), { type: "observe" });
+    expect(model.game.meta.rProcess.ejecta).toBe(0);
+    expect(model.game.meta.rProcess.discovered).toContain(52);
+    expect(model.notices.map((n) => n.event)).toContainEqual({ type: "rDiscover", z: 52 });
+  });
+});

@@ -7,6 +7,7 @@ import {
   R_PATH_START,
   bestPair,
   rGoal,
+  OBSERVE_RATE,
   yieldOf,
   binarySlots,
   mergerSeconds,
@@ -164,6 +165,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回・放出物{" "}
         {formatNumber(ejecta)}（星屑タブで強化に使う）
       </p>
+      <ObserveButton meta={meta} dispatch={dispatch} />
       <ul aria-label="r過程で作る元素" className="grid gap-1 text-sm sm:grid-cols-2">
         {[...R_ELEMENTS, ...ACTINIDES].map((z) => {
           const element = elementOf(z);
@@ -182,5 +184,27 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         })}
       </ul>
     </section>
+  );
+}
+
+/** 追観測：放出物を強化に使わず、いま作りたい元素の発見に回す */
+function ObserveButton({ meta, dispatch }: Props) {
+  const { ejecta } = meta.rProcess;
+  const goal = elementOf(rGoal(meta));
+  return (
+    <div className="grid gap-1">
+      <Button
+        variant="outline"
+        className="h-11 justify-self-start"
+        disabled={ejecta <= 0}
+        onClick={() => dispatch({ type: "observe" })}
+      >
+        追観測：放出物 {formatNumber(ejecta)} を{goal.name}（{goal.symbol}）の発見に回す
+      </Button>
+      <p className="text-muted-foreground text-sm">
+        キロノバの光を望遠鏡で追い、作りかけの元素を見つけ出す。放出物を強化に使わず、いま作りたい元素の発見に回す（放出物
+        1 につき {OBSERVE_RATE} ぶん）
+      </p>
+    </div>
   );
 }

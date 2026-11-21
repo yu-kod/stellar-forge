@@ -85,6 +85,19 @@ describe("GameScreen：第4層 中性子星合体", () => {
     );
   });
 
+  it("追観測：放出物を強化に使わず、いま作りたい元素の発見に回せる（なければ押せない）", async () => {
+    const game = layer4();
+    game.meta.rProcess.ejecta = 100;
+    const { user } = renderGame(game);
+    const button = within(panel()).getByRole("button", {
+      name: "追観測：放出物 100 をテルル（Te）の発見に回す",
+    });
+    expect(panel()).toHaveTextContent("放出物 1 につき 6 ぶん");
+    await user.click(button);
+    expect(panel()).toHaveTextContent("放出物 0");
+    expect(within(panel()).getByRole("button", { name: /追観測/ })).toBeDisabled();
+  });
+
   it("第4層では、星屑タブの第1・2層の強化を畳む（まとめて交換で買える）", async () => {
     const { user } = renderGame(layer4());
     await user.click(screen.getByRole("tab", { name: "星屑" }));
