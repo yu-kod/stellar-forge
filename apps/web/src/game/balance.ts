@@ -481,6 +481,6 @@ export const GALAXIES: Record<
       "古い星が多く、はじめから白色矮星が20個ある。金属の多い星ほど、中性子を吸う軽い原子核（中性子の毒）も多い。中性子の毒 ×4",
     poison: 4,
     whiteDwarfs: 20,
-    par: 1.28,
+    par: 1.2,
   },
 };
