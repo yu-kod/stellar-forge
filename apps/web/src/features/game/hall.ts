@@ -26,6 +26,12 @@ export const MEDALS: readonly { name: MedalName; within: number }[] = [
   { name: "銅", within: Infinity },
 ];
 
+/** 記録タブで挙げる、単独でも速くなる手（それぞれ初期設定より3分以上速い。medals.test.ts） */
+export const FASTER_MOVES: readonly string[] = [
+  "鉄の種を局面で変える",
+  "第3層で主星を炭素星にする",
+];
+
 export function medalOf(seconds: number): MedalName {
   return MEDALS.find((medal) => seconds <= medal.within)!.name;
 }

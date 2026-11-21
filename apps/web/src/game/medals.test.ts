@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { medalOf } from "@/features/game/hall";
+import { FASTER_MOVES, medalOf } from "@/features/game/hall";
 import { playIdle, type IdleReport } from "@/test-utils/simulate";
 import { S_DISCOVERABLE } from "./sprocess";
 import type { GameState } from "./types";
@@ -48,5 +48,16 @@ describe("記録への挑戦のメダル", () => {
     const kept = standard.marks.complete! - best.marks.complete!;
     expect(earlier).toBeGreaterThan(0);
     expect(kept / earlier).toBeGreaterThanOrEqual(0.85);
+  });
+
+  it("記録タブで挙げる手は、それぞれ単独で初期設定より3分以上速い", () => {
+    const alone: Record<string, IdleReport> = {
+      鉄の種を局面で変える: shiftOnly,
+      第3層で主星を炭素星にする: carbonOnly,
+    };
+    expect([...FASTER_MOVES]).toEqual(Object.keys(alone));
+    for (const report of Object.values(alone)) {
+      expect(standard.marks.complete! - report.marks.complete!).toBeGreaterThanOrEqual(3 * 60);
+    }
   });
 });
