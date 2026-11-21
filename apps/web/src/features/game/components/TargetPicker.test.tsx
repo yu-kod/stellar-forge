@@ -17,6 +17,18 @@ describe("TargetPicker：狙いごとの見込み", () => {
     expect(screen.getByRole("radio", { name: "ネオン" })).toHaveAccessibleDescription(/ Ne /);
   });
 
+  it("見込みの「時間」「元素と数」は、それぞれ途中で折り返さない（スマホ幅で O / 3,212 と割れない）", () => {
+    render(<TargetPicker meta={midMeta()} dispatch={() => {}} />);
+    const id = screen.getByRole("radio", { name: "炭素" }).getAttribute("aria-describedby")!;
+    const parts = [...document.getElementById(id)!.children];
+    expect(parts.map((part) => part.textContent)).toEqual([
+      expect.stringMatching(/^約\d+秒$/),
+      expect.stringMatching(/^C \S+$/),
+      expect.stringMatching(/^\w+ \S+$/),
+    ]);
+    for (const part of parts) expect(part).toHaveClass("whitespace-nowrap");
+  });
+
   it("自動制御がなければ見込みは出さない（手で強化するので当てにならない）", () => {
     render(<TargetPicker meta={createMeta()} dispatch={() => {}} />);
     expect(screen.getByRole("radio", { name: "炭素" })).not.toHaveAccessibleDescription();

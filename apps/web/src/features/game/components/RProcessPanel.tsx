@@ -31,6 +31,21 @@ function countdown(seconds: number): string {
   return `${Math.floor(total / 60)}分${total % 60}秒`;
 }
 
+/** 選んだ組を組むのに足りない中性子星（「1.6 M☉ があと1つ要る」） */
+function shortage(pool: readonly number[], a: number, b: number): string {
+  const need =
+    a === b
+      ? [[a, 2]]
+      : [
+          [a, 1],
+          [b, 1],
+        ];
+  return need
+    .filter(([bin, n]) => pool[bin!]! < n!)
+    .map(([bin, n]) => `${massOf(bin!)} があと${n! - pool[bin!]!}つ要る`)
+    .join("・");
+}
+
 /** はじめに選んでおく組：いま作りたい元素を一番速く作る組。なければ在庫の一番軽いものと一番重いもの */
 function defaultPair(meta: Meta): [number, number] {
   const best = bestPair(meta, rGoal(meta));
@@ -112,6 +127,12 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         ))}
       </div>
       <p role="status" aria-label="合体の見込み" className="bg-muted rounded-lg px-3 py-2 text-sm">
+        {!enough && (
+          <>
+            在庫が足りない：{shortage(pool, a, b)}。星団の超新星で中性子星が貯まるのを待つ
+            <br />
+          </>
+        )}
         {preview.blackHole ? (
           <>
             合計 {total.toFixed(1)} M☉：すぐブラックホールになり、円盤風は吹かない。潮汐の放出物{" "}

@@ -131,6 +131,25 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(preview).toHaveTextContent("合体まで 15分53秒・1回でテルル（Te）+2.70");
   });
 
+  it("在庫で組めない組は、見込みの前に「在庫が足りない」と書く（1つしかない質量を2つ選んだとき）", () => {
+    renderGame(layer4({ [LIGHT + 4]: 1 }));
+    const preview = within(panel()).getByRole("status", { name: "合体の見込み" });
+    expect(preview).toHaveTextContent(/^在庫が足りない：1\.6 M☉ があと1つ要る/);
+    expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeDisabled();
+  });
+
+  it("違う質量の組でも、在庫にない方を「あと1つ要る」と書く", async () => {
+    const { user } = renderGame(layer4());
+    await user.selectOptions(within(panel()).getByRole("combobox", { name: "1つ目" }), "1");
+    await user.selectOptions(
+      within(panel()).getByRole("combobox", { name: "2つ目" }),
+      String(HEAVY)
+    );
+    expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
+      /^在庫が足りない：1\.3 M☉ があと1つ要る。/
+    );
+  });
+
   it("偏った組は、潮汐の放出物が重い元素まで届く", async () => {
     const { user } = renderGame(layer4());
     await user.selectOptions(
