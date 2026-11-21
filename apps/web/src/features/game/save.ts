@@ -184,6 +184,7 @@ function parseRProcess(value: unknown): RProcess {
     discovered: parseNumbers(raw.discovered),
     mergers: raw.mergers === undefined ? 0 : requireNumber(raw.mergers),
     ejecta: raw.ejecta === undefined ? 0 : requireNumber(raw.ejecta),
+    observing: raw.observing === true,
   };
 }
 

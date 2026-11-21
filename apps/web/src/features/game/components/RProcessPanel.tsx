@@ -165,7 +165,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
         連星の枠 {binaries.length} / {binarySlots(meta)}・合体 {formatNumber(mergers)} 回・放出物{" "}
         {formatNumber(ejecta)}（星屑タブで強化に使う）
       </p>
-      <ObserveButton meta={meta} dispatch={dispatch} />
+      <EjectaUse meta={meta} dispatch={dispatch} />
       <ul aria-label="r過程で作る元素" className="grid gap-1 text-sm sm:grid-cols-2">
         {[...R_ELEMENTS, ...ACTINIDES].map((z) => {
           const element = elementOf(z);
@@ -187,24 +187,44 @@ export function RProcessPanel({ meta, dispatch }: Props) {
   );
 }
 
-/** 追観測：放出物を強化に使わず、いま作りたい元素の発見に回す */
-function ObserveButton({ meta, dispatch }: Props) {
-  const { ejecta } = meta.rProcess;
+/** 放出物の使い道：強化に使う（貯める）か、追観測に回す（合体のたびに、いま作りたい元素の発見に回す） */
+function EjectaUse({ meta, dispatch }: Props) {
+  const labelId = useId();
+  const { observing } = meta.rProcess;
   const goal = elementOf(rGoal(meta));
+  const options = [
+    { on: false, label: "強化に使う", note: "貯めて、星屑タブで第4層の強化に使う" },
+    {
+      on: true,
+      label: "追観測に回す",
+      note: `キロノバの光を望遠鏡で追い、合体のたびに放出物をいま作りたい元素の発見に回す（放出物 1 につき ${OBSERVE_RATE} ぶん。いまは${goal.name}（${goal.symbol}））`,
+    },
+  ];
   return (
-    <div className="grid gap-1">
-      <Button
-        variant="outline"
-        className="h-11 justify-self-start"
-        disabled={ejecta <= 0}
-        onClick={() => dispatch({ type: "observe" })}
-      >
-        追観測：放出物 {formatNumber(ejecta)} を{goal.name}（{goal.symbol}）の発見に回す
-      </Button>
-      <p className="text-muted-foreground text-sm">
-        キロノバの光を望遠鏡で追い、作りかけの元素を見つけ出す。放出物を強化に使わず、いま作りたい元素の発見に回す（放出物
-        1 につき {OBSERVE_RATE} ぶん）
-      </p>
-    </div>
+    <fieldset className="grid gap-2">
+      <legend id={labelId} className="mb-1 text-sm font-medium">
+        放出物の使い道
+      </legend>
+      <div role="radiogroup" aria-labelledby={labelId} className="grid gap-2">
+        {options.map((option) => (
+          <label
+            key={option.label}
+            className="has-focus-visible:ring-ring/50 has-checked:border-foreground/40 has-checked:bg-accent flex min-h-11 cursor-pointer items-start gap-2 rounded-md border p-3 text-sm has-focus-visible:ring-[3px]"
+          >
+            <input
+              type="radio"
+              name={labelId}
+              className="accent-ignite mt-1"
+              checked={observing === option.on}
+              onChange={() => dispatch({ type: "setObserving", on: option.on })}
+            />
+            <span>
+              <b>{option.label}</b>
+              <span className="text-muted-foreground block">{option.note}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }

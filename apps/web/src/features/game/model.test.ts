@@ -238,14 +238,17 @@ describe("gameReducer：種ごとの見込み", () => {
   });
 });
 
-describe("gameReducer：追観測", () => {
-  it("放出物をいま作りたい元素の発見に回し、見つけたら知らせる", () => {
+describe("gameReducer：放出物の使い道", () => {
+  it("追観測に切り替えると、貯めた放出物をいま作りたい元素の発見に回し、見つけたら知らせる", () => {
     const game = createGame();
     game.meta.rProcess = { ...game.meta.rProcess, unlocked: true, ejecta: 100 };
     game.meta.rProcess.pool[2] = 4;
-    const model = gameReducer(createModel(game), { type: "observe" });
+    const model = gameReducer(createModel(game), { type: "setObserving", on: true });
+    expect(model.game.meta.rProcess.observing).toBe(true);
     expect(model.game.meta.rProcess.ejecta).toBe(0);
     expect(model.game.meta.rProcess.discovered).toContain(52);
     expect(model.notices.map((n) => n.event)).toContainEqual({ type: "rDiscover", z: 52 });
+    const back = gameReducer(model, { type: "setObserving", on: false });
+    expect(back.game.meta.rProcess.observing).toBe(false);
   });
 });
