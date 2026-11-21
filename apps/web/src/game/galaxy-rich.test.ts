@@ -11,6 +11,7 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
   const minutes: Record<number, number> = {};
   let best: IdleReport;
   let none: number;
+  let noneReport: IdleReport;
   let carbonOnly: number;
   let seedsOnly: number;
   let milkyLayer3: number;
@@ -24,7 +25,8 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
       minutes[to] = report.marks.complete!;
       if (to === 10) best = report;
     }
-    none = playFlow("metalRich", { carbonStar: false }).marks.complete!;
+    noneReport = playFlow("metalRich", { carbonStar: false });
+    none = noneReport.marks.complete!;
     carbonOnly = playFlow("metalRich", { carbonStar: true }).marks.complete!;
     seedsOnly = playFlow("metalRich", {
       seedTarget: reduceAfterStrontium(10),
@@ -54,6 +56,19 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
     for (const alone of [carbonOnly, seedsOnly]) {
       expect(none - alone).toBeGreaterThanOrEqual(3 * MINUTE);
     }
+  });
+
+  it("何も変えない流れ（炭素星にせず、種も変えない）でも2時間50分以内に完結する（試した人を長く待たせない）", () => {
+    expect(none).toBeLessThanOrEqual(170 * MINUTE);
+  });
+
+  it("何も変えない流れの第3層でも、発見のあいだは11分以内（長いのはストロンチウムの後の峠だけ）", () => {
+    const { layer3, layer4 } = noneReport.marks;
+    const found = [layer3!, ...Object.values(noneReport.sAt), ...Object.values(noneReport.lightAt)]
+      .filter((t) => t >= layer3! && t <= layer4!)
+      .sort((a, b) => a - b);
+    const longest = Math.max(...found.slice(1).map((t, i) => t - found[i]!));
+    expect(longest).toBeLessThanOrEqual(11 * MINUTE);
   });
 
   it("白色矮星をはじめから持つので、第3層の解放が天の川より5分以上早い", () => {

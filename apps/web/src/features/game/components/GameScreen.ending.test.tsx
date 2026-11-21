@@ -198,13 +198,13 @@ describe("記録への挑戦", () => {
     const game = completed();
     game.meta.galaxy = "metalRich";
     game.meta.heritage = true;
-    game.meta.completedAt = 2 * 3600 + 16 * 60;
+    game.meta.completedAt = 2 * 3600 + 8 * 60;
     render(
       <EndingDialog game={game} hall={{ ...EMPTY_HALL, completions: 1 }} open onClose={() => {}} />
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：金（金属の多い銀河の中心）");
-    expect(dialog).toHaveTextContent("金：2時間18分以内");
+    expect(dialog).toHaveTextContent("金：2時間9分以内");
   });
 
   it("前の周の星屑を持って始めた周は、厳しい基準でメダルを決め、そう書く", async () => {
