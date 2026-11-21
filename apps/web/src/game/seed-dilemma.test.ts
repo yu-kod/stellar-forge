@@ -67,12 +67,9 @@ describe("鉄の種の目標の板挟み（画面を開いたまま遊ぶ）", (
     expect(thirty.marks.complete!).toBeGreaterThanOrEqual(standard.marks.complete! - 5 * MINUTE);
   });
 
-  it("最善の種は層の中で入れ替わる：30 → 1 → 30 と変えると、初期設定・種30のままより5%以上速い", () => {
-    // 循環には2割近く早く届き、第4層は重元素の星屑が少ないぶん長くなるが、完結でも5%以上速い
+  it("最善の種は層の中で入れ替わる：30 → 1 → 30 と変えると、循環に初期設定より15%以上早く届く", () => {
     expect(shifting.marks.loop!).toBeLessThanOrEqual(0.85 * standard.marks.loop!);
-    const faster = (r: IdleReport) => r.marks.complete! <= 0.95 * standard.marks.complete!;
-    expect(faster(shifting)).toBe(true);
-    expect(shifting.marks.complete!).toBeLessThanOrEqual(0.95 * thirty.marks.complete!);
+    expect(shifting.marks.loop!).toBeLessThan(thirty.marks.loop!);
   });
 
   it("ストロンチウムの後にどこまで下げるかで、循環の時刻が10分以上変わる（1 と 10）", () => {

@@ -8,7 +8,7 @@ import {
   rateConstant,
   stageCost,
 } from "./rates";
-import { RATE_CAP } from "./balance";
+import { PACE, RATE_CAP } from "./balance";
 import { createGame } from "./star";
 
 function expectRelative(actual: number, expected: number) {
@@ -16,20 +16,20 @@ function expectRelative(actual: number, expected: number) {
 }
 
 describe("baseRateConstant（上限を掛ける前）", () => {
-  it("k = 0.4 × 基本速度 × Lv。Lv0 なら燃えない", () => {
+  it("k = PACE × 基本速度 × Lv。Lv0 なら燃えない", () => {
     const { meta, star } = createGame();
-    expectRelative(baseRateConstant(meta, star, "H"), 0.4 * 0.004 * 1);
+    expectRelative(baseRateConstant(meta, star, "H"), PACE * 0.004 * 1);
     star.levels.H = 7;
-    expectRelative(baseRateConstant(meta, star, "H"), 0.4 * 0.004 * 7);
+    expectRelative(baseRateConstant(meta, star, "H"), PACE * 0.004 * 7);
     expect(baseRateConstant(meta, star, "He")).toBe(0);
   });
 
   it("Lv10 ごとに2倍になる", () => {
     const { meta, star } = createGame();
     star.levels.C = 10;
-    expectRelative(baseRateConstant(meta, star, "C"), 0.4 * 0.004 * 10 * 2);
+    expectRelative(baseRateConstant(meta, star, "C"), PACE * 0.004 * 10 * 2);
     star.levels.C = 25;
-    expectRelative(baseRateConstant(meta, star, "C"), 0.4 * 0.004 * 25 * 4);
+    expectRelative(baseRateConstant(meta, star, "C"), PACE * 0.004 * 25 * 4);
   });
 
   it("反応断面積（Lv ごとに +25%）は全段階、金属量は水素燃焼だけに効く", () => {
@@ -37,15 +37,15 @@ describe("baseRateConstant（上限を掛ける前）", () => {
     meta.shop.xs = 2;
     meta.shop.cno = 2;
     star.levels.He = 1;
-    expectRelative(baseRateConstant(meta, star, "H"), 0.4 * 0.004 * 1.5 * 1.5);
-    expectRelative(baseRateConstant(meta, star, "He"), 0.4 * 0.004 * 1.5);
+    expectRelative(baseRateConstant(meta, star, "H"), PACE * 0.004 * 1.5 * 1.5);
+    expectRelative(baseRateConstant(meta, star, "He"), PACE * 0.004 * 1.5);
   });
 
   it("炭素・ネオン・硫黄の発見で、それぞれヘリウム・炭素・酸素燃焼が2倍になる", () => {
     const { meta, star } = createGame();
     star.levels = { H: 1, He: 1, C: 1, Ne: 1, O: 1, Si: 0 };
     meta.discovered = { C: true, Ne: true, S: true };
-    const k = 0.4 * 0.004;
+    const k = PACE * 0.004;
     expectRelative(baseRateConstant(meta, star, "He"), k * 2);
     expectRelative(baseRateConstant(meta, star, "C"), k * 2);
     expectRelative(baseRateConstant(meta, star, "O"), k * 2);
@@ -88,7 +88,7 @@ describe("isIgnited", () => {
 describe("burnRate", () => {
   it("燃焼量は k × 燃料。点火していなければ 0", () => {
     const { meta, star } = createGame();
-    expect(burnRate(meta, star, "H")).toBeCloseTo(0.4 * 0.004 * 25);
+    expect(burnRate(meta, star, "H")).toBeCloseTo(effectiveRate(PACE * 0.004, RATE_CAP.H) * 25);
     star.levels.He = 1;
     star.mass.He = 5;
     expect(burnRate(meta, star, "He")).toBe(0);
@@ -99,7 +99,7 @@ describe("burnRate", () => {
     star.temperature = 1.5e9;
     star.levels.O = 1;
     star.mass.O = 2;
-    expect(burnRate(meta, star, "O")).toBeCloseTo(0.4 * 0.004 * 2);
+    expect(burnRate(meta, star, "O")).toBeCloseTo(PACE * 0.004 * 2);
   });
 });
 

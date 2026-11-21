@@ -86,15 +86,15 @@ describe("GameScreen：星と時間", () => {
     game.star.temperature = 1.5e9;
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(
-      "次の目標：ケイ素燃焼が始まると30秒でコアが崩壊する。それまでに外層の元素を育てておこう"
+      "次の目標：ケイ素燃焼が始まると20秒でコアが崩壊する。それまでに外層の元素を育てておこう"
     );
   });
 
-  it("全段階が点火したら、最後の30秒の使い方を促す", () => {
+  it("全段階が点火したら、最後の20秒の使い方を促す", () => {
     const game = aboutToCollapse();
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(
-      "最後の30秒：強化の費用が4分の1になる。貯めたエネルギーで、残りを欲しい元素に変えきろう"
+      "最後の20秒：強化の費用が4分の1になる。貯めたエネルギーで、残りを欲しい元素に変えきろう"
     );
   });
 });
@@ -116,7 +116,7 @@ describe("GameScreen：2周目からの目標", () => {
     game.meta.supernovae = 1;
     renderGame(game);
     expect(screen.getByRole("note")).toHaveTextContent(
-      "次の目標：「燃焼の自動制御」まで硫黄の星屑 あと 4（狙い：ケイ素・硫黄）"
+      "次の目標：「燃焼の自動制御」まで硫黄の星屑 あと 2（狙い：ケイ素・硫黄）"
     );
   });
 
@@ -151,7 +151,7 @@ describe("GameScreen：2周目からの目標", () => {
     const game = aboutToCollapse();
     game.meta.supernovae = 1;
     renderGame(game);
-    expect(screen.getByRole("note")).toHaveTextContent(/^最後の30秒/);
+    expect(screen.getByRole("note")).toHaveTextContent(/^最後の20秒/);
   });
 
   it("自動で次の星を生むようになったら、最後の数十秒の案内は出さない", () => {
@@ -219,7 +219,7 @@ describe("GameScreen：燃焼の強化", () => {
     renderGame();
     const card = stageCard("水素燃焼");
     expect(within(card).getByText(/燃料/)).toHaveTextContent("燃料 25.0 M☉");
-    expect(within(card).getByText(/^燃焼/)).toHaveTextContent("燃焼 0.04 M☉/s");
+    expect(within(card).getByText(/^燃焼/)).toHaveTextContent("燃焼 0.07 M☉/s");
   });
 
   it("ケイ素燃焼は強化できず、鉄のコアが育つ様子と崩壊までの秒数を見せる", () => {
@@ -229,7 +229,7 @@ describe("GameScreen：燃焼の強化", () => {
     const card = stageCard("ケイ素燃焼");
 
     expect(within(card).queryByRole("button")).not.toBeInTheDocument();
-    expect(within(card).getByText("崩壊まで 15 秒")).toBeInTheDocument();
+    expect(within(card).getByText("崩壊まで 10 秒")).toBeInTheDocument();
     expect(within(card).getByRole("progressbar", { name: "鉄のコア" })).toHaveAttribute(
       "aria-valuenow",
       "0.7"

@@ -96,7 +96,7 @@ describe("記録への挑戦", () => {
     await user.click(screen.getByRole("tab", { name: "記録" }));
     const hall = screen.getByRole("region", { name: "記録への挑戦" });
     expect(hall).toHaveTextContent("完結 2回・最速 2時間58分（銀）");
-    expect(hall).toHaveTextContent("金：2時間50分以内");
+    expect(hall).toHaveTextContent("金：2時間48分以内");
     expect(hall).toHaveTextContent("第3層で重元素の星屑を貯める");
   });
 
@@ -112,7 +112,7 @@ describe("記録への挑戦", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：銅");
-    expect(dialog).toHaveTextContent("金：2時間50分以内");
+    expect(dialog).toHaveTextContent("金：2時間48分以内");
   });
 
   it("エンディングに層ごとの時刻と、前回との差を出す", async () => {

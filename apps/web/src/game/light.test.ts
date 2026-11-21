@@ -47,11 +47,11 @@ describe("超新星で見つける軽い元素", () => {
     expect(found(rebirth(collapsedStar({ Si: 4 }, meta)).meta)).toEqual([18, 19, 20]);
   });
 
-  it("α過程の凍結：外層によらず、爆発エネルギー Lv6 でスカンジウム、Lv7 でチタン（⁴⁴Ti）", () => {
+  it("α過程の凍結：外層によらず、爆発エネルギー Lv6 でスカンジウム、Lv8 でチタン（⁴⁴Ti）", () => {
     const meta = createMeta();
-    meta.shop.boom = 6;
-    expect(found(rebirth(collapsedStar({}, meta)).meta)).toEqual([21]);
     meta.shop.boom = 7;
+    expect(found(rebirth(collapsedStar({}, meta)).meta)).toEqual([21]);
+    meta.shop.boom = 8;
     expect(found(rebirth(collapsedStar({}, meta)).meta)).toEqual([21, 22]);
   });
 

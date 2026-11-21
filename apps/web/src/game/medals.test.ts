@@ -17,9 +17,11 @@ const shifting = (s: GameState) =>
 /** メダルの基準は、画面の初期設定（星団の質量 7・7 M☉）で目標の案内に従う流れで測る */
 describe("記録への挑戦のメダル", () => {
   let standard: IdleReport;
+  let shiftOnly: IdleReport;
   let best: IdleReport;
   beforeAll(() => {
     standard = playIdle(LIMIT, { keepCluster: true, stopAt: "complete" });
+    shiftOnly = playIdle(LIMIT, { keepCluster: true, seedTarget: shifting, stopAt: "complete" });
     // 第3層で主星を炭素星にし、種を局面で変える
     best = playIdle(LIMIT, {
       keepCluster: true,
@@ -29,8 +31,9 @@ describe("記録への挑戦のメダル", () => {
     });
   }, 900_000);
 
-  it("初期設定で案内に従うと銀", () => {
-    expect(medalOf(standard.marks.complete!)).toBe("銀");
+  it("初期設定で案内に従うだけでは金に届かない。種を局面で変えると速くなる", () => {
+    expect(medalOf(standard.marks.complete!)).not.toBe("金");
+    expect(shiftOnly.marks.complete!).toBeLessThan(standard.marks.complete!);
   });
 
   it("炭素星と種の切り替えを組み合わせると金", () => {

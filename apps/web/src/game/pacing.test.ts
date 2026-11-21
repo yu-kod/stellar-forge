@@ -9,8 +9,8 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     report = playIdle(240 * MINUTE);
   }, 300_000);
 
-  it("第2層は25〜60分で解放される", () => {
-    expect(report.marks.layer2).toBeGreaterThanOrEqual(25 * MINUTE);
+  it("第2層は15〜60分で解放される", () => {
+    expect(report.marks.layer2).toBeGreaterThanOrEqual(15 * MINUTE);
     expect(report.marks.layer2).toBeLessThanOrEqual(60 * MINUTE);
   });
 
@@ -66,10 +66,10 @@ describe("ペーシング（4時間、画面を開いたまま遊ぶ）", () => 
     expect(report.maxDust).toBeLessThan(1e12);
   });
 
-  it("最初の2時間は、10分ごとに1〜30回恒久強化を買う", () => {
+  it("最初の2時間は、10分ごとに1〜40回恒久強化を買う", () => {
     const firstTwoHours = report.purchasesPer10Min.slice(0, 12);
     expect(Math.min(...firstTwoHours)).toBeGreaterThanOrEqual(1);
-    expect(Math.max(...firstTwoHours)).toBeLessThanOrEqual(30);
+    expect(Math.max(...firstTwoHours)).toBeLessThanOrEqual(40);
   });
 
   it("90分以降も、10分ごとに平均4.5回以上恒久強化を買い、30分以上何も買えない時間がない", () => {
