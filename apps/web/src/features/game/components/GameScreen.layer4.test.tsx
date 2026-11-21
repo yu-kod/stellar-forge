@@ -54,6 +54,14 @@ describe("GameScreen：第4層 中性子星合体", () => {
     expect(details).toHaveTextContent("ゲーム用の簡略化");
   });
 
+  it("s過程を終えた後、重元素の星屑を第4層の通貨のように書かない（第4層の強化はキロノバの放出物で買う）", () => {
+    render(<GameScreen initial={layer4()} ticker={manualTicker().ticker} />);
+    openTab("星屑");
+    const done = screen.getByText(/s過程は終えた/);
+    expect(done).not.toHaveTextContent(/重元素の星屑は第4層/);
+    expect(done).toHaveTextContent("キロノバの放出物");
+  });
+
   it("燃焼の自動制御を持っていれば、星屑タブで自動交換を切り替えられる", async () => {
     const game = layer4();
     game.meta.shop.auto = 1;
