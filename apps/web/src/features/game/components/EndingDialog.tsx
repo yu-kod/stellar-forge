@@ -8,7 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { ORIGINS, originOf, type Origin } from "@/game/progress";
 import { whiteDwarfsMade } from "@/game/star";
-import type { GameState } from "@/game/types";
+import type { Galaxy, GameState } from "@/game/types";
+import { useState } from "react";
+import { GalaxyPicker } from "./GalaxyPicker";
 import { cn } from "@/lib/utils";
 import { formatDiff, formatDuration, formatNumber } from "../format";
 import { PERIODIC_TABLE } from "../periodicTable";
@@ -16,7 +18,14 @@ import { GALAXIES } from "@/game/balance";
 import { bestOf, medalOf, type Hall, type Splits } from "../hall";
 import { MedalTargets } from "./HallView";
 
-type Props = { game: GameState; hall: Hall; open: boolean; onClose: () => void };
+type Props = {
+  game: GameState;
+  hall: Hall;
+  open: boolean;
+  onClose: () => void;
+  /** 銀河を選んで次の周を始める（いまの周の進み具合は消え、記録は残る） */
+  onNextRun?: (galaxy: Galaxy) => void;
+};
 
 const ORIGIN_COLOR: Record<Origin, string> = {
   bigBang: "bg-el-h",
@@ -62,7 +71,8 @@ function SplitsTable({ game, previous }: { game: GameState; previous: Splits | n
 }
 
 /** 83マスが埋まったときの画面。元素ごとの起源で塗り分けた周期表を見せる */
-export function EndingDialog({ game, hall, open, onClose }: Props) {
+export function EndingDialog({ game, hall, open, onClose, onNextRun }: Props) {
+  const [galaxy, setGalaxy] = useState<Galaxy>(game.meta.galaxy);
   const { meta, star } = game;
   const best = bestOf(hall, meta.galaxy);
   const stats: [string, number][] = [
@@ -141,6 +151,17 @@ export function EndingDialog({ game, hall, open, onClose }: Props) {
         <p className="text-muted-foreground text-sm">
           このあとも星は燃え続ける。中性子の多い合体を重ねれば、周期表の先のトリウムやウランも作れる。
         </p>
+        {onNextRun && (
+          <section aria-label="次の周" className="grid gap-2 border-t pt-3">
+            <GalaxyPicker value={galaxy} onChange={setGalaxy} />
+            <p className="text-muted-foreground text-sm">
+              いまの周の進み具合は消え、記録への挑戦（完結の回数と最速）は残る。
+            </p>
+            <Button variant="outline" className="h-11" onClick={() => onNextRun(galaxy)}>
+              この銀河で次の周を始める
+            </Button>
+          </section>
+        )}
         <Button className="h-11 justify-self-end" onClick={onClose}>
           宇宙を見続ける
         </Button>
