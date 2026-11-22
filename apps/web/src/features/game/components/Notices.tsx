@@ -186,6 +186,13 @@ function NoticeText({ event }: { event: NoticeEvent }) {
           未満の星は白色矮星になる
         </>
       );
+    case "autoShopReady":
+      return (
+        <>
+          <b className="text-ignite">燃焼の自動制御</b>
+          ：星屑タブの「交換できるものを自動で交換する」を ON にすると、目を離しても強化が進む
+        </>
+      );
     case "autoRebirthUnlocked":
       return <>超新星10回。これからは超新星のあと自動で次の星が生まれる（切り替えられる）</>;
     case "away":
