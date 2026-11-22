@@ -125,3 +125,41 @@ describe("2周目のメダル", () => {
     ).toBeGreaterThanOrEqual(5 * MINUTE);
   });
 });
+
+/** 第4層の追観測（解放から25分で切り替える）を3つ目の手として数えても、色を誤差で決めない */
+describe("追観測を含めた手の組み合わせのメダル", () => {
+  const OBSERVE = 25 * MINUTE;
+  const runs: Record<string, IdleReport> = {};
+  beforeAll(() => {
+    for (const completions of [0, 1]) {
+      const play = (options: Parameters<typeof playIdle>[1] = {}) =>
+        playIdle(LIMIT, {
+          start: createGame("milkyWay", completions),
+          keepCluster: true,
+          stopAt: "complete",
+          observeAfter: OBSERVE,
+          ...options,
+        });
+      runs[`${completions}:observe`] = play();
+      runs[`${completions}:shift+observe`] = play({ seedTarget: shifting });
+      runs[`${completions}:carbon+observe`] = play({ layer3MainMass: 2 });
+    }
+  }, 1_200_000);
+
+  it.each([
+    ["observe", "銀"],
+    ["shift+observe", "金"],
+    ["carbon+observe", "銀"],
+  ] as const)("%s：1周目も2周目も %s で、金・銀の線から2分以上離れる", (flow, medal) => {
+    for (const completions of [0, 1]) {
+      const heritage = completions > 0;
+      const at = runs[`${completions}:${flow}`]!.marks.complete!;
+      expect(medalOf(at, "milkyWay", heritage)).toBe(medal);
+      for (const line of ["金", "銀"] as const) {
+        expect(Math.abs(at - medalLimit(line, "milkyWay", heritage))).toBeGreaterThanOrEqual(
+          2 * MINUTE
+        );
+      }
+    }
+  });
+});

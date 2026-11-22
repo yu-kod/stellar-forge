@@ -491,7 +491,7 @@ export const GALAXIES: Record<
     poison: 3,
     whiteDwarfs: 20,
     binarySlots: 1,
-    par: 1.111,
+    par: 1.129,
   },
 };
 
@@ -514,4 +514,4 @@ export const HERITAGE_DUST: Readonly<Record<DustId, number>> = {
 export const HERITAGE_HEAVY = 100;
 
 /** 前の周の星屑を持って始めた周のメダルの基準の倍率（持っている分だけ速いので、同じ判断を求めるよう厳しくする。medals.test.ts） */
-export const HERITAGE_PAR = 0.88;
+export const HERITAGE_PAR = 0.89;

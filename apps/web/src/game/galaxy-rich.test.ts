@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { FASTER_MOVES, medalLimit, medalOf } from "@/features/game/hall";
-import type { IdleReport } from "@/test-utils/simulate";
+import { playIdle, type IdleReport } from "@/test-utils/simulate";
+import { createGame } from "./star";
 import { playFlow, reduceAfterStrontium } from "@/test-utils/strategies";
 
 const MINUTE = 60;
@@ -16,6 +17,7 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
   let seedsOnly: number;
   let milkyLayer3: number;
   let milkyLayer4: number;
+  const observed: Record<string, number> = {};
   beforeAll(() => {
     for (const to of REDUCE_TO) {
       const report = playFlow("metalRich", {
@@ -32,6 +34,17 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
       seedTarget: reduceAfterStrontium(10),
       carbonStar: false,
     }).marks.complete!;
+    const observe = (options: Parameters<typeof playIdle>[1] = {}) =>
+      playIdle(330 * MINUTE, {
+        start: createGame("metalRich", 1),
+        keepCluster: true,
+        stopAt: "complete",
+        observeAfter: 20 * MINUTE,
+        ...options,
+      }).marks.complete!;
+    observed.observe = observe();
+    observed.seedsObserve = observe({ seedTarget: reduceAfterStrontium(10) });
+    observed.carbonObserve = observe({ layer3MainMass: 2 });
     const milky = playFlow("milkyWay", { seedTarget: reduceAfterStrontium(1), carbonStar: true });
     milkyLayer3 = milky.marks.layer3!;
     milkyLayer4 = milky.marks.complete! - milky.marks.layer4!;
@@ -55,6 +68,17 @@ describe("金属の多い銀河の中心の最善の作戦", () => {
       expect(alone - medalLimit("金", "metalRich", true)).toBeGreaterThanOrEqual(2 * MINUTE);
     }
     expect(medalOf(none, "metalRich", true)).toBe("銅");
+  });
+
+  it("追観測（解放から20分）を足した流れも、金・銀の線から2分以上離れる（追観測だけ・種＋追観測・炭素星＋追観測は銀）", () => {
+    for (const at of Object.values(observed)) {
+      expect(medalOf(at, "metalRich", true)).toBe("銀");
+      for (const line of ["金", "銀"] as const) {
+        expect(Math.abs(at - medalLimit(line, "metalRich", true))).toBeGreaterThanOrEqual(
+          2 * MINUTE
+        );
+      }
+    }
   });
 
   it("記録タブで挙げる手は、それぞれ単独で何もしない流れより3分以上速い", () => {

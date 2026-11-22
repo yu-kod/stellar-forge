@@ -152,7 +152,7 @@ describe("記録への挑戦", () => {
     await user.click(screen.getByRole("tab", { name: "記録" }));
     const hall = screen.getByRole("region", { name: "記録への挑戦" });
     expect(hall).toHaveTextContent("まだ完結していない");
-    expect(hall).toHaveTextContent("金：2時間13分以内");
+    expect(hall).toHaveTextContent("金：2時間11分以内");
     expect(hall).not.toHaveTextContent("炭素星");
     expect(hall).not.toHaveTextContent("追観測");
     expect(hall).not.toHaveTextContent("種");
@@ -175,7 +175,7 @@ describe("記録への挑戦", () => {
     await user.click(screen.getByRole("tab", { name: "記録" }));
     const hall = screen.getByRole("region", { name: "記録への挑戦" });
     expect(hall).toHaveTextContent("完結 2回・天の川 最速 2時間30分（銀）");
-    expect(hall).toHaveTextContent("金：2時間13分以内");
+    expect(hall).toHaveTextContent("金：2時間11分以内");
     expect(hall).toHaveTextContent("第3層で主星を炭素星にする");
     expect(hall).toHaveTextContent("第4層では、放出物を追観測に回す時で完結が数分変わる");
   });
@@ -192,7 +192,7 @@ describe("記録への挑戦", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：銅");
-    expect(dialog).toHaveTextContent("金：2時間13分以内");
+    expect(dialog).toHaveTextContent("金：2時間11分以内");
   });
 
   it("天の川でない周のエンディングは、その銀河の基準でメダルを決め、銀河の名前を出す", async () => {
@@ -206,7 +206,7 @@ describe("記録への挑戦", () => {
     );
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveTextContent("今回のメダル：金（金属の多い銀河の中心）");
-    expect(dialog).toHaveTextContent("金：2時間10分以内");
+    expect(dialog).toHaveTextContent("金：2時間12分以内");
   });
 
   it("前の周の星屑を持って始めた周は、厳しい基準でメダルを決め、そう書く", async () => {
