@@ -41,6 +41,8 @@ export type NoticeEvent =
   | { type: "away"; seconds: number; supernovae: number; whiteDwarfs: number }
   | SupernovaEvent
   | { type: "autoRebirthUnlocked" }
+  /** 燃焼の自動制御を手に入れたが、星屑の自動交換が OFF */
+  | { type: "autoShopReady" }
   | { type: "layer3Unlocked" }
   | { type: "sDiscover"; z: number }
   | { type: "sLoop" }
@@ -287,7 +289,15 @@ function markMilestones(model: Model): Model {
 }
 
 export function gameReducer(model: Model, action: Action): Model {
-  return checkComplete(markFound(model, markMilestones(reduce(model, action))));
+  return checkComplete(
+    markFound(model, noticeAutoShop(model, markMilestones(reduce(model, action))))
+  );
+}
+
+/** 燃焼の自動制御を手に入れた時、星屑の自動交換が OFF なら、ON にできると知らせる（気づかないと大きく遅れる） */
+function noticeAutoShop(before: Model, after: Model): Model {
+  const got = before.game.meta.shop.auto === 0 && after.game.meta.shop.auto > 0;
+  return got && !after.game.meta.autoShop ? notify(after, [{ type: "autoShopReady" }]) : after;
 }
 
 /** 見つけた元素の数が増えたら、その時刻を残す（足りない分は今の時刻で埋める） */

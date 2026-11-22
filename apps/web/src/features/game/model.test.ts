@@ -80,6 +80,25 @@ describe("gameReducer", () => {
     ]);
   });
 
+  it("燃焼の自動制御を手に入れた時、星屑の自動交換が OFF なら、ON にできると知らせる", () => {
+    const start = modelWith();
+    start.game.meta.dust.S = 1e6;
+    const model = gameReducer(start, { type: "buyShopItem", item: "auto" });
+    expect(model.game.meta.shop.auto).toBe(1);
+    expect(model.notices.map((n) => n.event)).toContainEqual({ type: "autoShopReady" });
+    // もう持っていれば知らせない
+    const again = gameReducer(model, { type: "buyShopItem", item: "auto" });
+    expect(again.notices).toEqual(model.notices);
+  });
+
+  it("自動交換をすでに ON にしていれば、自動制御を手に入れても知らせない", () => {
+    const start = modelWith();
+    start.game.meta.dust.S = 1e6;
+    start.game.meta.autoShop = true;
+    const model = gameReducer(start, { type: "buyShopItem", item: "auto" });
+    expect(model.notices.map((n) => n.event.type)).not.toContain("autoShopReady");
+  });
+
   it("崩壊は知らせに積まない（超新星の画面で見せる）", () => {
     const model = gameReducer(createModel(aboutToCollapse()), { type: "tick", seconds: 1 });
     expect(model.game.star.end).toBe("collapse");
