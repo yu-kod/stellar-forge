@@ -10,12 +10,13 @@ import {
   OBSERVE_RATE,
   yieldOf,
   binarySlots,
+  comingBins,
   mergerSeconds,
   predictMerger,
   rThreshold,
   reachName,
 } from "@/game/merger";
-import { NEUTRON_STAR_MASSES } from "@/game/rprocess";
+import { NEUTRON_STAR_MASSES, progenitorMass } from "@/game/rprocess";
 import type { Meta } from "@/game/types";
 import { formatNumber } from "../format";
 import type { Action } from "../model";
@@ -31,8 +32,12 @@ function countdown(seconds: number): string {
   return `${Math.floor(total / 60)}分${total % 60}秒`;
 }
 
-/** 選んだ組を組むのに足りない中性子星（「1.6 M☉ があと1つ要る」） */
-function shortage(pool: readonly number[], a: number, b: number): string {
+/**
+ * 選んだ組を組むのに足りない中性子星と、どうすれば手に入るか（「1.6 M☉ があと1つ要る」）。
+ * 星団の星がその段を残すなら待つ。残さなければ、残す親の星の質量を書く（待っても来ない）
+ */
+function shortage(meta: Meta, a: number, b: number): string {
+  const { pool } = meta.rProcess;
   const need =
     a === b
       ? [[a, 2]]
@@ -40,10 +45,17 @@ function shortage(pool: readonly number[], a: number, b: number): string {
           [a, 1],
           [b, 1],
         ];
-  return need
-    .filter(([bin, n]) => pool[bin!]! < n!)
-    .map(([bin, n]) => `${massOf(bin!)} があと${n! - pool[bin!]!}つ要る`)
-    .join("・");
+  const missing = need.filter(([bin, n]) => pool[bin!]! < n!);
+  const lacking = missing.map(([bin, n]) => `${massOf(bin!)} があと${n! - pool[bin!]!}つ要る`);
+  const coming = comingBins(meta);
+  const never = missing.map(([bin]) => bin!).filter((bin) => !coming.includes(bin));
+  const how =
+    never.length === 0
+      ? "星団の超新星で中性子星が貯まるのを待つ"
+      : never
+          .map((bin) => `星団の星を ${progenitorMass(bin)} M☉ にすると ${massOf(bin)} が残る`)
+          .join("・");
+  return `${lacking.join("・")}。${how}`;
 }
 
 /** はじめに選んでおく組：いま作りたい元素を一番速く作る組。なければ在庫の一番軽いものと一番重いもの */
@@ -129,7 +141,7 @@ export function RProcessPanel({ meta, dispatch }: Props) {
       <p role="status" aria-label="合体の見込み" className="bg-muted rounded-lg px-3 py-2 text-sm">
         {!enough && (
           <>
-            在庫が足りない：{shortage(pool, a, b)}。星団の超新星で中性子星が貯まるのを待つ
+            在庫が足りない：{shortage(meta, a, b)}
             <br />
           </>
         )}

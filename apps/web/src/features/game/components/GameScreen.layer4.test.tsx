@@ -7,6 +7,7 @@ import { createGame } from "@/game/star";
 import { SHOP } from "@/game/balance";
 import { formatNumber } from "../format";
 import { createSlot } from "@/game/actions";
+import { progenitorMass } from "@/game/rprocess";
 import type { GameState } from "@/game/types";
 import { manualTicker, openTab } from "@/test-utils/game";
 import { createModel, gameReducer } from "../model";
@@ -136,6 +137,24 @@ describe("GameScreen：第4層 中性子星合体", () => {
     const preview = within(panel()).getByRole("status", { name: "合体の見込み" });
     expect(preview).toHaveTextContent(/^在庫が足りない：1\.6 M☉ があと1つ要る/);
     expect(within(panel()).getByRole("button", { name: "連星にする" })).toBeDisabled();
+  });
+
+  it("足りない中性子星を残す星団の星がなければ、待たせずに、残す質量を書く", () => {
+    renderGame(layer4({ [LIGHT + 4]: 1 }));
+    const preview = within(panel()).getByRole("status", { name: "合体の見込み" });
+    expect(preview).toHaveTextContent(
+      `星団の星を ${progenitorMass(LIGHT + 4)} M☉ にすると 1.6 M☉ が残る`
+    );
+    expect(preview).not.toHaveTextContent("貯まるのを待つ");
+  });
+
+  it("星団の星がその中性子星を残すなら、貯まるのを待つと書く", () => {
+    const game = layer4({ [LIGHT + 4]: 1 });
+    game.meta.cluster = [{ ...createSlot(game.meta), nextMass: progenitorMass(LIGHT + 4) }];
+    renderGame(game);
+    expect(within(panel()).getByRole("status", { name: "合体の見込み" })).toHaveTextContent(
+      "星団の超新星で中性子星が貯まるのを待つ"
+    );
   });
 
   it("違う質量の組でも、在庫にない方を「あと1つ要る」と書く", async () => {
