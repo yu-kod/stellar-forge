@@ -273,16 +273,21 @@ export type PairAdvice =
       alternative: { bins: [number, number]; masses: [number, number] } | null;
     };
 
+/** 星団の星がこれから残す中性子星の段（作っている段はいくつでも来る） */
+export function comingBins(meta: Meta): number[] {
+  return meta.cluster.flatMap((slot) => {
+    const bin = neutronStarBin(slot.nextMass ?? slot.star.initialMass);
+    return bin === null ? [] : [bin];
+  });
+}
+
 /**
  * その元素に届く組があるか。なければ、在庫と星団の星がこれから残す中性子星で届くなら待つ、
  * 遮蔽をあと1回強化すれば届くなら遮蔽を、届かなければ星団の星の質量を勧める（どの組でも届かなければ遮蔽）
  */
 export function pairAdvice(meta: Meta, z: number): PairAdvice {
   if (bestPair(meta, z)) return { type: "ready" };
-  const coming = meta.cluster.flatMap((slot) => {
-    const bin = neutronStarBin(slot.nextMass ?? slot.star.initialMass);
-    return bin === null ? [] : [bin];
-  });
+  const coming = comingBins(meta);
   const { pool } = meta.rProcess;
   // 作っている段はいくつでも来る。在庫だけの段は、同じ段で組むなら2つ要る
   const enough = (bin: number, need: number) => coming.includes(bin) || pool[bin]! >= need;
